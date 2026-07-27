@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   /* ============================================================
      COLORS — replace with the MON Logistics brand book.
@@ -308,6 +309,15 @@
     transition: border-color var(--ease);
   }
   .filter-bar select:hover { border-color: #C7CDDA; }
+  .export-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--color-card-bg); border: 1px solid var(--color-border); color: var(--color-text);
+    padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: background var(--ease), border-color var(--ease);
+  }
+  .export-btn svg { width: 14px; height: 14px; }
+  .export-btn:hover { background: #F5F6F9; border-color: #C7CDDA; }
+  .export-btn:active { transform: scale(0.97); }
   #tasksListTable, #subtasksListTable { width: 100%; border-collapse: collapse; font-size: 13px; }
   #tasksListTable th, #subtasksListTable th { text-align: left; padding: 12px 18px; color: var(--color-muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 1px solid var(--color-border); }
   #tasksListTable td, #subtasksListTable td { padding: 12px 18px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
@@ -503,6 +513,10 @@
     </nav>
 
     <div class="sidebar-footer">
+      <button class="refresh" id="exportExcelBtn" title="Export everything to Excel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Export Excel
+      </button>
       <button class="refresh" id="refreshBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path></svg>
         Refresh
@@ -546,6 +560,7 @@
       <label>Status
         <select id="taskFilterStatus"></select>
       </label>
+      <button class="export-btn" id="exportTasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export CSV</button>
     </div>
     <div class="section-card">
       <h3>All tasks</h3>
@@ -561,6 +576,7 @@
       <label>Status
         <select id="subtaskFilterStatus"></select>
       </label>
+      <button class="export-btn" id="exportSubtasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export CSV</button>
     </div>
     <div class="section-card">
       <h3>All subtasks</h3>
@@ -805,6 +821,116 @@ function renderSubtasksListTab() {
   document.getElementById('subtasksListTable').innerHTML = filtered.length
     ? `<thead><tr><th>Title</th><th>Task</th><th>Phase</th><th>Assignee</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
     : `<tbody><tr><td class="empty-state" colspan="6">No subtasks match these filters.</td></tr></tbody>`;
+}
+
+/* ================================================================
+   EXPORT — CSV (per filtered view) and Excel (everything at once)
+   ================================================================ */
+function csvEscape(value) {
+  const str = value === null || value === undefined ? '' : String(value);
+  return /[",\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+}
+function toCSV(columns, rows) {
+  const header = columns.map(c => csvEscape(c.label)).join(',');
+  const lines = rows.map(row => columns.map(c => csvEscape(c.value(row))).join(','));
+  return [header, ...lines].join('\r\n');
+}
+function downloadFile(content, filename, mime) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function filteredTasksForExport() {
+  return tasks.filter(t =>
+    (!taskFilters.phase || t.phase_id === taskFilters.phase) &&
+    (!taskFilters.status || t.status === taskFilters.status)
+  );
+}
+function filteredSubtasksForExport() {
+  return subtasks.filter(s =>
+    (!subtaskFilters.task || s.task_id === subtaskFilters.task) &&
+    (!subtaskFilters.status || s.status === subtaskFilters.status)
+  );
+}
+
+function exportTasksCSV() {
+  const rows = filteredTasksForExport();
+  const columns = [
+    { label: 'Title', value: t => t.title },
+    { label: 'Phase', value: t => phaseName(t.phase_id) },
+    { label: 'Assignee', value: t => memberName(t.assignee_id) },
+    { label: 'Priority', value: t => t.priority },
+    { label: 'Status', value: t => STATUS_LABELS[t.status] },
+    { label: 'Start date', value: t => t.start_date || '' },
+    { label: 'Due date', value: t => t.due_date || '' },
+    { label: 'Completed date', value: t => t.completed_date || '' },
+    { label: 'Description', value: t => t.description || '' },
+    { label: 'Notes', value: t => t.notes || '' },
+  ];
+  downloadFile(toCSV(columns, rows), 'tasks-export.csv', 'text/csv;charset=utf-8;');
+  showToast(`Exported ${rows.length} task${rows.length === 1 ? '' : 's'} to CSV.`, 'success');
+}
+function exportSubtasksCSV() {
+  const rows = filteredSubtasksForExport();
+  const columns = [
+    { label: 'Title', value: s => s.title },
+    { label: 'Task', value: s => taskName(s.task_id) },
+    { label: 'Phase', value: s => phaseName(taskPhaseId(s.task_id)) },
+    { label: 'Assignee', value: s => memberName(s.assignee_id) },
+    { label: 'Status', value: s => STATUS_LABELS[s.status] },
+    { label: 'Start date', value: s => s.start_date || '' },
+    { label: 'Due date', value: s => s.due_date || '' },
+    { label: 'Completed date', value: s => s.completed_date || '' },
+    { label: 'Description', value: s => s.description || '' },
+    { label: 'Notes', value: s => s.notes || '' },
+  ];
+  downloadFile(toCSV(columns, rows), 'subtasks-export.csv', 'text/csv;charset=utf-8;');
+  showToast(`Exported ${rows.length} subtask${rows.length === 1 ? '' : 's'} to CSV.`, 'success');
+}
+
+function exportAllExcel() {
+  if (typeof XLSX === 'undefined') { showToast('Excel export library failed to load. Check your connection and try again.'); return; }
+  const wb = XLSX.utils.book_new();
+
+  const teamRows = teamMembers.map(m => ({
+    Name: m.name, Role: m.role || '', Company: m.company || '', Email: m.email || '',
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(teamRows), 'Team');
+
+  const phaseRows = phases.map(p => ({
+    Name: p.name, Description: p.description || '', Status: STATUS_LABELS[p.status],
+    'Start date': p.start_date || '', 'End date': p.end_date || '', 'Progress %': phaseProgress(p.id),
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(phaseRows), 'Phases');
+
+  const taskRows = tasks.map(t => ({
+    Title: t.title, Phase: phaseName(t.phase_id), Assignee: memberName(t.assignee_id),
+    Priority: t.priority, Status: STATUS_LABELS[t.status],
+    'Start date': t.start_date || '', 'Due date': t.due_date || '', 'Completed date': t.completed_date || '',
+    Description: t.description || '', Notes: t.notes || '',
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(taskRows), 'Tasks');
+
+  const subtaskRows = subtasks.map(s => ({
+    Title: s.title, Task: taskName(s.task_id), Phase: phaseName(taskPhaseId(s.task_id)),
+    Assignee: memberName(s.assignee_id), Status: STATUS_LABELS[s.status],
+    'Start date': s.start_date || '', 'Due date': s.due_date || '', 'Completed date': s.completed_date || '',
+    Description: s.description || '', Notes: s.notes || '',
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(subtaskRows), 'Subtasks');
+
+  const objectiveRows = objectives.map(o => ({
+    Title: o.title, Description: o.description || '', Metric: o.metric_label || '',
+    Current: o.current_value ?? '', Target: o.target_value ?? '', Unit: o.unit || '', Status: STATUS_LABELS[o.status],
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(objectiveRows), 'Objectives');
+
+  XLSX.writeFile(wb, 'MON-Logistics-Nestle-Project-Export.xlsx');
+  showToast('Excel file downloaded.', 'success');
 }
 
 function phaseTasks(phaseId) { return tasks.filter(t => t.phase_id === phaseId); }
@@ -1321,6 +1447,10 @@ document.getElementById('taskFilterPhase').addEventListener('change', e => { tas
 document.getElementById('taskFilterStatus').addEventListener('change', e => { taskFilters.status = e.target.value; renderTasksListTab(); });
 document.getElementById('subtaskFilterTask').addEventListener('change', e => { subtaskFilters.task = e.target.value; renderSubtasksListTab(); });
 document.getElementById('subtaskFilterStatus').addEventListener('change', e => { subtaskFilters.status = e.target.value; renderSubtasksListTab(); });
+
+document.getElementById('exportTasksCsv').addEventListener('click', exportTasksCSV);
+document.getElementById('exportSubtasksCsv').addEventListener('click', exportSubtasksCSV);
+document.getElementById('exportExcelBtn').addEventListener('click', exportAllExcel);
 
 loadData();
 </script>
