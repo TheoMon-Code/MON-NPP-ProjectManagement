@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MON Logistics — Nestlé Flow Improvement Project</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  /* ============================================================
+     COLORS — replace with the MON Logistics brand book.
+     These are the only variables you need to change to
+     re-skin the whole dashboard.
+     ============================================================ */
+  :root {
+    --color-primary: #0B2545;
+    --color-secondary: #13315C;
+    --color-accent: #E4572E;
+    --color-bg: #F4F6F8;
+    --color-text: #1B1F23;
+    --color-card-bg: #FFFFFF;
+    --color-border: #E1E5EA;
+    --color-ok: #2E7D32;
+    --color-warn: #ED6C02;
+    --color-blocked: #C62828;
+    --color-muted: #6B7280;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+  header .subtitle { font-size: 13px; opacity: 0.85; margin-top: 4px; max-width: 640px; }
+  header .refresh {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  header .refresh:hover { background: rgba(255,255,255,0.25); }
+  header .updated-at { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+
+  nav.tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 32px;
+    background: var(--color-card-bg);
+    border-bottom: 1px solid var(--color-border);
+    overflow-x: auto;
+  }
+  nav.tabs button {
+    border: none;
+    background: transparent;
+    padding: 14px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+  }
+  nav.tabs button.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-accent);
+  }
+
+  main { padding: 24px 32px 48px; max-width: 1280px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .kpi-card .value { font-size: 26px; font-weight: 700; color: var(--color-primary); }
+  .kpi-card .label { font-size: 12.5px; color: var(--color-muted); margin-top: 4px; }
+
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 800px) { .charts-row { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 16px;
+    height: 280px;
+  }
+  .chart-card h3 { margin: 0 0 8px; font-size: 14px; color: var(--color-text); }
+  .chart-wrap { position: relative; height: 220px; }
+
+  .section-card {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .section-card > h3 {
+    margin: 0; padding: 14px 18px; font-size: 14px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .progress-bar { width: 100%; height: 8px; background: #EEF1F4; border-radius: 999px; overflow: hidden; }
+  .progress-bar > div { height: 100%; background: var(--color-accent); }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .badge.done { background: #E6F4EA; color: var(--color-ok); }
+  .badge.in_progress { background: #FFF4E5; color: var(--color-warn); }
+  .badge.not_started { background: #F1F2F4; color: var(--color-muted); }
+  .badge.blocked { background: #FDECEA; color: var(--color-blocked); }
+
+  .prio { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+  .prio.high { background: #FDECEA; color: var(--color-blocked); }
+  .prio.medium { background: #FFF4E5; color: var(--color-warn); }
+  .prio.low { background: #F1F2F4; color: var(--color-muted); }
+
+  /* Phases > Tasks > Subtasks accordion */
+  .phase {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .phase:last-child { border-bottom: none; }
+  .phase-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px; cursor: pointer;
+  }
+  .phase-header:hover { background: #FAFBFC; }
+  .caret { font-size: 11px; color: var(--color-muted); width: 12px; transition: transform 0.15s; }
+  .phase.open > .phase-header .caret { transform: rotate(90deg); }
+  .phase-name { font-weight: 600; font-size: 14.5px; flex: 0 0 200px; }
+  .phase-progress { flex: 1; display: flex; align-items: center; gap: 10px; }
+  .phase-progress .progress-bar { max-width: 200px; }
+  .phase-meta { font-size: 12px; color: var(--color-muted); flex: 0 0 180px; text-align: right; }
+  .phase-tasks { display: none; padding: 0 18px 12px 44px; }
+  .phase.open .phase-tasks { display: block; }
+
+  .task {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: #FCFDFE;
+  }
+  .task-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; cursor: pointer; font-size: 13.5px;
+  }
+  .task-header:hover { background: #F5F7F9; }
+  .task-title { flex: 1; font-weight: 500; }
+  .task-assignee { font-size: 12px; color: var(--color-muted); flex: 0 0 140px; }
+  .task-due { font-size: 12px; color: var(--color-muted); flex: 0 0 170px; }
+  .task.open .caret { transform: rotate(90deg); }
+  .item-detail { font-size: 12px; color: var(--color-muted); padding: 0 14px 8px 34px; line-height: 1.5; }
+  .item-notes { margin-top: 3px; }
+  .item-notes.blocked { color: var(--color-blocked); }
+  .subtasks { display: none; padding: 4px 14px 10px 34px; }
+  .task.open .subtasks { display: block; }
+  .subtask {
+    padding: 7px 0; font-size: 13px; border-top: 1px dashed var(--color-border);
+  }
+  .subtask:first-child { border-top: none; }
+  .subtask-row { display: flex; align-items: center; gap: 10px; }
+  .subtask-title { flex: 1; }
+  .subtask-assignee { font-size: 11.5px; color: var(--color-muted); flex: 0 0 130px; }
+  .subtask-due { font-size: 11.5px; color: var(--color-muted); flex: 0 0 160px; }
+  .subtask .item-detail { padding: 4px 0 0 0; }
+  .no-subtasks { font-size: 12px; color: var(--color-muted); padding: 6px 0; font-style: italic; }
+
+  /* Team */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
+  }
+  .team-card {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--color-primary); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .team-card .name { font-weight: 600; font-size: 14px; }
+  .team-card .role { font-size: 12.5px; color: var(--color-muted); }
+  .team-card .company { font-size: 11px; color: var(--color-accent); font-weight: 600; margin-top: 2px; }
+  .team-card .workload { font-size: 12px; color: var(--color-muted); margin-top: 8px; }
+
+  /* Objectives */
+  .objective-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .objective-card {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .objective-card .title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .objective-card .title { font-weight: 600; font-size: 14.5px; }
+  .objective-card .desc { font-size: 12.5px; color: var(--color-muted); margin-bottom: 12px; }
+  .objective-card .metric-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--color-muted); margin-bottom: 6px; }
+  .objective-card .metric-row strong { color: var(--color-text); }
+
+  .empty-state, .error-state { text-align: center; padding: 60px 20px; color: var(--color-muted); }
+  .error-state { color: var(--color-blocked); }
+
+  /* Filter bar (Tasks / Subtasks tabs) */
+  .filter-bar {
+    display: flex; gap: 20px; align-items: center;
+    background: var(--color-card-bg); border: 1px solid var(--color-border);
+    border-radius: 10px; padding: 12px 18px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .filter-bar label {
+    font-size: 12px; color: var(--color-muted); display: flex; flex-direction: column; gap: 4px; font-weight: 600;
+  }
+  .filter-bar select {
+    padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 6px;
+    font-size: 13px; font-family: inherit; background: white; min-width: 160px;
+  }
+  #tasksListTable, #subtasksListTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+  #tasksListTable th, #subtasksListTable th { text-align: left; padding: 10px 16px; color: var(--color-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid var(--color-border); }
+  #tasksListTable td, #subtasksListTable td { padding: 10px 16px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  #tasksListTable tr:hover td, #subtasksListTable tr:hover td { background: #FAFBFC; }
+  .muted-text { font-size: 12px; color: var(--color-muted); margin-top: 3px; max-width: 320px; }
+  .muted-text.blocked-text { color: var(--color-blocked); }
+  .overdue-tag {
+    display: inline-block; background: #FDECEA; color: var(--color-blocked);
+    font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px; margin-left: 4px; vertical-align: middle;
+  }
+
+  /* Manage tab */
+  .manage-note {
+    background: #EAF2FB; border: 1px solid #C9DEF2; color: #123A63;
+    padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;
+  }
+  .table-scroll { overflow-x: auto; }
+  #manageTeamTable, #managePhasesTable, #manageTasksTable, #manageSubtasksTable {
+    width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px;
+  }
+  #manageTeamTable th, #managePhasesTable th, #manageTasksTable th, #manageSubtasksTable th,
+  #manageTeamTable td, #managePhasesTable td, #manageTasksTable td, #manageSubtasksTable td {
+    padding: 8px 10px; border-bottom: 1px solid var(--color-border); text-align: left;
+  }
+  #manageTeamTable th, #managePhasesTable th, #manageTasksTable th, #manageSubtasksTable th {
+    color: var(--color-muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase;
+  }
+  .mrow input[type="text"], .mrow input[type="date"], .mrow input[type="number"], .mrow select, .mrow textarea {
+    width: 100%; padding: 6px 8px; font-size: 12.5px; border: 1px solid var(--color-border);
+    border-radius: 5px; font-family: inherit; background: white;
+  }
+  .mrow textarea { resize: vertical; min-height: 32px; }
+  .mrow.new-row { background: #FAFBFC; }
+  .m-actions { display: flex; gap: 6px; white-space: nowrap; }
+  .m-btn {
+    border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .m-btn.save { background: var(--color-primary); color: white; }
+  .m-btn.add { background: var(--color-accent); color: white; }
+  .m-btn.delete { background: #FDECEA; color: var(--color-blocked); }
+  .m-btn:hover { opacity: 0.85; }
+  .col-name { min-width: 140px; } .col-desc { min-width: 180px; } .col-date { min-width: 120px; }
+  .col-select { min-width: 130px; } .col-actions { width: 110px; }
+
+  .config-warning {
+    background: #FFF4E5; border: 1px solid #F5C97B; color: #7A4A00;
+    padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 13.5px;
+  }
+  .config-warning code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>MON Logistics — Nestlé Flow Improvement Project</h1>
+    <div class="subtitle">Tracking phases, tasks, subtasks, the team, and the project's improvement objectives.</div>
+    <div class="updated-at" id="updatedAt">Loading…</div>
+  </div>
+  <button class="refresh" id="refreshBtn">↻ Refresh</button>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="overview" class="active">Overview</button>
+  <button data-tab="phases">Phases</button>
+  <button data-tab="tasks">Tasks</button>
+  <button data-tab="subtasks">Subtasks</button>
+  <button data-tab="team">Team</button>
+  <button data-tab="objectives">Objectives</button>
+  <button data-tab="manage">Manage</button>
+</nav>
+
+<main id="app">
+  <div class="config-warning" id="configWarning" style="display:none;">
+    ⚠️ The dashboard isn't connected to Supabase yet.
+  </div>
+
+  <section class="tab-panel active" id="panel-overview">
+    <div class="kpi-row" id="overviewKpis"></div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>Progress by phase</h3>
+        <div class="chart-wrap"><canvas id="chartByPhase"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Task status breakdown</h3>
+        <div class="chart-wrap"><canvas id="chartByStatus"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="panel-phases">
+    <div class="section-card">
+      <h3>Phases → Tasks → Subtasks</h3>
+      <div id="phasesTree"></div>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="panel-tasks">
+    <div class="filter-bar">
+      <label>Phase
+        <select id="taskFilterPhase"></select>
+      </label>
+      <label>Status
+        <select id="taskFilterStatus"></select>
+      </label>
+    </div>
+    <div class="section-card">
+      <h3>All tasks</h3>
+      <div class="table-scroll"><table id="tasksListTable"></table></div>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="panel-subtasks">
+    <div class="filter-bar">
+      <label>Task
+        <select id="subtaskFilterTask"></select>
+      </label>
+      <label>Status
+        <select id="subtaskFilterStatus"></select>
+      </label>
+    </div>
+    <div class="section-card">
+      <h3>All subtasks</h3>
+      <div class="table-scroll"><table id="subtasksListTable"></table></div>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="panel-team">
+    <div class="team-grid" id="teamGrid"></div>
+  </section>
+
+  <section class="tab-panel" id="panel-objectives">
+    <div class="objective-grid" id="objectivesGrid"></div>
+  </section>
+
+  <section class="tab-panel" id="panel-manage">
+    <div class="manage-note">Add, edit or delete phases, tasks, subtasks and team members below. Changes save straight to Supabase — everyone with this link sees them after a refresh.</div>
+
+    <div class="section-card">
+      <h3>Team Members</h3>
+      <div class="table-scroll"><table id="manageTeamTable"></table></div>
+    </div>
+
+    <div class="section-card">
+      <h3>Phases</h3>
+      <div class="table-scroll"><table id="managePhasesTable"></table></div>
+    </div>
+
+    <div class="section-card">
+      <h3>Tasks</h3>
+      <div class="table-scroll"><table id="manageTasksTable"></table></div>
+    </div>
+
+    <div class="section-card">
+      <h3>Subtasks</h3>
+      <div class="table-scroll"><table id="manageSubtasksTable"></table></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ================================================================
+   SUPABASE CONFIG — loaded at runtime from a Netlify serverless
+   function (netlify/functions/config.js), which reads the actual
+   SUPABASE_URL / SUPABASE_ANON_KEY from Netlify's environment
+   variables (Site settings > Environment variables). Nothing
+   project-specific is hardcoded here or committed to GitHub.
+
+   This only works once the site is deployed on Netlify (or run
+   locally with the Netlify CLI's `netlify dev`) — opening this
+   file directly in a browser can't reach the function.
+   ================================================================ */
+let SUPABASE_URL = "";
+let SUPABASE_ANON_KEY = "";
+let configLoadError = "";
+
+async function fetchConfig() {
+  try {
+    const res = await fetch('/.netlify/functions/config');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const cfg = await res.json();
+    SUPABASE_URL = cfg.url || "";
+    SUPABASE_ANON_KEY = cfg.anonKey || "";
+  } catch (e) {
+    configLoadError = e.message;
+  }
+}
+
+const STATUS_LABELS = { not_started: "Not started", in_progress: "In progress", blocked: "Blocked", done: "Done" };
+const STATUS_PROGRESS = { not_started: 0, in_progress: 50, blocked: 50, done: 100 };
+
+let supabase = null;
+let teamMembers = [], phases = [], tasks = [], subtasks = [], objectives = [];
+let charts = {};
+let taskFilters = { phase: '', status: '' };
+let subtaskFilters = { task: '', status: '' };
+
+function isConfigured() {
+  return !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
+}
+
+function badge(status) { return `<span class="badge ${status}">${STATUS_LABELS[status] || status || "—"}</span>`; }
+function prioBadge(p) { return `<span class="prio ${p}">${p || '—'}</span>`; }
+function fmtDate(d) { if (!d) return "—"; try { return new Date(d).toLocaleDateString('en-CA'); } catch(e) { return d; } }
+function initials(name) { if (!name) return "?"; return name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase(); }
+function memberName(id) { const m = teamMembers.find(t => t.id === id); return m ? m.name : "Unassigned"; }
+function dateRange(start, due) {
+  if (!start && !due) return "—";
+  if (start && due) return `${fmtDate(start)} → ${fmtDate(due)}`;
+  return fmtDate(start || due);
+}
+function completedTag(item) {
+  return (item.status === 'done' && item.completed_date)
+    ? ` <span style="color:var(--color-ok);font-weight:600;">✓ ${fmtDate(item.completed_date)}</span>` : '';
+}
+function isOverdue(item) {
+  if (item.status === 'done' || !item.due_date) return false;
+  return new Date(item.due_date) < new Date(new Date().toDateString());
+}
+function detailBlock(item) {
+  if (!item.description && !item.notes) return '';
+  return `<div class="item-detail">
+    ${item.description ? `<div>${item.description}</div>` : ''}
+    ${item.notes ? `<div class="item-notes ${item.status === 'blocked' ? 'blocked' : ''}">${item.status === 'blocked' ? '⚠ ' : '📝 '}${item.notes}</div>` : ''}
+  </div>`;
+}
+
+async function loadData() {
+  if (!isConfigured()) {
+    await fetchConfig();
+  }
+  if (!isConfigured()) {
+    document.getElementById('configWarning').style.display = 'block';
+    document.getElementById('configWarning').innerHTML = configLoadError
+      ? `⚠️ Couldn't load Supabase config from the Netlify function (${configLoadError}). Make sure this site is deployed on Netlify with <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> set under Site settings &gt; Environment variables, and that <code>netlify/functions/config.js</code> was deployed alongside <code>index.html</code>. (Testing locally? Use the Netlify CLI's <code>netlify dev</code> instead of opening the file directly.)`
+      : `⚠️ <code>SUPABASE_URL</code> / <code>SUPABASE_ANON_KEY</code> aren't set yet. Add them under Netlify &gt; Site settings &gt; Environment variables, then redeploy.`;
+    document.getElementById('updatedAt').textContent = "Not connected — connect Supabase to see real data";
+    return;
+  }
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  document.getElementById('updatedAt').textContent = "Loading…";
+
+  const [tm, ph, tk, sb, ob] = await Promise.all([
+    supabase.from('team_members').select('*').order('name'),
+    supabase.from('phases').select('*').order('sort_order'),
+    supabase.from('tasks').select('*').order('sort_order'),
+    supabase.from('subtasks').select('*').order('sort_order'),
+    supabase.from('objectives').select('*').order('sort_order'),
+  ]);
+
+  const firstError = [tm, ph, tk, sb, ob].find(r => r.error);
+  if (firstError) {
+    document.getElementById('overviewKpis').innerHTML =
+      `<div class="error-state">Supabase connection error: ${firstError.error.message}</div>`;
+    document.getElementById('updatedAt').textContent = "Error";
+    return;
+  }
+
+  teamMembers = tm.data || [];
+  phases = ph.data || [];
+  tasks = tk.data || [];
+  subtasks = sb.data || [];
+  objectives = ob.data || [];
+
+  document.getElementById('updatedAt').textContent = "Last updated: " + new Date().toLocaleString('en-CA');
+  renderAll();
+}
+
+function renderAll() {
+  renderOverview();
+  renderPhasesTree();
+  renderTasksListTab();
+  renderSubtasksListTab();
+  renderTeam();
+  renderObjectives();
+  renderManage();
+}
+
+function phaseName(id) { const p = phases.find(x => x.id === id); return p ? p.name : '—'; }
+function taskName(id) { const t = tasks.find(x => x.id === id); return t ? t.title : '—'; }
+function taskPhaseId(taskId) { const t = tasks.find(x => x.id === taskId); return t ? t.phase_id : null; }
+
+function renderTasksListTab() {
+  const phaseSel = document.getElementById('taskFilterPhase');
+  const statusSel = document.getElementById('taskFilterStatus');
+  phaseSel.innerHTML = '<option value="">All phases</option>' + phases.map(p => opt(p.id, p.name, taskFilters.phase)).join('');
+  statusSel.innerHTML = '<option value="">All statuses</option>' + statusOptions(taskFilters.status);
+
+  const filtered = tasks.filter(t =>
+    (!taskFilters.phase || t.phase_id === taskFilters.phase) &&
+    (!taskFilters.status || t.status === taskFilters.status)
+  );
+  const rows = filtered.map(t => `
+    <tr>
+      <td><strong>${t.title}</strong>${t.description ? `<div class="muted-text">${t.description}</div>` : ''}${t.notes ? `<div class="muted-text ${t.status==='blocked'?'blocked-text':''}">${t.status==='blocked'?'⚠ ':'📝 '}${t.notes}</div>` : ''}</td>
+      <td>${phaseName(t.phase_id)}</td>
+      <td>${memberName(t.assignee_id)}</td>
+      <td>${prioBadge(t.priority)}</td>
+      <td>${dateRange(t.start_date, t.due_date)}${completedTag(t)}${isOverdue(t) ? ' <span class="overdue-tag">Overdue</span>' : ''}</td>
+      <td>${badge(t.status)}</td>
+    </tr>`).join('');
+  document.getElementById('tasksListTable').innerHTML = filtered.length
+    ? `<thead><tr><th>Title</th><th>Phase</th><th>Assignee</th><th>Priority</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
+    : `<tbody><tr><td class="empty-state" colspan="6">No tasks match these filters.</td></tr></tbody>`;
+}
+
+function renderSubtasksListTab() {
+  const taskSel = document.getElementById('subtaskFilterTask');
+  const statusSel = document.getElementById('subtaskFilterStatus');
+  taskSel.innerHTML = '<option value="">All tasks</option>' + tasks.map(t => opt(t.id, t.title, subtaskFilters.task)).join('');
+  statusSel.innerHTML = '<option value="">All statuses</option>' + statusOptions(subtaskFilters.status);
+
+  const filtered = subtasks.filter(s =>
+    (!subtaskFilters.task || s.task_id === subtaskFilters.task) &&
+    (!subtaskFilters.status || s.status === subtaskFilters.status)
+  );
+  const rows = filtered.map(s => `
+    <tr>
+      <td><strong>${s.title}</strong>${s.description ? `<div class="muted-text">${s.description}</div>` : ''}${s.notes ? `<div class="muted-text ${s.status==='blocked'?'blocked-text':''}">${s.status==='blocked'?'⚠ ':'📝 '}${s.notes}</div>` : ''}</td>
+      <td>${taskName(s.task_id)}</td>
+      <td>${phaseName(taskPhaseId(s.task_id))}</td>
+      <td>${memberName(s.assignee_id)}</td>
+      <td>${dateRange(s.start_date, s.due_date)}${completedTag(s)}${isOverdue(s) ? ' <span class="overdue-tag">Overdue</span>' : ''}</td>
+      <td>${badge(s.status)}</td>
+    </tr>`).join('');
+  document.getElementById('subtasksListTable').innerHTML = filtered.length
+    ? `<thead><tr><th>Title</th><th>Task</th><th>Phase</th><th>Assignee</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
+    : `<tbody><tr><td class="empty-state" colspan="6">No subtasks match these filters.</td></tr></tbody>`;
+}
+
+function phaseTasks(phaseId) { return tasks.filter(t => t.phase_id === phaseId); }
+function taskSubtasks(taskId) { return subtasks.filter(s => s.task_id === taskId); }
+
+function phaseProgress(phaseId) {
+  const ts = phaseTasks(phaseId);
+  if (!ts.length) return 0;
+  return Math.round(ts.reduce((sum, t) => sum + STATUS_PROGRESS[t.status], 0) / ts.length);
+}
+
+function renderOverview() {
+  const totalTasks = tasks.length;
+  const doneTasks = tasks.filter(t => t.status === 'done').length;
+  const blockedTasks = tasks.filter(t => t.status === 'blocked').length;
+  const overallProgress = totalTasks ? Math.round(tasks.reduce((s,t) => s + STATUS_PROGRESS[t.status], 0) / totalTasks) : 0;
+  const overdueCount = tasks.filter(isOverdue).length + subtasks.filter(isOverdue).length;
+
+  document.getElementById('overviewKpis').innerHTML = `
+    <div class="kpi-card"><div class="value">${phases.length}</div><div class="label">Phases</div></div>
+    <div class="kpi-card"><div class="value">${overallProgress}%</div><div class="label">Overall progress</div></div>
+    <div class="kpi-card"><div class="value" style="color:var(--color-blocked)">${blockedTasks}</div><div class="label">Blocked tasks</div></div>
+    <div class="kpi-card"><div class="value" style="color:var(--color-blocked)">${overdueCount}</div><div class="label">Overdue (tasks + subtasks)</div></div>
+    <div class="kpi-card"><div class="value">${teamMembers.length}</div><div class="label">Team members</div></div>
+  `;
+
+  drawBarChart('chartByPhase', phases.map(p => p.name), phases.map(p => phaseProgress(p.id)));
+
+  const byStatus = { not_started:0, in_progress:0, blocked:0, done:0 };
+  tasks.forEach(t => byStatus[t.status] = (byStatus[t.status]||0) + 1);
+  drawDoughnutChart('chartByStatus', Object.keys(byStatus).map(k => STATUS_LABELS[k]), Object.values(byStatus));
+}
+
+function renderPhasesTree() {
+  const html = phases.map(phase => {
+    const ts = phaseTasks(phase.id);
+    const pct = phaseProgress(phase.id);
+    const taskRows = ts.length ? ts.map(t => {
+      const subs = taskSubtasks(t.id);
+      const subRows = subs.length
+        ? subs.map(s => `
+            <div class="subtask">
+              <div class="subtask-row">
+                <span class="subtask-title">${s.title}</span>
+                <span class="subtask-assignee">${memberName(s.assignee_id)}</span>
+                <span class="subtask-due">${dateRange(s.start_date, s.due_date)}${completedTag(s)}</span>
+                ${badge(s.status)}
+              </div>
+              ${detailBlock(s)}
+            </div>`).join('')
+        : `<div class="no-subtasks">No subtasks</div>`;
+      return `
+        <div class="task" data-task-id="${t.id}">
+          <div class="task-header" onclick="toggleTask('${t.id}')">
+            <span class="caret">▶</span>
+            <span class="task-title">${t.title}</span>
+            ${prioBadge(t.priority)}
+            <span class="task-assignee">${memberName(t.assignee_id)}</span>
+            <span class="task-due">${dateRange(t.start_date, t.due_date)}${completedTag(t)}</span>
+            ${badge(t.status)}
+          </div>
+          ${detailBlock(t)}
+          <div class="subtasks">${subRows}</div>
+        </div>`;
+    }).join('') : `<div class="no-subtasks">No tasks yet in this phase</div>`;
+
+    return `
+      <div class="phase" data-phase-id="${phase.id}">
+        <div class="phase-header" onclick="togglePhase('${phase.id}')">
+          <span class="caret">▶</span>
+          <span class="phase-name">${phase.name}</span>
+          <span class="phase-progress">
+            <div class="progress-bar"><div style="width:${pct}%"></div></div>
+            <span style="font-size:12px;color:var(--color-muted);">${pct}%</span>
+          </span>
+          <span class="phase-meta">${fmtDate(phase.start_date)} → ${fmtDate(phase.end_date)}</span>
+          ${badge(phase.status)}
+        </div>
+        <div class="phase-tasks">${taskRows}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('phasesTree').innerHTML = phases.length ? html : `<div class="empty-state">No phases defined yet.</div>`;
+}
+
+window.togglePhase = function(id) {
+  document.querySelector(`.phase[data-phase-id="${id}"]`).classList.toggle('open');
+};
+window.toggleTask = function(id) {
+  document.querySelector(`.task[data-task-id="${id}"]`).classList.toggle('open');
+};
+
+function renderTeam() {
+  const html = teamMembers.map(m => {
+    const assignedTasks = tasks.filter(t => t.assignee_id === m.id);
+    const assignedSubtasks = subtasks.filter(s => s.assignee_id === m.id);
+    const doneTasks = assignedTasks.filter(t => t.status === 'done').length;
+    const doneSubtasks = assignedSubtasks.filter(s => s.status === 'done').length;
+    const overdueOwn = assignedTasks.filter(isOverdue).length + assignedSubtasks.filter(isOverdue).length;
+    return `
+      <div class="team-card">
+        <div class="avatar">${initials(m.name)}</div>
+        <div>
+          <div class="name">${m.name}</div>
+          <div class="role">${m.role || '—'}</div>
+          <div class="company">${m.company || ''}</div>
+          <div class="workload">${assignedTasks.length} task${assignedTasks.length===1?'':'s'} (${doneTasks} done) · ${assignedSubtasks.length} subtask${assignedSubtasks.length===1?'':'s'} (${doneSubtasks} done)${overdueOwn ? ` · <span style="color:var(--color-blocked);font-weight:600;">${overdueOwn} overdue</span>` : ''}</div>
+        </div>
+      </div>`;
+  }).join('');
+  document.getElementById('teamGrid').innerHTML = teamMembers.length ? html : `<div class="empty-state">No team members yet.</div>`;
+}
+
+function renderObjectives() {
+  const html = objectives.map(o => `
+    <div class="objective-card">
+      <div class="title-row">
+        <span class="title">${o.title}</span>
+        ${badge(o.status)}
+      </div>
+      <div class="desc">${o.description || ''}</div>
+      <div class="metric-row"><span>${o.metric_label || ''}</span><strong>${o.current_value ?? '—'} → ${o.target_value ?? '—'} ${o.unit || ''}</strong></div>
+      <div class="progress-bar"><div style="width:${STATUS_PROGRESS[o.status]}%"></div></div>
+    </div>
+  `).join('');
+  document.getElementById('objectivesGrid').innerHTML = objectives.length ? html : `<div class="empty-state">No objectives defined yet.</div>`;
+}
+
+/* ================================================================
+   MANAGE TAB — create / edit / delete phases, tasks, subtasks, team
+   ================================================================ */
+const STATUS_OPTIONS = ['not_started','in_progress','blocked','done'];
+const PRIORITY_OPTIONS = ['high','medium','low'];
+
+function opt(value, label, selected) {
+  return `<option value="${value}" ${selected === value ? 'selected' : ''}>${label}</option>`;
+}
+function statusOptions(current) {
+  return STATUS_OPTIONS.map(s => opt(s, STATUS_LABELS[s], current)).join('');
+}
+function priorityOptions(current) {
+  return PRIORITY_OPTIONS.map(p => opt(p, p.charAt(0).toUpperCase()+p.slice(1), current)).join('');
+}
+function memberOptions(current) {
+  return '<option value="">Unassigned</option>' + teamMembers.map(m => opt(m.id, m.name, current)).join('');
+}
+function phaseOptions(current) {
+  return phases.map(p => opt(p.id, p.name, current)).join('');
+}
+function taskOptions(current) {
+  return tasks.map(t => opt(t.id, t.title, current)).join('');
+}
+
+async function insertRow(table, payload) {
+  if (!supabase) return;
+  const { error } = await supabase.from(table).insert(payload);
+  if (error) { alert('Error: ' + error.message); return; }
+  await loadData();
+}
+async function updateRow(table, id, payload) {
+  if (!supabase) return;
+  const { error } = await supabase.from(table).update(payload).eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  await loadData();
+}
+async function deleteRowById(table, id, confirmMsg) {
+  if (!supabase) return;
+  if (!confirm(confirmMsg || 'Delete this item? This cannot be undone.')) return;
+  const { error } = await supabase.from(table).delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  await loadData();
+}
+function collectRowData(rowEl) {
+  const data = {};
+  rowEl.querySelectorAll('[data-field]').forEach(el => {
+    const field = el.dataset.field;
+    let val = el.value;
+    if (el.dataset.type === 'number') val = val === '' ? null : Number(val);
+    else if (el.dataset.type === 'date') val = val || null;
+    else if (el.dataset.type === 'uuid' && val === '') val = null;
+    data[field] = val;
+  });
+  return data;
+}
+window.saveRow = function(table, btn) {
+  const row = btn.closest('tr');
+  const data = collectRowData(row);
+  // Convenience: auto-stamp completed_date when marking something done
+  // (if left blank), and auto-stamp updated_at on every save.
+  if ('status' in data && 'completed_date' in data) {
+    if (data.status === 'done' && !data.completed_date) {
+      data.completed_date = new Date().toISOString().slice(0, 10);
+    } else if (data.status !== 'done') {
+      data.completed_date = data.completed_date || null;
+    }
+  }
+  if (['team_members','phases','tasks','subtasks'].includes(table)) {
+    data.updated_at = new Date().toISOString();
+  }
+  updateRow(table, row.dataset.id, data);
+};
+window.deleteRow = function(table, btn, msg) {
+  const row = btn.closest('tr');
+  deleteRowById(table, row.dataset.id, msg);
+};
+window.addRow = function(table, btn, requiredField) {
+  const row = btn.closest('tr');
+  const data = collectRowData(row);
+  if (requiredField && !data[requiredField]) { alert('Please fill in the required field first.'); return; }
+  insertRow(table, data);
+};
+
+function renderManage() {
+  renderManageTeam();
+  renderManagePhases();
+  renderManageTasks();
+  renderManageSubtasks();
+}
+
+function renderManageTeam() {
+  const rows = teamMembers.map(m => `
+    <tr class="mrow" data-id="${m.id}">
+      <td class="col-name"><input type="text" data-field="name" value="${m.name || ''}"></td>
+      <td class="col-name"><input type="text" data-field="role" value="${m.role || ''}"></td>
+      <td class="col-select"><input type="text" data-field="company" value="${m.company || ''}"></td>
+      <td class="col-actions">
+        <div class="m-actions">
+          <button class="m-btn save" onclick="saveRow('team_members', this)">Save</button>
+          <button class="m-btn delete" onclick="deleteRow('team_members', this, 'Delete this team member? Their tasks will become unassigned.')">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  const newRow = `
+    <tr class="mrow new-row">
+      <td><input type="text" data-field="name" placeholder="Full name"></td>
+      <td><input type="text" data-field="role" placeholder="Role"></td>
+      <td><input type="text" data-field="company" placeholder="MON Logistics / Nestlé"></td>
+      <td><button class="m-btn add" onclick="addRow('team_members', this, 'name')">+ Add</button></td>
+    </tr>`;
+
+  document.getElementById('manageTeamTable').innerHTML = `
+    <thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Actions</th></tr></thead>
+    <tbody>${rows}${newRow}</tbody>`;
+}
+
+function renderManagePhases() {
+  const rows = phases.map(p => `
+    <tr class="mrow" data-id="${p.id}">
+      <td class="col-name"><input type="text" data-field="name" value="${p.name || ''}"></td>
+      <td class="col-desc"><input type="text" data-field="description" value="${p.description || ''}"></td>
+      <td class="col-date"><input type="date" data-field="start_date" data-type="date" value="${p.start_date || ''}"></td>
+      <td class="col-date"><input type="date" data-field="end_date" data-type="date" value="${p.end_date || ''}"></td>
+      <td class="col-select"><select data-field="status">${statusOptions(p.status)}</select></td>
+      <td class="col-actions">
+        <div class="m-actions">
+          <button class="m-btn save" onclick="saveRow('phases', this)">Save</button>
+          <button class="m-btn delete" onclick="deleteRow('phases', this, 'Delete this phase? All its tasks and subtasks will be deleted too.')">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  const newRow = `
+    <tr class="mrow new-row">
+      <td><input type="text" data-field="name" placeholder="Phase name"></td>
+      <td><input type="text" data-field="description" placeholder="Description"></td>
+      <td><input type="date" data-field="start_date" data-type="date"></td>
+      <td><input type="date" data-field="end_date" data-type="date"></td>
+      <td><select data-field="status">${statusOptions('not_started')}</select></td>
+      <td><button class="m-btn add" onclick="addRow('phases', this, 'name')">+ Add</button></td>
+    </tr>`;
+
+  document.getElementById('managePhasesTable').innerHTML = `
+    <thead><tr><th>Name</th><th>Description</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${rows}${newRow}</tbody>`;
+}
+
+function renderManageTasks() {
+  if (!phases.length) {
+    document.getElementById('manageTasksTable').innerHTML = `<tbody><tr><td>Add a phase first before creating tasks.</td></tr></tbody>`;
+    return;
+  }
+  const rows = tasks.map(t => `
+    <tr class="mrow" data-id="${t.id}">
+      <td class="col-select"><select data-field="phase_id" data-type="uuid">${phaseOptions(t.phase_id)}</select></td>
+      <td class="col-name"><input type="text" data-field="title" value="${t.title || ''}"></td>
+      <td class="col-desc"><textarea data-field="description" placeholder="What needs to be done">${t.description || ''}</textarea></td>
+      <td class="col-desc"><textarea data-field="notes" placeholder="Context, blockers...">${t.notes || ''}</textarea></td>
+      <td class="col-select"><select data-field="assignee_id" data-type="uuid">${memberOptions(t.assignee_id)}</select></td>
+      <td class="col-select"><select data-field="priority">${priorityOptions(t.priority)}</select></td>
+      <td class="col-date"><input type="date" data-field="start_date" data-type="date" value="${t.start_date || ''}"></td>
+      <td class="col-date"><input type="date" data-field="due_date" data-type="date" value="${t.due_date || ''}"></td>
+      <td class="col-date"><input type="date" data-field="completed_date" data-type="date" value="${t.completed_date || ''}"></td>
+      <td class="col-select"><select data-field="status">${statusOptions(t.status)}</select></td>
+      <td class="col-actions">
+        <div class="m-actions">
+          <button class="m-btn save" onclick="saveRow('tasks', this)">Save</button>
+          <button class="m-btn delete" onclick="deleteRow('tasks', this, 'Delete this task? Its subtasks will be deleted too.')">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  const newRow = `
+    <tr class="mrow new-row">
+      <td><select data-field="phase_id" data-type="uuid">${phaseOptions()}</select></td>
+      <td><input type="text" data-field="title" placeholder="Task title"></td>
+      <td><textarea data-field="description" placeholder="What needs to be done"></textarea></td>
+      <td><textarea data-field="notes" placeholder="Context, blockers..."></textarea></td>
+      <td><select data-field="assignee_id" data-type="uuid">${memberOptions()}</select></td>
+      <td><select data-field="priority">${priorityOptions('medium')}</select></td>
+      <td><input type="date" data-field="start_date" data-type="date"></td>
+      <td><input type="date" data-field="due_date" data-type="date"></td>
+      <td><input type="date" data-field="completed_date" data-type="date"></td>
+      <td><select data-field="status">${statusOptions('not_started')}</select></td>
+      <td><button class="m-btn add" onclick="addRow('tasks', this, 'title')">+ Add</button></td>
+    </tr>`;
+
+  document.getElementById('manageTasksTable').innerHTML = `
+    <thead><tr><th>Phase</th><th>Title</th><th>Description</th><th>Notes</th><th>Assignee</th><th>Priority</th><th>Start</th><th>Due</th><th>Completed</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${rows}${newRow}</tbody>`;
+}
+
+function renderManageSubtasks() {
+  if (!tasks.length) {
+    document.getElementById('manageSubtasksTable').innerHTML = `<tbody><tr><td>Add a task first before creating subtasks.</td></tr></tbody>`;
+    return;
+  }
+  const rows = subtasks.map(s => `
+    <tr class="mrow" data-id="${s.id}">
+      <td class="col-select"><select data-field="task_id" data-type="uuid">${taskOptions(s.task_id)}</select></td>
+      <td class="col-name"><input type="text" data-field="title" value="${s.title || ''}"></td>
+      <td class="col-desc"><textarea data-field="description" placeholder="What needs to be done">${s.description || ''}</textarea></td>
+      <td class="col-desc"><textarea data-field="notes" placeholder="Context, blockers...">${s.notes || ''}</textarea></td>
+      <td class="col-select"><select data-field="assignee_id" data-type="uuid">${memberOptions(s.assignee_id)}</select></td>
+      <td class="col-date"><input type="date" data-field="start_date" data-type="date" value="${s.start_date || ''}"></td>
+      <td class="col-date"><input type="date" data-field="due_date" data-type="date" value="${s.due_date || ''}"></td>
+      <td class="col-date"><input type="date" data-field="completed_date" data-type="date" value="${s.completed_date || ''}"></td>
+      <td class="col-select"><select data-field="status">${statusOptions(s.status)}</select></td>
+      <td class="col-actions">
+        <div class="m-actions">
+          <button class="m-btn save" onclick="saveRow('subtasks', this)">Save</button>
+          <button class="m-btn delete" onclick="deleteRow('subtasks', this)">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  const newRow = `
+    <tr class="mrow new-row">
+      <td><select data-field="task_id" data-type="uuid">${taskOptions()}</select></td>
+      <td><input type="text" data-field="title" placeholder="Subtask title"></td>
+      <td><textarea data-field="description" placeholder="What needs to be done"></textarea></td>
+      <td><textarea data-field="notes" placeholder="Context, blockers..."></textarea></td>
+      <td><select data-field="assignee_id" data-type="uuid">${memberOptions()}</select></td>
+      <td><input type="date" data-field="start_date" data-type="date"></td>
+      <td><input type="date" data-field="due_date" data-type="date"></td>
+      <td><input type="date" data-field="completed_date" data-type="date"></td>
+      <td><select data-field="status">${statusOptions('not_started')}</select></td>
+      <td><button class="m-btn add" onclick="addRow('subtasks', this, 'title')">+ Add</button></td>
+    </tr>`;
+
+  document.getElementById('manageSubtasksTable').innerHTML = `
+    <thead><tr><th>Task</th><th>Title</th><th>Description</th><th>Notes</th><th>Assignee</th><th>Start</th><th>Due</th><th>Completed</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${rows}${newRow}</tbody>`;
+}
+
+function chartColors() {
+  const style = getComputedStyle(document.documentElement);
+  return [
+    style.getPropertyValue('--color-primary').trim(),
+    style.getPropertyValue('--color-accent').trim(),
+    style.getPropertyValue('--color-warn').trim(),
+    style.getPropertyValue('--color-ok').trim(),
+    style.getPropertyValue('--color-muted').trim(),
+  ];
+}
+
+function drawBarChart(canvasId, labels, values) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  if (charts[canvasId]) charts[canvasId].destroy();
+  charts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: chartColors()[0] }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } } }
+  });
+}
+
+function drawDoughnutChart(canvasId, labels, values) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  if (charts[canvasId]) charts[canvasId].destroy();
+  charts[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: chartColors() }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+  });
+}
+
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+});
+
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+
+document.getElementById('taskFilterPhase').addEventListener('change', e => { taskFilters.phase = e.target.value; renderTasksListTab(); });
+document.getElementById('taskFilterStatus').addEventListener('change', e => { taskFilters.status = e.target.value; renderTasksListTab(); });
+document.getElementById('subtaskFilterTask').addEventListener('change', e => { subtaskFilters.task = e.target.value; renderSubtasksListTab(); });
+document.getElementById('subtaskFilterStatus').addEventListener('change', e => { subtaskFilters.status = e.target.value; renderSubtasksListTab(); });
+
+loadData();
+</script>
+</body>
+</html>
