@@ -449,7 +449,7 @@ async function fetchConfig() {
 const STATUS_LABELS = { not_started: "Not started", in_progress: "In progress", blocked: "Blocked", done: "Done" };
 const STATUS_PROGRESS = { not_started: 0, in_progress: 50, blocked: 50, done: 100 };
 
-let supabase = null;
+let supabaseClient = null;
 let teamMembers = [], phases = [], tasks = [], subtasks = [], objectives = [];
 let charts = {};
 let taskFilters = { phase: '', status: '' };
@@ -497,15 +497,15 @@ async function loadData() {
     document.getElementById('updatedAt').textContent = "Not connected — connect Supabase to see real data";
     return;
   }
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   document.getElementById('updatedAt').textContent = "Loading…";
 
   const [tm, ph, tk, sb, ob] = await Promise.all([
-    supabase.from('team_members').select('*').order('name'),
-    supabase.from('phases').select('*').order('sort_order'),
-    supabase.from('tasks').select('*').order('sort_order'),
-    supabase.from('subtasks').select('*').order('sort_order'),
-    supabase.from('objectives').select('*').order('sort_order'),
+    supabaseClient.from('team_members').select('*').order('name'),
+    supabaseClient.from('phases').select('*').order('sort_order'),
+    supabaseClient.from('tasks').select('*').order('sort_order'),
+    supabaseClient.from('subtasks').select('*').order('sort_order'),
+    supabaseClient.from('objectives').select('*').order('sort_order'),
   ]);
 
   const firstError = [tm, ph, tk, sb, ob].find(r => r.error);
@@ -740,21 +740,21 @@ function taskOptions(current) {
 }
 
 async function insertRow(table, payload) {
-  if (!supabase) return;
-  const { error } = await supabase.from(table).insert(payload);
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient.from(table).insert(payload);
   if (error) { alert('Error: ' + error.message); return; }
   await loadData();
 }
 async function updateRow(table, id, payload) {
-  if (!supabase) return;
-  const { error } = await supabase.from(table).update(payload).eq('id', id);
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient.from(table).update(payload).eq('id', id);
   if (error) { alert('Error: ' + error.message); return; }
   await loadData();
 }
 async function deleteRowById(table, id, confirmMsg) {
-  if (!supabase) return;
+  if (!supabaseClient) return;
   if (!confirm(confirmMsg || 'Delete this item? This cannot be undone.')) return;
-  const { error } = await supabase.from(table).delete().eq('id', id);
+  const { error } = await supabaseClient.from(table).delete().eq('id', id);
   if (error) { alert('Error: ' + error.message); return; }
   await loadData();
 }
