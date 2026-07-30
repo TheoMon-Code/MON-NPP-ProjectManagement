@@ -873,6 +873,7 @@ const STATUS_PROGRESS = { not_started: 0, in_progress: 50, blocked: 50, done: 10
 
 let supabaseClient = null;
 let teamMembers = [], phases = [], tasks = [], subtasks = [], objectives = [];
+let projectMembers = []; // access-role rows (owner/editor/member/viewer) for the current project
 let charts = {};
 let taskFilters = { phase: '', status: '', assignee: '' };
 let subtaskFilters = { task: '', status: '', assignee: '' };
@@ -1030,15 +1031,16 @@ async function loadData() {
   if (!currentProjectId) return;
   document.getElementById('updatedAt').textContent = "Loading…";
 
-  const [tm, ph, tk, sb, ob] = await Promise.all([
+  const [tm, ph, tk, sb, ob, pm] = await Promise.all([
     supabaseClient.from('team_members').select('*').eq('project_id', currentProjectId).order('name'),
     supabaseClient.from('phases').select('*').eq('project_id', currentProjectId).order('sort_order'),
     supabaseClient.from('tasks').select('*').eq('project_id', currentProjectId).order('sort_order'),
     supabaseClient.from('subtasks').select('*').eq('project_id', currentProjectId).order('sort_order'),
     supabaseClient.from('objectives').select('*').eq('project_id', currentProjectId).order('sort_order'),
+    supabaseClient.from('project_members').select('*').eq('project_id', currentProjectId).order('invited_at'),
   ]);
 
-  const firstError = [tm, ph, tk, sb, ob].find(r => r.error);
+  const firstError = [tm, ph, tk, sb, ob, pm].find(r => r.error);
   if (firstError) {
     document.getElementById('overviewKpis').innerHTML =
       `<div class="error-state">Supabase connection error: ${firstError.error.message}</div>`;
@@ -1051,6 +1053,7 @@ async function loadData() {
   tasks = tk.data || [];
   subtasks = sb.data || [];
   objectives = ob.data || [];
+  projectMembers = pm.data || [];
 
   document.getElementById('updatedAt').textContent = "Last updated: " + new Date().toLocaleString('en-CA');
   renderAll();
@@ -1582,7 +1585,7 @@ function renderTeam() {
         <div>
           <div class="name">${m.name}</div>
           <div class="role">${m.role || '—'}</div>
-          <div class="company">${m.company || ''}</div>
+          <div class="company">${m.company || ''}${m.email ? ` · ${m.email}` : ''}</div>
           <div class="workload">${assignedTasks.length} task${assignedTasks.length===1?'':'s'} (${doneTasks} done) · ${assignedSubtasks.length} subtask${assignedSubtasks.length===1?'':'s'} (${doneSubtasks} done)${overdueOwn ? ` · <span style="color:var(--color-blocked);font-weight:600;">${overdueOwn} overdue</span>` : ''}</div>
         </div>
       </div>`;
@@ -1763,15 +1766,9 @@ function renderManage() {
   renderManageAccess();
 }
 
-async function renderManageAccess() {
+function renderManageAccess() {
   const container = document.getElementById('accessTable');
-  const { data, error } = await supabaseClient
-    .from('project_members')
-    .select('*')
-    .eq('project_id', currentProjectId)
-    .order('invited_at');
-  if (error) { container.innerHTML = `<tr><td class="empty-state">Error: ${error.message}</td></tr>`; return; }
-  const rows = (data || []).map(m => `
+  const rows = projectMembers.map(m => `
     <tr>
       <td>${m.email}</td>
       <td style="text-transform:capitalize;">${m.role}</td>
@@ -1784,12 +1781,27 @@ async function renderManageAccess() {
   if (inviteRow) inviteRow.style.display = isOwner() ? 'flex' : 'none';
 }
 
+// Re-fetches project_members (access roles) and re-renders both the Access
+// tab and the Team tab (which shows each person's access role next to their
+// workflow info).
+async function reloadProjectMembers() {
+  const { data, error } = await supabaseClient
+    .from('project_members')
+    .select('*')
+    .eq('project_id', currentProjectId)
+    .order('invited_at');
+  if (error) { showToast('Error: ' + error.message); return; }
+  projectMembers = data || [];
+  renderManageTeam();
+  renderManageAccess();
+}
+
 window.removeProjectMember = async function(memberId) {
   if (!confirm('Remove this person from the project? They will lose access immediately.')) return;
   const { error } = await supabaseClient.from('project_members').delete().eq('id', memberId);
   if (error) { showToast('Error: ' + error.message); return; }
   showToast('Removed.', 'success');
-  renderManageAccess();
+  await reloadProjectMembers();
 };
 
 async function inviteProjectMember() {
@@ -1801,7 +1813,7 @@ async function inviteProjectMember() {
   if (error) { showToast('Error: ' + error.message); return; }
   showToast('Invited. Tell them to sign up with this email and the shared default password.', 'success');
   emailInput.value = '';
-  renderManageAccess();
+  await reloadProjectMembers();
 }
 
 window.toggleMgroup = function(el) {
@@ -1817,6 +1829,21 @@ function canEditTeamMemberRow(m) {
   return !!currentUser && m.user_id === currentUser.id;
 }
 
+// Looks up this person's permission role in the app (owner/editor/member/
+// viewer) by matching their team-member email against project_members --
+// this is separate from the free-text job title (m.role, e.g. "Project Lead").
+function accessRoleForEmail(email) {
+  if (!email) return null;
+  const match = projectMembers.find(pm => pm.email && pm.email.toLowerCase() === email.toLowerCase());
+  return match ? match.role : null;
+}
+function accessRoleBadge(email) {
+  const role = accessRoleForEmail(email);
+  return role
+    ? `<span style="text-transform:capitalize;font-weight:600;">${role}</span>`
+    : `<span class="muted-text">No access</span>`;
+}
+
 function renderManageTeam() {
   const rows = teamMembers.map(m => {
     const editable = canEditTeamMemberRow(m);
@@ -1825,6 +1852,8 @@ function renderManageTeam() {
       <td class="col-name"><input type="text" data-field="name" value="${m.name || ''}" ${editable ? '' : 'disabled'}></td>
       <td class="col-name"><input type="text" data-field="role" value="${m.role || ''}" ${editable ? '' : 'disabled'}></td>
       <td class="col-select"><input type="text" data-field="company" value="${m.company || ''}" ${editable ? '' : 'disabled'}></td>
+      <td class="col-name"><input type="email" data-field="email" value="${m.email || ''}" placeholder="name@company.com" ${editable ? '' : 'disabled'}></td>
+      <td class="col-select">${accessRoleBadge(m.email)}</td>
       <td class="col-actions">
         <div class="m-actions">
           ${editable ? `<button class="m-btn save" onclick="saveRow('team_members', this)">Save</button>` : ''}
@@ -1839,11 +1868,13 @@ function renderManageTeam() {
       <td><input type="text" data-field="name" placeholder="Full name"></td>
       <td><input type="text" data-field="role" placeholder="Role"></td>
       <td><input type="text" data-field="company" placeholder="Company"></td>
+      <td><input type="email" data-field="email" placeholder="name@company.com"></td>
+      <td></td>
       <td><button class="m-btn add" onclick="addRow('team_members', this, 'name')">+ Add</button></td>
     </tr>` : '';
 
   document.getElementById('manageTeamTable').innerHTML = `
-    <thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Email</th><th>App access</th><th>Actions</th></tr></thead>
     <tbody>${rows}${newRow}</tbody>`;
 }
 
