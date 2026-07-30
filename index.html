@@ -498,6 +498,8 @@
   .project-card:hover { border-color: var(--color-accent); }
   .project-card .pname { font-weight: 700; font-size: 14px; }
   .project-card .prole { font-size: 10.5px; color: var(--color-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.03em; }
+  .project-card .pcard-right { display: flex; align-items: center; gap: 10px; }
+  .project-card .pdelete { font-size: 11px; padding: 5px 9px; }
   .new-project-row { display: flex; gap: 8px; }
   .new-project-row input { flex: 1; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; }
 
@@ -1129,10 +1131,23 @@ function renderProjectList() {
     ? myProjects.map(p => `
         <div class="project-card" onclick="enterProject('${p.id}')">
           <span class="pname">${p.name}</span>
-          <span class="prole">${p.role}</span>
+          <div class="pcard-right">
+            <span class="prole">${p.role}</span>
+            ${p.role === 'owner' ? `<button class="m-btn delete pdelete" onclick="event.stopPropagation();deleteProjectFromList('${p.id}','${p.name.replace(/'/g, "\\'")}')">Delete</button>` : ''}
+          </div>
         </div>`).join('')
     : `<div class="empty-state">No projects yet — create your first one below, or ask to be invited to an existing one.</div>`;
 }
+
+window.deleteProjectFromList = async function(projectId, projectName) {
+  const typed = prompt(`This permanently deletes "${projectName}" and everything in it (phases, tasks, subtasks, team, objectives, members) for everyone. This cannot be undone.\n\nType the project name exactly to confirm:`);
+  if (typed === null) return;
+  if (typed !== projectName) { showToast('Name did not match — nothing was deleted.'); return; }
+  const { error } = await supabaseClient.rpc('delete_project', { pid: projectId });
+  if (error) { showToast('Error: ' + error.message); return; }
+  showToast('Project deleted.', 'success');
+  await loadMyProjects();
+};
 
 window.enterProject = function(projectId) {
   currentProjectId = projectId;
