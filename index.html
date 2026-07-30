@@ -87,6 +87,8 @@
   .side-nav button:hover { background: #F5F6F9; color: var(--color-text); }
   .side-nav button.active { background: color-mix(in srgb, var(--color-primary) 9%, white); color: var(--color-primary); }
   .side-nav button.active svg { opacity: 1; }
+  .nav-dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--color-blocked); margin-left: auto; flex-shrink: 0; }
+  .nav-dot.show { display: inline-block; }
 
   .sidebar-footer { border-top: 1px solid var(--color-border); padding-top: 12px; margin-top: 10px; }
   .sidebar-footer .refresh {
@@ -329,6 +331,11 @@
     display: inline-block; background: color-mix(in srgb, var(--color-blocked) 14%, white); color: var(--color-blocked);
     font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 4px; vertical-align: middle;
   }
+  .risk-tag {
+    display: inline-block; background: color-mix(in srgb, var(--color-blocked) 14%, white); color: var(--color-blocked);
+    font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 8px;
+  }
+  .dep-tag { color: var(--color-warn); font-weight: 600; }
 
   /* Manage tab */
   .manage-note {
@@ -494,12 +501,12 @@
   /* Phase timeline (Gantt-style strip) on Overview */
   .tl-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
   .tl-row:last-child { margin-bottom: 4px; }
-  .tl-label { flex: 0 0 190px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tl-label { flex: 0 0 220px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
   .tl-track { flex: 1; position: relative; height: 14px; background: #F2F3F7; border-radius: 999px; }
   .tl-bar { position: absolute; top: 0; height: 100%; border-radius: 999px; overflow: hidden; min-width: 6px; }
   .tl-bar-fill { height: 100%; }
   .tl-today { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--color-accent); border-radius: 1px; }
-  .tl-dates { flex: 0 0 150px; font-size: 11px; color: var(--color-muted); text-align: right; }
+  .tl-dates { flex: 0 0 140px; font-size: 11px; color: var(--color-muted); text-align: right; }
   .tl-caption { font-size: 11px; color: var(--color-muted); margin-top: 4px; }
 
   /* Recent activity feed on Overview */
@@ -570,10 +577,12 @@
       <button data-tab="tasks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
         Tasks
+        <span class="nav-dot" id="navDotTasks" title="Overdue tasks"></span>
       </button>
       <button data-tab="subtasks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
         Subtasks
+        <span class="nav-dot" id="navDotSubtasks" title="Overdue subtasks"></span>
       </button>
       <button data-tab="team">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -651,6 +660,9 @@
       <label>Status
         <select id="taskFilterStatus"></select>
       </label>
+      <label>Assignee
+        <select id="taskFilterAssignee"></select>
+      </label>
       <button class="export-btn" id="exportTasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export CSV</button>
     </div>
     <div class="section-card">
@@ -666,6 +678,9 @@
       </label>
       <label>Status
         <select id="subtaskFilterStatus"></select>
+      </label>
+      <label>Assignee
+        <select id="subtaskFilterAssignee"></select>
       </label>
       <button class="export-btn" id="exportSubtasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export CSV</button>
     </div>
@@ -759,8 +774,8 @@ const STATUS_PROGRESS = { not_started: 0, in_progress: 50, blocked: 50, done: 10
 let supabaseClient = null;
 let teamMembers = [], phases = [], tasks = [], subtasks = [], objectives = [];
 let charts = {};
-let taskFilters = { phase: '', status: '' };
-let subtaskFilters = { task: '', status: '' };
+let taskFilters = { phase: '', status: '', assignee: '' };
+let subtaskFilters = { task: '', status: '', assignee: '' };
 
 function isConfigured() {
   return !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
@@ -849,12 +864,27 @@ function isOverdue(item) {
   if (item.status === 'done' || !item.due_date) return false;
   return new Date(item.due_date) < new Date(new Date().toDateString());
 }
+function dependencyTag(item) {
+  if (!item.depends_on_task_id) return '';
+  const dep = tasks.find(x => x.id === item.depends_on_task_id);
+  if (!dep || dep.status === 'done') return '';
+  return `<span class="dep-tag">⛔ Waiting on: ${dep.title}</span>`;
+}
 function detailBlock(item) {
-  if (!item.description && !item.notes) return '';
+  const depTag = dependencyTag(item);
+  if (!item.description && !item.notes && !depTag) return '';
   return `<div class="item-detail">
     ${item.description ? `<div>${item.description}</div>` : ''}
     ${item.notes ? `<div class="item-notes ${item.status === 'blocked' ? 'blocked' : ''}">${item.status === 'blocked' ? '⚠ ' : '📝 '}${item.notes}</div>` : ''}
+    ${depTag ? `<div>${depTag}</div>` : ''}
   </div>`;
+}
+function phaseAtRisk(phaseId) {
+  const ts = phaseTasks(phaseId);
+  const taskIds = ts.map(t => t.id);
+  const badTask = ts.some(t => t.status === 'blocked' || isOverdue(t));
+  const badSubtask = subtasks.some(s => taskIds.includes(s.task_id) && (s.status === 'blocked' || isOverdue(s)));
+  return badTask || badSubtask;
 }
 
 async function loadData() {
@@ -906,6 +936,12 @@ function renderAll() {
   renderTeam();
   renderObjectives();
   renderManage();
+  renderNavDots();
+}
+
+function renderNavDots() {
+  document.getElementById('navDotTasks').classList.toggle('show', tasks.some(isOverdue));
+  document.getElementById('navDotSubtasks').classList.toggle('show', subtasks.some(isOverdue));
 }
 
 function phaseName(id) { const p = phases.find(x => x.id === id); return p ? p.name : '—'; }
@@ -915,16 +951,19 @@ function taskPhaseId(taskId) { const t = tasks.find(x => x.id === taskId); retur
 function renderTasksListTab() {
   const phaseSel = document.getElementById('taskFilterPhase');
   const statusSel = document.getElementById('taskFilterStatus');
+  const assigneeSel = document.getElementById('taskFilterAssignee');
   phaseSel.innerHTML = '<option value="">All phases</option>' + phases.map(p => opt(p.id, p.name, taskFilters.phase)).join('');
   statusSel.innerHTML = '<option value="">All statuses</option>' + statusOptions(taskFilters.status);
+  assigneeSel.innerHTML = '<option value="">Everyone</option>' + teamMembers.map(m => opt(m.id, m.name, taskFilters.assignee)).join('');
 
   const filtered = tasks.filter(t =>
     (!taskFilters.phase || t.phase_id === taskFilters.phase) &&
-    (!taskFilters.status || t.status === taskFilters.status)
+    (!taskFilters.status || t.status === taskFilters.status) &&
+    (!taskFilters.assignee || t.assignee_id === taskFilters.assignee)
   );
   const rows = filtered.map(t => `
     <tr data-row-id="${t.id}">
-      <td><strong>${t.title}</strong>${t.description ? `<div class="muted-text">${t.description}</div>` : ''}${t.notes ? `<div class="muted-text ${t.status==='blocked'?'blocked-text':''}">${t.status==='blocked'?'⚠ ':'📝 '}${t.notes}</div>` : ''}</td>
+      <td><strong>${t.title}</strong>${t.description ? `<div class="muted-text">${t.description}</div>` : ''}${t.notes ? `<div class="muted-text ${t.status==='blocked'?'blocked-text':''}">${t.status==='blocked'?'⚠ ':'📝 '}${t.notes}</div>` : ''}${dependencyTag(t) ? `<div class="muted-text">${dependencyTag(t)}</div>` : ''}</td>
       <td>${phaseDot(t.phase_id)}${phaseName(t.phase_id)}</td>
       <td>${memberName(t.assignee_id)}</td>
       <td>${prioBadge(t.priority)}</td>
@@ -942,12 +981,15 @@ function renderTasksListTab() {
 function renderSubtasksListTab() {
   const taskSel = document.getElementById('subtaskFilterTask');
   const statusSel = document.getElementById('subtaskFilterStatus');
+  const assigneeSel = document.getElementById('subtaskFilterAssignee');
   taskSel.innerHTML = '<option value="">All tasks</option>' + tasks.map(t => opt(t.id, t.title, subtaskFilters.task)).join('');
   statusSel.innerHTML = '<option value="">All statuses</option>' + statusOptions(subtaskFilters.status);
+  assigneeSel.innerHTML = '<option value="">Everyone</option>' + teamMembers.map(m => opt(m.id, m.name, subtaskFilters.assignee)).join('');
 
   const filtered = subtasks.filter(s =>
     (!subtaskFilters.task || s.task_id === subtaskFilters.task) &&
-    (!subtaskFilters.status || s.status === subtaskFilters.status)
+    (!subtaskFilters.status || s.status === subtaskFilters.status) &&
+    (!subtaskFilters.assignee || s.assignee_id === subtaskFilters.assignee)
   );
   const rows = filtered.map(s => `
     <tr data-row-id="${s.id}">
@@ -990,13 +1032,15 @@ function downloadFile(content, filename, mime) {
 function filteredTasksForExport() {
   return tasks.filter(t =>
     (!taskFilters.phase || t.phase_id === taskFilters.phase) &&
-    (!taskFilters.status || t.status === taskFilters.status)
+    (!taskFilters.status || t.status === taskFilters.status) &&
+    (!taskFilters.assignee || t.assignee_id === taskFilters.assignee)
   );
 }
 function filteredSubtasksForExport() {
   return subtasks.filter(s =>
     (!subtaskFilters.task || s.task_id === subtaskFilters.task) &&
-    (!subtaskFilters.status || s.status === subtaskFilters.status)
+    (!subtaskFilters.status || s.status === subtaskFilters.status) &&
+    (!subtaskFilters.assignee || s.assignee_id === subtaskFilters.assignee)
   );
 }
 
@@ -1011,6 +1055,7 @@ function exportTasksCSV() {
     { label: 'Start date', value: t => t.start_date || '' },
     { label: 'Due date', value: t => t.due_date || '' },
     { label: 'Completed date', value: t => t.completed_date || '' },
+    { label: 'Depends on', value: t => t.depends_on_task_id ? taskName(t.depends_on_task_id) : '' },
     { label: 'Description', value: t => t.description || '' },
     { label: 'Notes', value: t => t.notes || '' },
   ];
@@ -1054,6 +1099,7 @@ function exportAllExcel() {
     Title: t.title, Phase: phaseName(t.phase_id), Assignee: memberName(t.assignee_id),
     Priority: t.priority, Status: STATUS_LABELS[t.status],
     'Start date': t.start_date || '', 'Due date': t.due_date || '', 'Completed date': t.completed_date || '',
+    'Depends on': t.depends_on_task_id ? taskName(t.depends_on_task_id) : '',
     Description: t.description || '', Notes: t.notes || '',
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(taskRows), 'Tasks');
@@ -1201,7 +1247,7 @@ function renderPhaseTimeline() {
     const pct = phaseProgress(p.id);
     return `
       <div class="tl-row">
-        <div class="tl-label">${phaseDot(p.id)}${p.name}</div>
+        <div class="tl-label" title="${p.name}">${phaseDot(p.id)}${p.name}</div>
         <div class="tl-track">
           <div class="tl-bar" style="left:${left}%;width:${width}%;background:color-mix(in srgb, ${color} 24%, white);">
             <div class="tl-bar-fill" style="width:${pct}%;background:${color};"></div>
@@ -1282,7 +1328,7 @@ function renderPhasesTree() {
             <span style="font-size:12px;color:var(--color-muted);">${pct}%</span>
           </span>
           <span class="phase-meta">${fmtDate(phase.start_date)} → ${fmtDate(phase.end_date)}</span>
-          ${badge(phase.status)}
+          ${badge(phase.status)}${phaseAtRisk(phase.id) ? '<span class="risk-tag">⚠ At risk</span>' : ''}
         </div>
         <div class="phase-tasks">${taskRows}</div>
       </div>`;
@@ -1367,6 +1413,9 @@ function phaseOptions(current) {
 }
 function taskOptions(current) {
   return tasks.map(t => opt(t.id, t.title, current)).join('');
+}
+function taskOptionsExcluding(current, excludeId) {
+  return '<option value="">None</option>' + tasks.filter(t => t.id !== excludeId).map(t => opt(t.id, t.title, current)).join('');
 }
 
 async function insertRow(table, payload) {
@@ -1568,6 +1617,7 @@ function manageTaskCardHtml(t) {
         <label>Notes<textarea data-field="notes" placeholder="Context, blockers...">${t.notes || ''}</textarea></label>
         <label>Start<input type="date" data-field="start_date" data-type="date" value="${t.start_date || ''}"></label>
         <label>Completed<input type="date" data-field="completed_date" data-type="date" value="${t.completed_date || ''}"></label>
+        <label>Depends on<select data-field="depends_on_task_id" data-type="uuid">${taskOptionsExcluding(t.depends_on_task_id, t.id)}</select></label>
       </div>
     </div>`;
 }
@@ -1699,8 +1749,10 @@ document.getElementById('manageSubnav').addEventListener('click', (e) => {
 
 document.getElementById('taskFilterPhase').addEventListener('change', e => { taskFilters.phase = e.target.value; renderTasksListTab(); });
 document.getElementById('taskFilterStatus').addEventListener('change', e => { taskFilters.status = e.target.value; renderTasksListTab(); });
+document.getElementById('taskFilterAssignee').addEventListener('change', e => { taskFilters.assignee = e.target.value; renderTasksListTab(); });
 document.getElementById('subtaskFilterTask').addEventListener('change', e => { subtaskFilters.task = e.target.value; renderSubtasksListTab(); });
 document.getElementById('subtaskFilterStatus').addEventListener('change', e => { subtaskFilters.status = e.target.value; renderSubtasksListTab(); });
+document.getElementById('subtaskFilterAssignee').addEventListener('change', e => { subtaskFilters.assignee = e.target.value; renderSubtasksListTab(); });
 
 document.getElementById('exportTasksCsv').addEventListener('click', exportTasksCSV);
 document.getElementById('exportSubtasksCsv').addEventListener('click', exportSubtasksCSV);
