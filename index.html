@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MON Logistics — Nestlé Flow Improvement Project</title>
+<title>MON Logistics — Project Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1300,7 +1300,9 @@ function exportAllExcel() {
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(objectiveRows), 'Objectives');
 
-  XLSX.writeFile(wb, 'MON-Logistics-Nestle-Project-Export.xlsx');
+  const proj = myProjects.find(p => p.id === currentProjectId);
+  const safeName = (proj ? proj.name : 'project').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+  XLSX.writeFile(wb, `${safeName}-export.xlsx`);
   showToast('Excel file downloaded.', 'success');
 }
 
@@ -1781,7 +1783,7 @@ function renderManageTeam() {
     <tr class="mrow new-row">
       <td><input type="text" data-field="name" placeholder="Full name"></td>
       <td><input type="text" data-field="role" placeholder="Role"></td>
-      <td><input type="text" data-field="company" placeholder="MON Logistics / Nestlé"></td>
+      <td><input type="text" data-field="company" placeholder="Company"></td>
       <td><button class="m-btn add" onclick="addRow('team_members', this, 'name')">+ Add</button></td>
     </tr>`;
 
