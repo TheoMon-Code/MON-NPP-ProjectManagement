@@ -1841,9 +1841,9 @@ const ACCESS_ROLES = ['', 'viewer', 'member', 'editor', 'owner'];
 function accessRoleLabel(r) { return r === '' ? 'No access' : r.charAt(0).toUpperCase() + r.slice(1); }
 function accessRoleSelectHtml(m) {
   const role = accessRoleForEmail(m.email) || '';
-  const canManage = isOwner() && !!m.email;
+  const canManage = isOwner();
   const opts = ACCESS_ROLES.map(r => `<option value="${r}" ${r === role ? 'selected' : ''}>${accessRoleLabel(r)}</option>`).join('');
-  const title = !m.email ? 'title="Add an email for this person first"' : '';
+  const title = !m.email ? 'title="No email on file yet — add one in the Email column first"' : '';
   const emailAttr = (m.email || '').replace(/'/g, "\\'");
   return `<select ${canManage ? '' : 'disabled'} ${title} onchange="changeTeamMemberAccess('${emailAttr}', this.value)">${opts}</select>`;
 }
@@ -1852,7 +1852,7 @@ function isOnlyOwner(email) {
   return owners.length === 1 && owners[0].email && owners[0].email.toLowerCase() === email.toLowerCase();
 }
 window.changeTeamMemberAccess = async function(email, newRole) {
-  if (!email) { showToast('Add an email for this person first.'); renderManageTeam(); return; }
+  if (!email) { showToast('Add an email for this person first (Email column), then set their access.'); renderManageTeam(); return; }
   const existing = projectMembers.find(pm => pm.email && pm.email.toLowerCase() === email.toLowerCase());
 
   if (existing && existing.role === 'owner' && newRole !== 'owner' && isOnlyOwner(email)) {
