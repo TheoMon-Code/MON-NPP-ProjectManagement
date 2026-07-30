@@ -1083,11 +1083,8 @@ function showProjectScreen() {
 }
 
 async function checkCanCreateProjects() {
-  const { data } = await supabaseClient
-    .from('project_creators')
-    .select('email')
-    .eq('email', currentUser.email)
-    .maybeSingle();
+  const { data, error } = await supabaseClient.rpc('can_create_projects');
+  if (error) { showToast('Could not check project-creation permission: ' + error.message); canCreateProjects = false; return; }
   canCreateProjects = !!data;
 }
 function showDashboardScreen() {
