@@ -468,10 +468,47 @@
   #toast.success { background: var(--color-ok); }
 
   .config-warning {
-    background: color-mix(in srgb, var(--color-warn) 10%, white); border: 1px solid color-mix(in srgb, var(--color-warn) 30%, white); color: #8A4B0C;
-    padding: 15px 18px; border-radius: var(--radius-sm); margin-bottom: 20px; font-size: 13.5px; line-height: 1.55;
+    background: color-mix(in srgb, var(--color-warn) 10%, white); border-bottom: 1px solid color-mix(in srgb, var(--color-warn) 30%, white); color: #8A4B0C;
+    padding: 15px 18px; font-size: 13.5px; line-height: 1.55;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
   }
   .config-warning code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+
+  /* Auth screen (sign in / sign up) */
+  .auth-screen, .project-screen { min-height: 100vh; display: none; align-items: center; justify-content: center; background: var(--color-bg); padding: 20px; }
+  .auth-card { background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 36px 32px; width: 100%; max-width: 360px; text-align: center; }
+  .auth-card h2 { font-size: 16px; margin: 10px 0 4px; }
+  .auth-sub { font-size: 12.5px; color: var(--color-muted); margin: 0 0 20px; }
+  .auth-card input { width: 100%; padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; }
+  .auth-card input:focus { outline: none; border-color: var(--color-accent); }
+  .auth-error { background: color-mix(in srgb, var(--color-blocked) 12%, white); color: var(--color-blocked); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm); margin-bottom: 10px; text-align: left; }
+  .auth-error.success { background: color-mix(in srgb, var(--color-ok) 12%, white); color: var(--color-ok); }
+  .auth-toggle { display: block; margin: 14px auto 0; background: none; border: none; color: var(--color-info); font-size: 12.5px; cursor: pointer; font-family: inherit; width: 100%; }
+  .auth-submit { width: 100%; }
+
+  /* Project switcher screen */
+  .project-screen-inner { width: 100%; max-width: 520px; }
+  .project-screen-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px; }
+  .project-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+  .project-card {
+    background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    padding: 16px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    transition: border-color var(--ease); box-shadow: var(--shadow-sm);
+  }
+  .project-card:hover { border-color: var(--color-accent); }
+  .project-card .pname { font-weight: 700; font-size: 14px; }
+  .project-card .prole { font-size: 10.5px; color: var(--color-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.03em; }
+  .new-project-row { display: flex; gap: 8px; }
+  .new-project-row input { flex: 1; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; }
+
+  /* Access sub-tab (project members) */
+  #accessTable, #manageAccessTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+  #accessTable th, #accessTable td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); text-align: left; }
+  .invite-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--color-border); }
+  .invite-row input[type="email"] { flex: 1; min-width: 200px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; }
+  .invite-row select { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; background: white; }
+  .pending-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-warn); background: color-mix(in srgb, var(--color-warn) 14%, white); padding: 2px 8px; border-radius: 999px; }
+  .joined-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-ok); background: color-mix(in srgb, var(--color-ok) 14%, white); padding: 2px 8px; border-radius: 999px; }
 
   /* Phase color dot — reused everywhere a phase is referenced */
   .phase-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: middle; flex-shrink: 0; }
@@ -549,13 +586,47 @@
 
 <div id="toast"></div>
 
-<div class="app-shell">
+<div class="config-warning" id="configWarning" style="display:none;">
+  ⚠️ The dashboard isn't connected to Supabase yet.
+</div>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="brand-mark" style="margin: 0 auto;">M</div>
+    <h2>MON Logistics — Project Hub</h2>
+    <p class="auth-sub" id="authModeLabel">Sign in to continue</p>
+    <input type="email" id="authEmail" placeholder="Email" autocomplete="username">
+    <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password">
+    <div class="auth-error" id="authError" style="display:none;"></div>
+    <button class="m-btn save auth-submit" id="authSubmitBtn">Sign in</button>
+    <button class="auth-toggle" id="authToggleBtn">Don't have an account? Sign up</button>
+  </div>
+</div>
+
+<div class="project-screen" id="projectScreen">
+  <div class="project-screen-inner">
+    <div class="project-screen-header">
+      <div>
+        <div class="brand-title" style="font-size:18px;">Your projects</div>
+        <div class="brand-subtitle" id="currentUserEmail"></div>
+      </div>
+      <button class="m-btn delete" id="signOutBtn">Sign out</button>
+    </div>
+    <div class="project-list" id="projectList"></div>
+    <div class="new-project-row">
+      <input type="text" id="newProjectName" placeholder="New project name">
+      <button class="m-btn add" id="createProjectBtn">+ Create project</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-shell" id="appShell" style="display:none;">
   <aside class="sidebar">
     <div class="sidebar-brand">
       <div class="brand-mark">M</div>
       <div>
-        <div class="brand-title">MON Logistics</div>
-        <div class="brand-subtitle">Nestlé Flow Project</div>
+        <div class="brand-title" id="sidebarProjectName">MON Logistics</div>
+        <div class="brand-subtitle"><a href="#" id="switchProjectLink" style="color:inherit;">Switch project</a></div>
       </div>
     </div>
 
@@ -611,16 +682,16 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
         Print
       </button>
+      <button class="refresh" id="signOutBtn2" title="Sign out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        Sign out
+      </button>
       <div class="updated-at" id="updatedAt">Loading…</div>
     </div>
   </aside>
 
   <div class="app-main">
 <main id="app">
-  <div class="config-warning" id="configWarning" style="display:none;">
-    ⚠️ The dashboard isn't connected to Supabase yet.
-  </div>
-
   <section class="tab-panel active" id="panel-overview">
     <div class="kpi-row" id="overviewKpis"></div>
     <div class="charts-row">
@@ -706,6 +777,7 @@
       <button data-msub="phases">Phases</button>
       <button data-msub="tasks">Tasks</button>
       <button data-msub="subtasks">Subtasks</button>
+      <button data-msub="access">Access</button>
     </div>
 
     <div class="manage-subpanel active" id="msub-team">
@@ -733,6 +805,30 @@
       <div class="section-card">
         <h3>Subtasks, grouped by task</h3>
         <div id="manageSubtasksTree" style="padding: 14px 18px;"></div>
+      </div>
+    </div>
+
+    <div class="manage-subpanel" id="msub-access">
+      <div class="manage-note">Who can sign in and see this project. Inviting someone by email doesn't send them anything automatically — tell them to go to the dashboard link, sign up with their email and the shared default password, confirm their email, then sign back in.</div>
+      <div class="section-card">
+        <h3>Project access</h3>
+        <div class="table-scroll"><table id="accessTable"></table></div>
+        <div class="invite-row" style="padding: 0 18px 18px;">
+          <input type="email" id="inviteEmail" placeholder="person@company.com">
+          <select id="inviteRole">
+            <option value="member">Member</option>
+            <option value="owner">Owner</option>
+          </select>
+          <button class="m-btn add" id="inviteBtn">+ Invite</button>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h3>Your account</h3>
+        <div class="invite-row" style="padding: 18px;">
+          <input type="password" id="newPassword" placeholder="New password" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;">
+          <button class="m-btn save" id="changePasswordBtn">Change password</button>
+        </div>
       </div>
     </div>
   </section>
@@ -776,6 +872,11 @@ let teamMembers = [], phases = [], tasks = [], subtasks = [], objectives = [];
 let charts = {};
 let taskFilters = { phase: '', status: '', assignee: '' };
 let subtaskFilters = { task: '', status: '', assignee: '' };
+
+// Auth / multi-project state
+let currentUser = null;
+let currentProjectId = null;
+let myProjects = [];
 
 function isConfigured() {
   return !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
@@ -887,7 +988,10 @@ function phaseAtRisk(phaseId) {
   return badTask || badSubtask;
 }
 
-async function loadData() {
+// Sets up the Supabase client from Netlify's config function. Returns true
+// if the client is ready to use. Does NOT touch auth or project data.
+async function ensureSupabaseClient() {
+  if (supabaseClient) return true;
   if (!isConfigured()) {
     await fetchConfig();
   }
@@ -896,18 +1000,24 @@ async function loadData() {
     document.getElementById('configWarning').innerHTML = configLoadError
       ? `⚠️ Couldn't load Supabase config from the Netlify function (${configLoadError}). Make sure this site is deployed on Netlify with <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> set under Site settings &gt; Environment variables, and that <code>netlify/functions/config.js</code> was deployed alongside <code>index.html</code>. (Testing locally? Use the Netlify CLI's <code>netlify dev</code> instead of opening the file directly.)`
       : `⚠️ <code>SUPABASE_URL</code> / <code>SUPABASE_ANON_KEY</code> aren't set yet. Add them under Netlify &gt; Site settings &gt; Environment variables, then redeploy.`;
-    document.getElementById('updatedAt').textContent = "Not connected — connect Supabase to see real data";
-    return;
+    return false;
   }
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return true;
+}
+
+// Loads the data for the currently selected project (currentProjectId).
+// Assumes the user is authenticated and a project has already been entered.
+async function loadData() {
+  if (!currentProjectId) return;
   document.getElementById('updatedAt').textContent = "Loading…";
 
   const [tm, ph, tk, sb, ob] = await Promise.all([
-    supabaseClient.from('team_members').select('*').order('name'),
-    supabaseClient.from('phases').select('*').order('sort_order'),
-    supabaseClient.from('tasks').select('*').order('sort_order'),
-    supabaseClient.from('subtasks').select('*').order('sort_order'),
-    supabaseClient.from('objectives').select('*').order('sort_order'),
+    supabaseClient.from('team_members').select('*').eq('project_id', currentProjectId).order('name'),
+    supabaseClient.from('phases').select('*').eq('project_id', currentProjectId).order('sort_order'),
+    supabaseClient.from('tasks').select('*').eq('project_id', currentProjectId).order('sort_order'),
+    supabaseClient.from('subtasks').select('*').eq('project_id', currentProjectId).order('sort_order'),
+    supabaseClient.from('objectives').select('*').eq('project_id', currentProjectId).order('sort_order'),
   ]);
 
   const firstError = [tm, ph, tk, sb, ob].find(r => r.error);
@@ -938,6 +1048,78 @@ function renderAll() {
   renderManage();
   renderNavDots();
 }
+
+/* ================================================================
+   AUTH + MULTI-PROJECT — sign in/up, project switcher, invites
+   ================================================================ */
+function showAuthScreen() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('projectScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'none';
+}
+function showProjectScreen() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('projectScreen').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('currentUserEmail').textContent = currentUser.email;
+  renderProjectList();
+}
+function showDashboardScreen() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('projectScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'flex';
+  const proj = myProjects.find(p => p.id === currentProjectId);
+  document.getElementById('sidebarProjectName').textContent = proj ? proj.name : 'Project';
+}
+
+async function initAuth() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) { showAuthScreen(); return; }
+  currentUser = session.user;
+  await claimPendingInvites();
+  await loadMyProjects();
+}
+
+// Once logged in with a verified email, link any pending invite(s) that
+// were created for that email address (user_id was null until now).
+async function claimPendingInvites() {
+  await supabaseClient.from('project_members')
+    .update({ user_id: currentUser.id, joined_at: new Date().toISOString() })
+    .eq('email', currentUser.email)
+    .is('user_id', null);
+}
+
+async function loadMyProjects() {
+  const { data, error } = await supabaseClient
+    .from('project_members')
+    .select('role, projects(id, name)')
+    .eq('user_id', currentUser.id);
+  if (error) { showToast('Error loading projects: ' + error.message); showProjectScreen(); return; }
+  myProjects = (data || []).filter(r => r.projects).map(r => ({ id: r.projects.id, name: r.projects.name, role: r.role }));
+  showProjectScreen();
+}
+
+function renderProjectList() {
+  const container = document.getElementById('projectList');
+  container.innerHTML = myProjects.length
+    ? myProjects.map(p => `
+        <div class="project-card" onclick="enterProject('${p.id}')">
+          <span class="pname">${p.name}</span>
+          <span class="prole">${p.role}</span>
+        </div>`).join('')
+    : `<div class="empty-state">No projects yet — create your first one below, or ask to be invited to an existing one.</div>`;
+}
+
+window.enterProject = function(projectId) {
+  currentProjectId = projectId;
+  showDashboardScreen();
+  loadData();
+};
+
+window.backToProjects = function() {
+  currentProjectId = null;
+  showProjectScreen();
+};
 
 function renderNavDots() {
   document.getElementById('navDotTasks').classList.toggle('show', tasks.some(isOverdue));
@@ -1420,6 +1602,9 @@ function taskOptionsExcluding(current, excludeId) {
 
 async function insertRow(table, payload) {
   if (!supabaseClient) return;
+  if (['team_members', 'phases', 'tasks', 'subtasks'].includes(table)) {
+    payload = { ...payload, project_id: currentProjectId };
+  }
   const { error } = await supabaseClient.from(table).insert(payload);
   if (error) { showToast('Error: ' + error.message); return; }
   showToast('Added.', 'success');
@@ -1530,6 +1715,45 @@ function renderManage() {
   renderManagePhases();
   renderManageTasksTree();
   renderManageSubtasksTree();
+  renderManageAccess();
+}
+
+async function renderManageAccess() {
+  const container = document.getElementById('accessTable');
+  const { data, error } = await supabaseClient
+    .from('project_members')
+    .select('*')
+    .eq('project_id', currentProjectId)
+    .order('invited_at');
+  if (error) { container.innerHTML = `<tr><td class="empty-state">Error: ${error.message}</td></tr>`; return; }
+  const rows = (data || []).map(m => `
+    <tr>
+      <td>${m.email}</td>
+      <td style="text-transform:capitalize;">${m.role}</td>
+      <td>${m.joined_at ? '<span class="joined-tag">Joined</span>' : '<span class="pending-tag">Pending</span>'}</td>
+      <td><button class="m-btn delete" onclick="removeProjectMember('${m.id}')">Remove</button></td>
+    </tr>`).join('');
+  container.innerHTML = `<thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows || '<tr><td class="empty-state" colspan="4">No one has been invited yet.</td></tr>'}</tbody>`;
+}
+
+window.removeProjectMember = async function(memberId) {
+  if (!confirm('Remove this person from the project? They will lose access immediately.')) return;
+  const { error } = await supabaseClient.from('project_members').delete().eq('id', memberId);
+  if (error) { showToast('Error: ' + error.message); return; }
+  showToast('Removed.', 'success');
+  renderManageAccess();
+};
+
+async function inviteProjectMember() {
+  const emailInput = document.getElementById('inviteEmail');
+  const email = emailInput.value.trim().toLowerCase();
+  const role = document.getElementById('inviteRole').value;
+  if (!email || !email.includes('@')) { showToast('Enter a valid email first.'); return; }
+  const { error } = await supabaseClient.from('project_members').insert({ project_id: currentProjectId, email, role });
+  if (error) { showToast('Error: ' + error.message); return; }
+  showToast('Invited. Tell them to sign up with this email and the shared default password.', 'success');
+  emailInput.value = '';
+  renderManageAccess();
 }
 
 window.toggleMgroup = function(el) {
@@ -1764,7 +1988,84 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.sidebar-search')) document.getElementById('searchResults').style.display = 'none';
 });
 
-loadData();
+document.getElementById('inviteBtn').addEventListener('click', inviteProjectMember);
+
+document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+  const input = document.getElementById('newPassword');
+  const newPassword = input.value;
+  if (!newPassword || newPassword.length < 6) { showToast('Password must be at least 6 characters.'); return; }
+  const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+  if (error) { showToast('Error: ' + error.message); return; }
+  showToast('Password changed.', 'success');
+  input.value = '';
+});
+
+document.getElementById('switchProjectLink').addEventListener('click', (e) => { e.preventDefault(); backToProjects(); });
+
+async function doSignOut() {
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  currentProjectId = null;
+  myProjects = [];
+  showAuthScreen();
+}
+document.getElementById('signOutBtn').addEventListener('click', doSignOut);
+document.getElementById('signOutBtn2').addEventListener('click', doSignOut);
+
+document.getElementById('createProjectBtn').addEventListener('click', async () => {
+  const nameInput = document.getElementById('newProjectName');
+  const name = nameInput.value.trim();
+  if (!name) { showToast('Enter a project name first.'); return; }
+  const { data: proj, error } = await supabaseClient.from('projects').insert({ name, created_by: currentUser.id }).select().single();
+  if (error) { showToast('Error: ' + error.message); return; }
+  const { error: memErr } = await supabaseClient.from('project_members').insert({
+    project_id: proj.id, email: currentUser.email, user_id: currentUser.id, role: 'owner', joined_at: new Date().toISOString(),
+  });
+  if (memErr) { showToast('Error: ' + memErr.message); return; }
+  showToast('Project created.', 'success');
+  nameInput.value = '';
+  await loadMyProjects();
+});
+
+// Auth form (sign in / sign up toggle)
+let authMode = 'signin';
+document.getElementById('authToggleBtn').addEventListener('click', () => {
+  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  document.getElementById('authSubmitBtn').textContent = authMode === 'signin' ? 'Sign in' : 'Sign up';
+  document.getElementById('authModeLabel').textContent = authMode === 'signin' ? 'Sign in to continue' : 'Create your account';
+  document.getElementById('authToggleBtn').textContent = authMode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in';
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authError').classList.remove('success');
+});
+document.getElementById('authSubmitBtn').addEventListener('click', async () => {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.style.display = 'none';
+  errEl.classList.remove('success');
+  if (!email || !password) { errEl.textContent = 'Enter an email and password.'; errEl.style.display = 'block'; return; }
+  const action = authMode === 'signin'
+    ? supabaseClient.auth.signInWithPassword({ email, password })
+    : supabaseClient.auth.signUp({ email, password });
+  const { data, error } = await action;
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+  if (authMode === 'signup' && !data.session) {
+    errEl.classList.add('success');
+    errEl.textContent = 'Check your email to confirm your account, then sign in.';
+    errEl.style.display = 'block';
+    return;
+  }
+  currentUser = data.user;
+  await claimPendingInvites();
+  await loadMyProjects();
+});
+
+async function boot() {
+  const ready = await ensureSupabaseClient();
+  if (!ready) return;
+  await initAuth();
+}
+boot();
 </script>
 </body>
 </html>
