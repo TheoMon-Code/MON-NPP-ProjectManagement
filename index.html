@@ -1901,7 +1901,7 @@ function renderManageTeam() {
     </tr>`;
   }).join('');
 
-  const newRow = canCreateItems() ? `
+  const newRow = canEditAny() ? `
     <tr class="mrow new-row">
       <td><input type="text" data-field="name" placeholder="Full name"></td>
       <td><input type="text" data-field="role" placeholder="Role"></td>
