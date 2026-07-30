@@ -613,7 +613,7 @@
       <button class="m-btn delete" id="signOutBtn">Sign out</button>
     </div>
     <div class="project-list" id="projectList"></div>
-    <div class="new-project-row">
+    <div class="new-project-row" id="newProjectRow" style="display:none;">
       <input type="text" id="newProjectName" placeholder="New project name">
       <button class="m-btn add" id="createProjectBtn">+ Create project</button>
     </div>
@@ -816,8 +816,10 @@
         <div class="invite-row" style="padding: 0 18px 18px;">
           <input type="email" id="inviteEmail" placeholder="person@company.com">
           <select id="inviteRole">
-            <option value="member">Member</option>
-            <option value="owner">Owner</option>
+            <option value="owner">Owner — full control</option>
+            <option value="editor">Editor — can edit anything, can't delete</option>
+            <option value="member" selected>Member — can edit only their own/assigned items</option>
+            <option value="viewer">Viewer — read-only</option>
           </select>
           <button class="m-btn add" id="inviteBtn">+ Invite</button>
         </div>
@@ -877,6 +879,20 @@ let subtaskFilters = { task: '', status: '', assignee: '' };
 let currentUser = null;
 let currentProjectId = null;
 let myProjects = [];
+let currentUserRole = null; // 'owner' | 'editor' | 'member' | 'viewer' for currentProjectId
+let canCreateProjects = false;
+
+function isOwner() { return currentUserRole === 'owner'; }
+function canEditAny() { return currentUserRole === 'owner' || currentUserRole === 'editor'; }
+function canCreateItems() { return currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === 'member'; }
+function myTeamMemberId() { const m = teamMembers.find(t => t.user_id === currentUser?.id); return m ? m.id : null; }
+function canEditItem(item) {
+  if (canEditAny()) return true;
+  if (currentUserRole !== 'member') return false;
+  if (item.created_by === currentUser?.id) return true;
+  const myId = myTeamMemberId();
+  return !!myId && item.assignee_id === myId;
+}
 
 function isConfigured() {
   return !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
@@ -1063,6 +1079,16 @@ function showProjectScreen() {
   document.getElementById('appShell').style.display = 'none';
   document.getElementById('currentUserEmail').textContent = currentUser.email;
   renderProjectList();
+  document.getElementById('newProjectRow').style.display = canCreateProjects ? 'flex' : 'none';
+}
+
+async function checkCanCreateProjects() {
+  const { data } = await supabaseClient
+    .from('project_creators')
+    .select('email')
+    .eq('email', currentUser.email)
+    .maybeSingle();
+  canCreateProjects = !!data;
 }
 function showDashboardScreen() {
   document.getElementById('authScreen').style.display = 'none';
@@ -1096,6 +1122,7 @@ async function loadMyProjects() {
     .eq('user_id', currentUser.id);
   if (error) { showToast('Error loading projects: ' + error.message); showProjectScreen(); return; }
   myProjects = (data || []).filter(r => r.projects).map(r => ({ id: r.projects.id, name: r.projects.name, role: r.role }));
+  await checkCanCreateProjects();
   showProjectScreen();
 }
 
@@ -1112,6 +1139,8 @@ function renderProjectList() {
 
 window.enterProject = function(projectId) {
   currentProjectId = projectId;
+  const proj = myProjects.find(p => p.id === projectId);
+  currentUserRole = proj ? proj.role : null;
   showDashboardScreen();
   loadData();
 };
@@ -1605,7 +1634,7 @@ function taskOptionsExcluding(current, excludeId) {
 async function insertRow(table, payload) {
   if (!supabaseClient) return;
   if (['team_members', 'phases', 'tasks', 'subtasks'].includes(table)) {
-    payload = { ...payload, project_id: currentProjectId };
+    payload = { ...payload, project_id: currentProjectId, created_by: currentUser?.id };
   }
   const { error } = await supabaseClient.from(table).insert(payload);
   if (error) { showToast('Error: ' + error.message); return; }
@@ -1693,6 +1722,7 @@ window.quickAddSubtask = function(taskId, btn) {
 };
 
 function quickAddTaskFormHtml(phaseId) {
+  if (!canCreateItems()) return '';
   return `
     <div class="minline-add">
       <input type="text" class="madd-title" placeholder="New task title">
@@ -1703,6 +1733,7 @@ function quickAddTaskFormHtml(phaseId) {
     </div>`;
 }
 function quickAddSubtaskFormHtml(taskId) {
+  if (!canCreateItems()) return '';
   return `
     <div class="minline-add">
       <input type="text" class="madd-title" placeholder="New subtask title">
@@ -1733,9 +1764,12 @@ async function renderManageAccess() {
       <td>${m.email}</td>
       <td style="text-transform:capitalize;">${m.role}</td>
       <td>${m.joined_at ? '<span class="joined-tag">Joined</span>' : '<span class="pending-tag">Pending</span>'}</td>
-      <td><button class="m-btn delete" onclick="removeProjectMember('${m.id}')">Remove</button></td>
+      <td>${isOwner() ? `<button class="m-btn delete" onclick="removeProjectMember('${m.id}')">Remove</button>` : ''}</td>
     </tr>`).join('');
   container.innerHTML = `<thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows || '<tr><td class="empty-state" colspan="4">No one has been invited yet.</td></tr>'}</tbody>`;
+
+  const inviteRow = document.querySelector('#msub-access .invite-row');
+  if (inviteRow) inviteRow.style.display = isOwner() ? 'flex' : 'none';
 }
 
 window.removeProjectMember = async function(memberId) {
@@ -1765,27 +1799,36 @@ window.toggleMcard = function(btn) {
   btn.closest('.mcard').classList.toggle('expanded');
 };
 
+function canEditTeamMemberRow(m) {
+  if (canEditAny()) return true;
+  if (currentUserRole !== 'member') return false;
+  return !!currentUser && m.user_id === currentUser.id;
+}
+
 function renderManageTeam() {
-  const rows = teamMembers.map(m => `
+  const rows = teamMembers.map(m => {
+    const editable = canEditTeamMemberRow(m);
+    return `
     <tr class="mrow" data-id="${m.id}">
-      <td class="col-name"><input type="text" data-field="name" value="${m.name || ''}"></td>
-      <td class="col-name"><input type="text" data-field="role" value="${m.role || ''}"></td>
-      <td class="col-select"><input type="text" data-field="company" value="${m.company || ''}"></td>
+      <td class="col-name"><input type="text" data-field="name" value="${m.name || ''}" ${editable ? '' : 'disabled'}></td>
+      <td class="col-name"><input type="text" data-field="role" value="${m.role || ''}" ${editable ? '' : 'disabled'}></td>
+      <td class="col-select"><input type="text" data-field="company" value="${m.company || ''}" ${editable ? '' : 'disabled'}></td>
       <td class="col-actions">
         <div class="m-actions">
-          <button class="m-btn save" onclick="saveRow('team_members', this)">Save</button>
-          <button class="m-btn delete" onclick="deleteRow('team_members', this, 'Delete this team member? Their tasks will become unassigned.')">Delete</button>
+          ${editable ? `<button class="m-btn save" onclick="saveRow('team_members', this)">Save</button>` : ''}
+          ${isOwner() ? `<button class="m-btn delete" onclick="deleteRow('team_members', this, 'Delete this team member? Their tasks will become unassigned.')">Delete</button>` : ''}
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
-  const newRow = `
+  const newRow = canCreateItems() ? `
     <tr class="mrow new-row">
       <td><input type="text" data-field="name" placeholder="Full name"></td>
       <td><input type="text" data-field="role" placeholder="Role"></td>
       <td><input type="text" data-field="company" placeholder="Company"></td>
       <td><button class="m-btn add" onclick="addRow('team_members', this, 'name')">+ Add</button></td>
-    </tr>`;
+    </tr>` : '';
 
   document.getElementById('manageTeamTable').innerHTML = `
     <thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Actions</th></tr></thead>
@@ -1795,20 +1838,20 @@ function renderManageTeam() {
 function renderManagePhases() {
   const rows = phases.map(p => `
     <tr class="mrow" data-id="${p.id}">
-      <td class="col-name"><input type="text" data-field="name" value="${p.name || ''}"></td>
-      <td class="col-desc"><input type="text" data-field="description" value="${p.description || ''}"></td>
-      <td class="col-date"><input type="date" data-field="start_date" data-type="date" value="${p.start_date || ''}"></td>
-      <td class="col-date"><input type="date" data-field="end_date" data-type="date" value="${p.end_date || ''}"></td>
-      <td class="col-select"><select data-field="status">${statusOptions(p.status)}</select></td>
+      <td class="col-name"><input type="text" data-field="name" value="${p.name || ''}" ${canEditItem(p) ? '' : 'disabled'}></td>
+      <td class="col-desc"><input type="text" data-field="description" value="${p.description || ''}" ${canEditItem(p) ? '' : 'disabled'}></td>
+      <td class="col-date"><input type="date" data-field="start_date" data-type="date" value="${p.start_date || ''}" ${canEditItem(p) ? '' : 'disabled'}></td>
+      <td class="col-date"><input type="date" data-field="end_date" data-type="date" value="${p.end_date || ''}" ${canEditItem(p) ? '' : 'disabled'}></td>
+      <td class="col-select"><select data-field="status" ${canEditItem(p) ? '' : 'disabled'}>${statusOptions(p.status)}</select></td>
       <td class="col-actions">
         <div class="m-actions">
-          <button class="m-btn save" onclick="saveRow('phases', this)">Save</button>
-          <button class="m-btn delete" onclick="deleteRow('phases', this, 'Delete this phase? All its tasks and subtasks will be deleted too.')">Delete</button>
+          ${canEditItem(p) ? `<button class="m-btn save" onclick="saveRow('phases', this)">Save</button>` : ''}
+          ${isOwner() ? `<button class="m-btn delete" onclick="deleteRow('phases', this, 'Delete this phase? All its tasks and subtasks will be deleted too.')">Delete</button>` : ''}
         </div>
       </td>
     </tr>`).join('');
 
-  const newRow = `
+  const newRow = canCreateItems() ? `
     <tr class="mrow new-row">
       <td><input type="text" data-field="name" placeholder="Phase name"></td>
       <td><input type="text" data-field="description" placeholder="Description"></td>
@@ -1816,7 +1859,7 @@ function renderManagePhases() {
       <td><input type="date" data-field="end_date" data-type="date"></td>
       <td><select data-field="status">${statusOptions('not_started')}</select></td>
       <td><button class="m-btn add" onclick="addRow('phases', this, 'name')">+ Add</button></td>
-    </tr>`;
+    </tr>` : '';
 
   document.getElementById('managePhasesTable').innerHTML = `
     <thead><tr><th>Name</th><th>Description</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead>
@@ -1824,49 +1867,53 @@ function renderManagePhases() {
 }
 
 function manageTaskCardHtml(t) {
+  const editable = canEditItem(t);
+  const dis = editable ? '' : 'disabled';
   return `
     <div class="mcard" data-id="${t.id}">
       <div class="mtask-summary">
         <button type="button" class="m-expand" onclick="toggleMcard(this)">▸</button>
-        <input type="text" data-field="title" value="${t.title || ''}">
-        <select data-field="assignee_id" data-type="uuid">${memberOptions(t.assignee_id)}</select>
-        <select data-field="priority">${priorityOptions(t.priority)}</select>
-        <input type="date" data-field="due_date" data-type="date" value="${t.due_date || ''}">
-        <select data-field="status">${statusOptions(t.status)}</select>
+        <input type="text" data-field="title" value="${t.title || ''}" ${dis}>
+        <select data-field="assignee_id" data-type="uuid" ${dis}>${memberOptions(t.assignee_id)}</select>
+        <select data-field="priority" ${dis}>${priorityOptions(t.priority)}</select>
+        <input type="date" data-field="due_date" data-type="date" value="${t.due_date || ''}" ${dis}>
+        <select data-field="status" ${dis}>${statusOptions(t.status)}</select>
         <div class="m-actions">
-          <button class="m-btn save" onclick="saveRow('tasks', this)">Save</button>
-          <button class="m-btn delete" onclick="deleteRow('tasks', this, 'Delete this task? Its subtasks will be deleted too.')">Delete</button>
+          ${editable ? `<button class="m-btn save" onclick="saveRow('tasks', this)">Save</button>` : ''}
+          ${isOwner() ? `<button class="m-btn delete" onclick="deleteRow('tasks', this, 'Delete this task? Its subtasks will be deleted too.')">Delete</button>` : ''}
         </div>
       </div>
       <div class="mtask-detail">
-        <label>Description<textarea data-field="description" placeholder="What needs to be done">${t.description || ''}</textarea></label>
-        <label>Notes<textarea data-field="notes" placeholder="Context, blockers...">${t.notes || ''}</textarea></label>
-        <label>Start<input type="date" data-field="start_date" data-type="date" value="${t.start_date || ''}"></label>
-        <label>Completed<input type="date" data-field="completed_date" data-type="date" value="${t.completed_date || ''}"></label>
-        <label>Depends on<select data-field="depends_on_task_id" data-type="uuid">${taskOptionsExcluding(t.depends_on_task_id, t.id)}</select></label>
+        <label>Description<textarea data-field="description" placeholder="What needs to be done" ${dis}>${t.description || ''}</textarea></label>
+        <label>Notes<textarea data-field="notes" placeholder="Context, blockers..." ${dis}>${t.notes || ''}</textarea></label>
+        <label>Start<input type="date" data-field="start_date" data-type="date" value="${t.start_date || ''}" ${dis}></label>
+        <label>Completed<input type="date" data-field="completed_date" data-type="date" value="${t.completed_date || ''}" ${dis}></label>
+        <label>Depends on<select data-field="depends_on_task_id" data-type="uuid" ${dis}>${taskOptionsExcluding(t.depends_on_task_id, t.id)}</select></label>
       </div>
     </div>`;
 }
 
 function manageSubtaskCardHtml(s) {
+  const editable = canEditItem(s);
+  const dis = editable ? '' : 'disabled';
   return `
     <div class="mcard" data-id="${s.id}">
       <div class="mtask-summary">
         <button type="button" class="m-expand" onclick="toggleMcard(this)">▸</button>
-        <input type="text" data-field="title" value="${s.title || ''}">
-        <select data-field="assignee_id" data-type="uuid">${memberOptions(s.assignee_id)}</select>
-        <input type="date" data-field="due_date" data-type="date" value="${s.due_date || ''}">
-        <select data-field="status">${statusOptions(s.status)}</select>
+        <input type="text" data-field="title" value="${s.title || ''}" ${dis}>
+        <select data-field="assignee_id" data-type="uuid" ${dis}>${memberOptions(s.assignee_id)}</select>
+        <input type="date" data-field="due_date" data-type="date" value="${s.due_date || ''}" ${dis}>
+        <select data-field="status" ${dis}>${statusOptions(s.status)}</select>
         <div class="m-actions">
-          <button class="m-btn save" onclick="saveRow('subtasks', this)">Save</button>
-          <button class="m-btn delete" onclick="deleteRow('subtasks', this)">Delete</button>
+          ${editable ? `<button class="m-btn save" onclick="saveRow('subtasks', this)">Save</button>` : ''}
+          ${isOwner() ? `<button class="m-btn delete" onclick="deleteRow('subtasks', this)">Delete</button>` : ''}
         </div>
       </div>
       <div class="mtask-detail">
-        <label>Description<textarea data-field="description" placeholder="What needs to be done">${s.description || ''}</textarea></label>
-        <label>Notes<textarea data-field="notes" placeholder="Context, blockers...">${s.notes || ''}</textarea></label>
-        <label>Start<input type="date" data-field="start_date" data-type="date" value="${s.start_date || ''}"></label>
-        <label>Completed<input type="date" data-field="completed_date" data-type="date" value="${s.completed_date || ''}"></label>
+        <label>Description<textarea data-field="description" placeholder="What needs to be done" ${dis}>${s.description || ''}</textarea></label>
+        <label>Notes<textarea data-field="notes" placeholder="Context, blockers..." ${dis}>${s.notes || ''}</textarea></label>
+        <label>Start<input type="date" data-field="start_date" data-type="date" value="${s.start_date || ''}" ${dis}></label>
+        <label>Completed<input type="date" data-field="completed_date" data-type="date" value="${s.completed_date || ''}" ${dis}></label>
       </div>
     </div>`;
 }
@@ -2018,12 +2065,8 @@ document.getElementById('createProjectBtn').addEventListener('click', async () =
   const nameInput = document.getElementById('newProjectName');
   const name = nameInput.value.trim();
   if (!name) { showToast('Enter a project name first.'); return; }
-  const { data: proj, error } = await supabaseClient.from('projects').insert({ name, created_by: currentUser.id }).select().single();
+  const { error } = await supabaseClient.rpc('create_project', { project_name: name });
   if (error) { showToast('Error: ' + error.message); return; }
-  const { error: memErr } = await supabaseClient.from('project_members').insert({
-    project_id: proj.id, email: currentUser.email, user_id: currentUser.id, role: 'owner', joined_at: new Date().toISOString(),
-  });
-  if (memErr) { showToast('Error: ' + memErr.message); return; }
   showToast('Project created.', 'success');
   nameInput.value = '';
   await loadMyProjects();
