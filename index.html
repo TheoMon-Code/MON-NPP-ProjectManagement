@@ -465,6 +465,77 @@
     padding: 15px 18px; border-radius: var(--radius-sm); margin-bottom: 20px; font-size: 13.5px; line-height: 1.55;
   }
   .config-warning code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+
+  /* Phase color dot — reused everywhere a phase is referenced */
+  .phase-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: middle; flex-shrink: 0; }
+
+  /* Sidebar quick search */
+  .sidebar-search { position: relative; padding: 0 8px 14px; }
+  .sidebar-search input {
+    width: 100%; padding: 8px 10px 8px 30px; font-size: 12.5px; border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); font-family: inherit; background: #FAFBFD; transition: border-color var(--ease), background var(--ease);
+  }
+  .sidebar-search input:focus { outline: none; border-color: var(--color-accent); background: white; }
+  .sidebar-search svg { position: absolute; left: 18px; top: 9px; width: 14px; height: 14px; color: var(--color-muted); pointer-events: none; }
+  .search-results {
+    position: absolute; top: 100%; left: 8px; right: 8px; margin-top: 4px; background: white;
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md);
+    z-index: 50; display: none; max-height: 300px; overflow-y: auto;
+  }
+  .search-result { padding: 9px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 12px; border-bottom: 1px solid var(--color-border); }
+  .search-result:last-child { border-bottom: none; }
+  .search-result:hover { background: #FAFBFD; }
+  .search-kind { font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: #EDEEF2; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+  .search-title { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .search-phase { font-size: 10.5px; color: var(--color-muted); flex-shrink: 0; }
+  .search-empty { padding: 14px; font-size: 12px; color: var(--color-muted); text-align: center; }
+  tr.row-flash td { background: color-mix(in srgb, var(--color-accent) 16%, white) !important; transition: background 1.4s ease; }
+
+  /* Phase timeline (Gantt-style strip) on Overview */
+  .tl-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .tl-row:last-child { margin-bottom: 4px; }
+  .tl-label { flex: 0 0 190px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tl-track { flex: 1; position: relative; height: 14px; background: #F2F3F7; border-radius: 999px; }
+  .tl-bar { position: absolute; top: 0; height: 100%; border-radius: 999px; overflow: hidden; min-width: 6px; }
+  .tl-bar-fill { height: 100%; }
+  .tl-today { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--color-accent); border-radius: 1px; }
+  .tl-dates { flex: 0 0 150px; font-size: 11px; color: var(--color-muted); text-align: right; }
+  .tl-caption { font-size: 11px; color: var(--color-muted); margin-top: 4px; }
+
+  /* Recent activity feed on Overview */
+  .activity-row { display: flex; align-items: center; gap: 10px; padding: 11px 20px; border-bottom: 1px solid var(--color-border); font-size: 12.5px; flex-wrap: wrap; }
+  .activity-row:last-child { border-bottom: none; }
+  .activity-kind { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: #EDEEF2; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; }
+  .activity-title { font-weight: 600; flex: 1; min-width: 120px; }
+  .activity-meta { font-size: 11.5px; color: var(--color-muted); }
+  .activity-time { font-size: 11px; color: var(--color-muted); flex: 0 0 70px; text-align: right; }
+
+  /* Objective radial progress gauge */
+  .objective-body { display: flex; gap: 16px; align-items: center; }
+  .gauge-wrap { position: relative; width: 62px; height: 62px; flex-shrink: 0; }
+  .gauge-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 800; color: var(--color-text); }
+  .objective-info { flex: 1; min-width: 0; }
+  .objective-info .metric-row { margin-bottom: 0; }
+
+  /* Friendlier empty states with a call to action */
+  .empty-state-cta { text-align: center; padding: 50px 20px; color: var(--color-muted); }
+  .empty-state-cta svg { color: #D3D8E2; margin-bottom: 14px; }
+  .empty-state-cta .empty-msg { font-size: 13.5px; margin-bottom: 16px; }
+
+  /* Print — clean snapshot of the current tab, no chrome or edit controls */
+  @media print {
+    .sidebar { display: none !important; }
+    .app-main { width: 100%; }
+    main#app { padding: 10px 4px; max-width: 100%; }
+    .refresh, .export-btn, .m-btn, .m-expand, .minline-add, .filter-bar, #toast, .config-warning, .subnav { display: none !important; }
+    #panel-manage { display: none !important; }
+    .tab-panel { display: none !important; }
+    .tab-panel.active { display: block !important; }
+    .kpi-card, .chart-card, .section-card, .team-card, .objective-card, .task, .phase, .mcard { box-shadow: none !important; border: 1px solid #ddd !important; }
+    body { background: white !important; }
+    .phase-tasks, .subtasks { display: block !important; }
+    .caret { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -479,6 +550,12 @@
         <div class="brand-title">MON Logistics</div>
         <div class="brand-subtitle">Nestlé Flow Project</div>
       </div>
+    </div>
+
+    <div class="sidebar-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="globalSearch" placeholder="Search tasks & subtasks…" autocomplete="off">
+      <div class="search-results" id="searchResults"></div>
     </div>
 
     <nav class="side-nav" id="tabs">
@@ -521,6 +598,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path></svg>
         Refresh
       </button>
+      <button class="refresh" id="printBtn" title="Print a clean snapshot of the current tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        Print
+      </button>
       <div class="updated-at" id="updatedAt">Loading…</div>
     </div>
   </aside>
@@ -542,6 +623,16 @@
         <h3>Task status breakdown</h3>
         <div class="chart-wrap"><canvas id="chartByStatus"></canvas></div>
       </div>
+    </div>
+
+    <div class="section-card">
+      <h3>Phase timeline</h3>
+      <div id="phaseTimeline" style="padding: 20px 20px 14px;"></div>
+    </div>
+
+    <div class="section-card">
+      <h3>Recent activity</h3>
+      <div id="activityFeed"></div>
     </div>
   </section>
 
@@ -699,6 +790,52 @@ function avatarColor(name) {
   return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
 }
 function memberName(id) { const m = teamMembers.find(t => t.id === id); return m ? m.name : "Unassigned"; }
+// Each phase gets a stable color (hashed from its id) reused everywhere it's
+// referenced -- phase tree, tasks/subtasks lists, Manage groups, timeline.
+const PHASE_PALETTE = ['#2D7FF9','#8B46FF','#1E8E5A','#DC7A15','#D6455A','#0EA5C4','#C2185B','#5C6BC0'];
+function phaseColor(id) {
+  if (!id) return '#6B7280';
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return PHASE_PALETTE[hash % PHASE_PALETTE.length];
+}
+function phaseDot(id) { return `<span class="phase-dot" style="background:${phaseColor(id)}"></span>`; }
+function statusColor(status) {
+  return { done: 'var(--color-ok)', in_progress: 'var(--color-info)', blocked: 'var(--color-blocked)', not_started: 'var(--color-muted)' }[status] || 'var(--color-muted)';
+}
+function radialGauge(pct, color) {
+  const r = 24, c = 2 * Math.PI * r;
+  const offset = c - (Math.max(0, Math.min(100, pct)) / 100) * c;
+  return `<svg width="62" height="62" viewBox="0 0 62 62" style="transform:rotate(-90deg);">
+    <circle cx="31" cy="31" r="${r}" fill="none" stroke="#EEF0F5" stroke-width="6"></circle>
+    <circle cx="31" cy="31" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"></circle>
+  </svg>`;
+}
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return fmtDate(dateStr);
+}
+function emptyStateHtml(message, showCta) {
+  return `<div class="empty-state-cta">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="34" height="34"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    <div class="empty-msg">${message}</div>
+    ${showCta === false ? '' : '<button class="m-btn add" onclick="goToManage()">Go to Manage</button>'}
+  </div>`;
+}
+window.goToManage = function() {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('#tabs button[data-tab="manage"]').classList.add('active');
+  document.getElementById('panel-manage').classList.add('active');
+};
 function dateRange(start, due) {
   if (!start && !due) return "—";
   if (start && due) return `${fmtDate(start)} → ${fmtDate(due)}`;
@@ -786,17 +923,20 @@ function renderTasksListTab() {
     (!taskFilters.status || t.status === taskFilters.status)
   );
   const rows = filtered.map(t => `
-    <tr>
+    <tr data-row-id="${t.id}">
       <td><strong>${t.title}</strong>${t.description ? `<div class="muted-text">${t.description}</div>` : ''}${t.notes ? `<div class="muted-text ${t.status==='blocked'?'blocked-text':''}">${t.status==='blocked'?'⚠ ':'📝 '}${t.notes}</div>` : ''}</td>
-      <td>${phaseName(t.phase_id)}</td>
+      <td>${phaseDot(t.phase_id)}${phaseName(t.phase_id)}</td>
       <td>${memberName(t.assignee_id)}</td>
       <td>${prioBadge(t.priority)}</td>
       <td>${dateRange(t.start_date, t.due_date)}${completedTag(t)}${isOverdue(t) ? ' <span class="overdue-tag">Overdue</span>' : ''}</td>
       <td>${badge(t.status)}</td>
     </tr>`).join('');
+  const tasksEmptyMsg = tasks.length === 0
+    ? `No tasks yet. <a href="#" onclick="goToManage();return false;" style="color:var(--color-accent);font-weight:600;">Add one in Manage →</a>`
+    : 'No tasks match these filters.';
   document.getElementById('tasksListTable').innerHTML = filtered.length
     ? `<thead><tr><th>Title</th><th>Phase</th><th>Assignee</th><th>Priority</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
-    : `<tbody><tr><td class="empty-state" colspan="6">No tasks match these filters.</td></tr></tbody>`;
+    : `<tbody><tr><td class="empty-state" colspan="6">${tasksEmptyMsg}</td></tr></tbody>`;
 }
 
 function renderSubtasksListTab() {
@@ -810,17 +950,20 @@ function renderSubtasksListTab() {
     (!subtaskFilters.status || s.status === subtaskFilters.status)
   );
   const rows = filtered.map(s => `
-    <tr>
+    <tr data-row-id="${s.id}">
       <td><strong>${s.title}</strong>${s.description ? `<div class="muted-text">${s.description}</div>` : ''}${s.notes ? `<div class="muted-text ${s.status==='blocked'?'blocked-text':''}">${s.status==='blocked'?'⚠ ':'📝 '}${s.notes}</div>` : ''}</td>
       <td>${taskName(s.task_id)}</td>
-      <td>${phaseName(taskPhaseId(s.task_id))}</td>
+      <td>${phaseDot(taskPhaseId(s.task_id))}${phaseName(taskPhaseId(s.task_id))}</td>
       <td>${memberName(s.assignee_id)}</td>
       <td>${dateRange(s.start_date, s.due_date)}${completedTag(s)}${isOverdue(s) ? ' <span class="overdue-tag">Overdue</span>' : ''}</td>
       <td>${badge(s.status)}</td>
     </tr>`).join('');
+  const subtasksEmptyMsg = subtasks.length === 0
+    ? `No subtasks yet. <a href="#" onclick="goToManage();return false;" style="color:var(--color-accent);font-weight:600;">Add one in Manage →</a>`
+    : 'No subtasks match these filters.';
   document.getElementById('subtasksListTable').innerHTML = filtered.length
     ? `<thead><tr><th>Title</th><th>Task</th><th>Phase</th><th>Assignee</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
-    : `<tbody><tr><td class="empty-state" colspan="6">No subtasks match these filters.</td></tr></tbody>`;
+    : `<tbody><tr><td class="empty-state" colspan="6">${subtasksEmptyMsg}</td></tr></tbody>`;
 }
 
 /* ================================================================
@@ -933,6 +1076,48 @@ function exportAllExcel() {
   showToast('Excel file downloaded.', 'success');
 }
 
+/* ================================================================
+   GLOBAL SEARCH — sidebar box, matches task/subtask titles
+   ================================================================ */
+let highlightRowId = null;
+function performGlobalSearch(query) {
+  const q = query.trim().toLowerCase();
+  const results = document.getElementById('searchResults');
+  if (!q) { results.style.display = 'none'; results.innerHTML = ''; return; }
+  const taskMatches = tasks.filter(t => t.title.toLowerCase().includes(q))
+    .map(t => ({ id: t.id, title: t.title, kind: 'Task', phase: phaseName(t.phase_id), tab: 'tasks' }));
+  const subMatches = subtasks.filter(s => s.title.toLowerCase().includes(q))
+    .map(s => ({ id: s.id, title: s.title, kind: 'Subtask', phase: phaseName(taskPhaseId(s.task_id)), tab: 'subtasks' }));
+  const all = [...taskMatches, ...subMatches].slice(0, 8);
+  results.innerHTML = all.length
+    ? all.map(r => `
+        <div class="search-result" onclick="goToSearchResult('${r.tab}','${r.id}')">
+          <span class="search-kind">${r.kind}</span>
+          <span class="search-title">${r.title}</span>
+          <span class="search-phase">${r.phase}</span>
+        </div>`).join('')
+    : `<div class="search-empty">No matches.</div>`;
+  results.style.display = 'block';
+}
+window.goToSearchResult = function(tab, id) {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`#tabs button[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'tasks') { taskFilters.phase = ''; taskFilters.status = ''; renderTasksListTab(); }
+  else { subtaskFilters.task = ''; subtaskFilters.status = ''; renderSubtasksListTab(); }
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('globalSearch').value = '';
+  setTimeout(() => {
+    const row = document.querySelector(`tr[data-row-id="${id}"]`);
+    if (row) {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.add('row-flash');
+      setTimeout(() => row.classList.remove('row-flash'), 1600);
+    }
+  }, 60);
+};
+
 function phaseTasks(phaseId) { return tasks.filter(t => t.phase_id === phaseId); }
 function taskSubtasks(taskId) { return subtasks.filter(s => s.task_id === taskId); }
 
@@ -990,6 +1175,65 @@ function renderOverview() {
   const byStatus = { not_started:0, in_progress:0, blocked:0, done:0 };
   tasks.forEach(t => byStatus[t.status] = (byStatus[t.status]||0) + 1);
   drawDoughnutChart('chartByStatus', Object.keys(byStatus).map(k => STATUS_LABELS[k]), Object.values(byStatus));
+
+  renderPhaseTimeline();
+  renderActivityFeed();
+}
+
+function renderPhaseTimeline() {
+  const container = document.getElementById('phaseTimeline');
+  const withDates = phases.filter(p => p.start_date && p.end_date);
+  if (!withDates.length) {
+    container.innerHTML = `<div class="empty-state">Add start/end dates to your phases (Manage &gt; Phases) to see the timeline.</div>`;
+    return;
+  }
+  const starts = withDates.map(p => new Date(p.start_date).getTime());
+  const ends = withDates.map(p => new Date(p.end_date).getTime());
+  const min = Math.min(...starts);
+  const max = Math.max(...ends);
+  const span = (max - min) || 1;
+  const todayPct = Math.min(100, Math.max(0, ((Date.now() - min) / span) * 100));
+
+  const rows = withDates.map(p => {
+    const color = phaseColor(p.id);
+    const left = ((new Date(p.start_date).getTime() - min) / span) * 100;
+    const width = Math.max(1.5, ((new Date(p.end_date).getTime() - new Date(p.start_date).getTime()) / span) * 100);
+    const pct = phaseProgress(p.id);
+    return `
+      <div class="tl-row">
+        <div class="tl-label">${phaseDot(p.id)}${p.name}</div>
+        <div class="tl-track">
+          <div class="tl-bar" style="left:${left}%;width:${width}%;background:color-mix(in srgb, ${color} 24%, white);">
+            <div class="tl-bar-fill" style="width:${pct}%;background:${color};"></div>
+          </div>
+          <div class="tl-today" style="left:${todayPct}%;"></div>
+        </div>
+        <div class="tl-dates">${fmtDate(p.start_date)} → ${fmtDate(p.end_date)}</div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = rows + `<div class="tl-caption">▍ marks today's date · bar fill shows % of tasks done</div>`;
+}
+
+function renderActivityFeed() {
+  const container = document.getElementById('activityFeed');
+  const items = [
+    ...tasks.map(t => ({ ...t, _kind: 'Task', _phase: phaseName(t.phase_id) })),
+    ...subtasks.map(s => ({ ...s, _kind: 'Subtask', _phase: phaseName(taskPhaseId(s.task_id)) })),
+  ].filter(i => i.updated_at).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 6);
+
+  if (!items.length) {
+    container.innerHTML = `<div class="empty-state">No activity yet.</div>`;
+    return;
+  }
+  container.innerHTML = items.map(i => `
+    <div class="activity-row">
+      <span class="activity-kind">${i._kind}</span>
+      <span class="activity-title">${i.title}</span>
+      ${badge(i.status)}
+      <span class="activity-meta">${i._phase} · ${memberName(i.assignee_id)}</span>
+      <span class="activity-time">${timeAgo(i.updated_at)}</span>
+    </div>`).join('');
 }
 
 function renderPhasesTree() {
@@ -1032,7 +1276,7 @@ function renderPhasesTree() {
       <div class="phase" data-phase-id="${phase.id}">
         <div class="phase-header" onclick="togglePhase('${phase.id}')">
           <span class="caret">▶</span>
-          <span class="phase-name">${phase.name}</span>
+          <span class="phase-name">${phaseDot(phase.id)}${phase.name}</span>
           <span class="phase-progress">
             <div class="progress-bar"><div style="width:${pct}%"></div></div>
             <span style="font-size:12px;color:var(--color-muted);">${pct}%</span>
@@ -1044,7 +1288,7 @@ function renderPhasesTree() {
       </div>`;
   }).join('');
 
-  document.getElementById('phasesTree').innerHTML = phases.length ? html : `<div class="empty-state">No phases defined yet.</div>`;
+  document.getElementById('phasesTree').innerHTML = phases.length ? html : emptyStateHtml('No phases defined yet. Add your first phase to start structuring the project.');
 }
 
 window.togglePhase = function(id) {
@@ -1072,22 +1316,32 @@ function renderTeam() {
         </div>
       </div>`;
   }).join('');
-  document.getElementById('teamGrid').innerHTML = teamMembers.length ? html : `<div class="empty-state">No team members yet.</div>`;
+  document.getElementById('teamGrid').innerHTML = teamMembers.length ? html : emptyStateHtml('No team members yet. Add the people working on this project.');
 }
 
 function renderObjectives() {
-  const html = objectives.map(o => `
+  const html = objectives.map(o => {
+    const pct = STATUS_PROGRESS[o.status];
+    const color = statusColor(o.status);
+    return `
     <div class="objective-card">
       <div class="title-row">
         <span class="title">${o.title}</span>
         ${badge(o.status)}
       </div>
-      <div class="desc">${o.description || ''}</div>
-      <div class="metric-row"><span>${o.metric_label || ''}</span><strong>${o.current_value ?? '—'} → ${o.target_value ?? '—'} ${o.unit || ''}</strong></div>
-      <div class="progress-bar"><div style="width:${STATUS_PROGRESS[o.status]}%"></div></div>
+      <div class="objective-body">
+        <div class="gauge-wrap">
+          ${radialGauge(pct, color)}
+          <div class="gauge-label">${pct}%</div>
+        </div>
+        <div class="objective-info">
+          <div class="desc">${o.description || ''}</div>
+          <div class="metric-row"><span>${o.metric_label || ''}</span><strong>${o.current_value ?? '—'} → ${o.target_value ?? '—'} ${o.unit || ''}</strong></div>
+        </div>
+      </div>
     </div>
-  `).join('');
-  document.getElementById('objectivesGrid').innerHTML = objectives.length ? html : `<div class="empty-state">No objectives defined yet.</div>`;
+  `; }).join('');
+  document.getElementById('objectivesGrid').innerHTML = objectives.length ? html : emptyStateHtml('No objectives defined yet. Add them via Supabase &gt; Table Editor.', false);
 }
 
 /* ================================================================
@@ -1353,7 +1607,7 @@ function renderManageTasksTree() {
       <div class="mgroup" data-phase-id="${phase.id}">
         <div class="mgroup-header" onclick="toggleMgroup(this)">
           <span class="caret">▶</span>
-          <span>${phase.name}</span>
+          <span>${phaseDot(phase.id)}${phase.name}</span>
           <span class="mgroup-count">${ts.length} task${ts.length === 1 ? '' : 's'}</span>
         </div>
         <div class="mgroup-body">
@@ -1388,7 +1642,7 @@ function renderManageSubtasksTree() {
           </div>
         </div>`;
     }).join('');
-    return `<div class="mphase-label">${phase.name}</div>${groups}`;
+    return `<div class="mphase-label">${phaseDot(phase.id)}${phase.name}</div>${groups}`;
   }).join('') || `<div class="empty-state">No tasks yet.</div>`;
 }
 
@@ -1451,6 +1705,12 @@ document.getElementById('subtaskFilterStatus').addEventListener('change', e => {
 document.getElementById('exportTasksCsv').addEventListener('click', exportTasksCSV);
 document.getElementById('exportSubtasksCsv').addEventListener('click', exportSubtasksCSV);
 document.getElementById('exportExcelBtn').addEventListener('click', exportAllExcel);
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+document.getElementById('globalSearch').addEventListener('input', e => performGlobalSearch(e.target.value));
+document.addEventListener('click', e => {
+  if (!e.target.closest('.sidebar-search')) document.getElementById('searchResults').style.display = 'none';
+});
 
 loadData();
 </script>
