@@ -2049,9 +2049,11 @@ document.getElementById('authSubmitBtn').addEventListener('click', async () => {
     : supabaseClient.auth.signUp({ email, password });
   const { data, error } = await action;
   if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
-  if (authMode === 'signup' && !data.session) {
+  if (!data.session) {
+    // Only happens if "Confirm email" is still turned on in Supabase --
+    // see README, this app expects it to be turned off (no email step).
     errEl.classList.add('success');
-    errEl.textContent = 'Check your email to confirm your account, then sign in.';
+    errEl.textContent = 'Account created. If sign-in does not continue automatically, ask the project owner to check the Supabase Auth email-confirmation setting.';
     errEl.style.display = 'block';
     return;
   }
