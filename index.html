@@ -1080,13 +1080,13 @@ async function initAuth() {
   await loadMyProjects();
 }
 
-// Once logged in with a verified email, link any pending invite(s) that
-// were created for that email address (user_id was null until now).
+// Once logged in, link any pending invite(s) that were created for this
+// account's email address (user_id was null until now). Done via a
+// security-definer RPC (claim_my_invites) rather than a plain update, so it
+// doesn't depend on getting an RLS/JWT email comparison exactly right.
 async function claimPendingInvites() {
-  await supabaseClient.from('project_members')
-    .update({ user_id: currentUser.id, joined_at: new Date().toISOString() })
-    .eq('email', currentUser.email)
-    .is('user_id', null);
+  const { error } = await supabaseClient.rpc('claim_my_invites');
+  if (error) { showToast('Could not check pending invites: ' + error.message); }
 }
 
 async function loadMyProjects() {
