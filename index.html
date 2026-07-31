@@ -429,11 +429,13 @@
     font-family: inherit; min-width: 110px; background: white;
   }
   .m-expand {
-    border: none; background: transparent; cursor: pointer; color: var(--color-muted);
-    font-size: 11px; padding: 4px; transition: transform var(--ease), color var(--ease);
+    border: 1px solid var(--color-border); background: #FAFBFD; cursor: pointer; color: var(--color-muted);
+    font-size: 11px; font-weight: 700; padding: 5px 9px; border-radius: var(--radius-sm); font-family: inherit;
+    white-space: nowrap; transition: color var(--ease), background var(--ease);
   }
-  .m-expand:hover { color: var(--color-text); }
-  .mcard.expanded .m-expand { transform: rotate(90deg); }
+  .m-expand:hover { color: var(--color-text); background: white; }
+  .m-expand-arrow { display: inline-block; transition: transform var(--ease); }
+  .mcard.expanded .m-expand-arrow { transform: rotate(90deg); }
   .mtask-detail {
     display: none; padding: 9px 11px 13px 35px; grid-template-columns: 1fr 1fr; gap: 8px 12px;
   }
@@ -2255,7 +2257,7 @@ function manageTaskCardHtml(t) {
   return `
     <div class="mcard" data-id="${t.id}">
       <div class="mtask-summary">
-        <button type="button" class="m-expand" onclick="toggleMcard(this)">▸</button>
+        <button type="button" class="m-expand" onclick="toggleMcard(this)" title="Show more fields: description, notes, dates, link, dependencies"><span class="m-expand-arrow">▸</span> More</button>
         <input type="text" data-field="title" value="${t.title || ''}" ${dis}>
         <select data-field="assignee_id" data-type="uuid" ${dis}>${memberOptions(t.assignee_id)}</select>
         <select data-field="priority" ${dis}>${priorityOptions(t.priority)}</select>
@@ -2283,7 +2285,7 @@ function manageSubtaskCardHtml(s) {
   return `
     <div class="mcard" data-id="${s.id}">
       <div class="mtask-summary">
-        <button type="button" class="m-expand" onclick="toggleMcard(this)">▸</button>
+        <button type="button" class="m-expand" onclick="toggleMcard(this)" title="Show more fields: description, notes, dates, link, dependencies"><span class="m-expand-arrow">▸</span> More</button>
         <input type="text" data-field="title" value="${s.title || ''}" ${dis}>
         <select data-field="assignee_id" data-type="uuid" ${dis}>${memberOptions(s.assignee_id)}</select>
         <input type="date" data-field="due_date" data-type="date" value="${s.due_date || ''}" ${dis}>
