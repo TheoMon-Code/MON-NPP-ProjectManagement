@@ -410,6 +410,27 @@
   .subtask .item-detail { padding: 4px 0 0 0; }
   .no-subtasks { font-size: 12px; color: var(--color-muted); padding: 8px 0; font-style: italic; }
 
+  /* Comment threads (Phases tab, per task/subtask) */
+  .comments-block { margin-top: 8px; }
+  .comments-toggle {
+    background: none; border: none; padding: 3px 0; margin: 0; font-family: inherit;
+    font-size: 11.5px; font-weight: 700; color: var(--color-muted); cursor: pointer;
+    transition: color var(--ease);
+  }
+  .comments-toggle:hover { color: var(--color-primary); }
+  .comments-panel {
+    margin-top: 8px; padding: 10px 12px; background: var(--color-fill); border-radius: var(--radius-sm);
+  }
+  .comments-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+  .comment-row { font-size: 12px; }
+  .comment-meta { display: flex; gap: 8px; align-items: baseline; }
+  .comment-author { font-weight: 700; color: var(--color-text); }
+  .comment-time { color: var(--color-muted); font-size: 10.5px; }
+  .comment-body { color: var(--color-text); margin-top: 2px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .no-comments { font-size: 12px; color: var(--color-muted); font-style: italic; margin-bottom: 8px; }
+  .comment-add-row { display: flex; gap: 8px; }
+  .comment-input { flex: 1; min-width: 0; font-size: 12.5px; padding: 7px 10px; }
+
   /* Team */
   .team-grid {
     display: grid;
@@ -1181,6 +1202,7 @@ const STATUS_PROGRESS = { not_started: 0, in_progress: 50, blocked: 50, done: 10
 let supabaseClient = null;
 let teamMembers = [], phases = [], tasks = [], subtasks = [], objectives = [];
 let projectMembers = []; // access-role rows (owner/editor/member/viewer) for the current project
+let comments = []; // discussion threads on tasks/subtasks (see migration-comments.sql)
 let charts = {};
 let taskFilters = { phase: '', status: '', assignee: '' };
 let subtaskFilters = { task: '', status: '', assignee: '' };
@@ -1317,15 +1339,17 @@ function linkTag(item) {
   if (!item.link_url) return '';
   return `<a href="${item.link_url}" target="_blank" rel="noopener noreferrer" class="link-tag" onclick="event.stopPropagation();">🔗 Link</a>`;
 }
-function detailBlock(item) {
+function detailBlock(item, itemTable) {
   const depTag = dependencyTag(item);
   const link = linkTag(item);
-  if (!item.description && !item.notes && !depTag && !link) return '';
+  const commentsHtml = itemTable ? commentsBlock(item, itemTable) : '';
+  if (!item.description && !item.notes && !depTag && !link && !commentsHtml) return '';
   return `<div class="item-detail">
     ${item.description ? `<div>${item.description}</div>` : ''}
     ${item.notes ? `<div class="item-notes ${item.status === 'blocked' ? 'blocked' : ''}">${item.status === 'blocked' ? '⚠ ' : '📝 '}${item.notes}</div>` : ''}
     ${depTag ? `<div>${depTag}</div>` : ''}
     ${link ? `<div>${link}</div>` : ''}
+    ${commentsHtml}
   </div>`;
 }
 function phaseAtRisk(phaseId) {
@@ -1367,10 +1391,12 @@ function renderKpiSkeleton() {
   if (el) el.innerHTML = card() + card() + card() + card() + card();
 }
 
-async function loadData() {
+async function loadData(silent) {
   if (!currentProjectId) return;
-  document.getElementById('updatedAt').textContent = "Loading…";
-  renderKpiSkeleton();
+  if (!silent) {
+    document.getElementById('updatedAt').textContent = "Loading…";
+    renderKpiSkeleton();
+  }
 
   const [tm, ph, tk, sb, ob, pm] = await Promise.all([
     supabaseClient.from('team_members').select('*').eq('project_id', currentProjectId).order('name'),
@@ -1399,6 +1425,7 @@ async function loadData() {
   document.getElementById('updatedAt').textContent = "Last updated: " + new Date().toLocaleString('en-CA');
   renderAll();
   loadActivityLog();
+  loadComments();
 }
 
 function renderAll() {
@@ -1412,6 +1439,68 @@ function renderAll() {
   renderNavDots();
   computeNotifications();
 }
+
+// Comment threads (see migration-comments.sql), fetched separately for the
+// same reason as the activity log below: if the migration hasn't been run
+// yet, this query fails silently instead of breaking the rest of the app.
+async function loadComments() {
+  if (!supabaseClient || !currentProjectId) return;
+  const { data, error } = await supabaseClient
+    .from('comments')
+    .select('*')
+    .eq('project_id', currentProjectId)
+    .order('created_at', { ascending: true });
+  comments = error ? null : (data || []);
+  renderPhasesTree();
+}
+function commentsForItem(itemTable, itemId) {
+  return (comments || []).filter(c => c.item_table === itemTable && c.item_id === itemId);
+}
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function commentsBlock(item, itemTable) {
+  if (comments === null) return ''; // migration-comments.sql hasn't been run yet -- stay quiet
+  const key = itemTable + '-' + item.id;
+  const list = commentsForItem(itemTable, item.id);
+  const rows = list.map(c => `
+      <div class="comment-row">
+        <div class="comment-meta"><span class="comment-author">${escapeHtml(c.author_email || 'Someone')}</span><span class="comment-time">${timeAgo(c.created_at)}</span></div>
+        <div class="comment-body">${escapeHtml(c.body)}</div>
+      </div>`).join('');
+  return `
+    <div class="comments-block">
+      <button class="comments-toggle" onclick="event.stopPropagation(); toggleComments('${key}')">💬 ${list.length ? list.length + ' comment' + (list.length === 1 ? '' : 's') : 'Comment'}</button>
+      <div class="comments-panel" id="comments-${key}" style="display:none;">
+        ${list.length ? `<div class="comments-list">${rows}</div>` : `<div class="no-comments">No comments yet.</div>`}
+        <div class="comment-add-row">
+          <input type="text" class="comment-input" id="comment-input-${key}" placeholder="Write a comment…" onkeydown="event.stopPropagation(); if(event.key==='Enter'){event.preventDefault();addComment('${itemTable}','${item.id}');}" onclick="event.stopPropagation();">
+          <button class="m-btn save" onclick="event.stopPropagation(); addComment('${itemTable}','${item.id}')">Post</button>
+        </div>
+      </div>
+    </div>`;
+}
+window.toggleComments = function(key) {
+  const panel = document.getElementById('comments-' + key);
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+};
+window.addComment = async function(itemTable, itemId) {
+  const key = itemTable + '-' + itemId;
+  const input = document.getElementById('comment-input-' + key);
+  if (!input) return;
+  const body = input.value.trim();
+  if (!body || !supabaseClient || !currentProjectId) return;
+  const { error } = await supabaseClient.from('comments').insert({
+    project_id: currentProjectId, item_table: itemTable, item_id: itemId,
+    author_id: currentUser?.id, author_email: currentUser?.email, body,
+  });
+  if (error) { showToast('Error posting comment: ' + error.message); return; }
+  input.value = '';
+  await loadComments();
+  const panel = document.getElementById('comments-' + key);
+  if (panel) panel.style.display = 'block';
+};
 
 // Activity log fetch is kept separate from the main loadData() Promise.all
 // on purpose: if migration-activity-log.sql hasn't been run yet, this query
@@ -1618,12 +1707,34 @@ window.enterProject = function(projectId) {
   currentUserRole = proj ? proj.role : null;
   showDashboardScreen();
   loadData();
+  startAutoRefresh();
 };
 
 window.backToProjects = function() {
   currentProjectId = null;
+  stopAutoRefresh();
   showProjectScreen();
 };
+
+// Keeps the dashboard reasonably up to date with what teammates are doing,
+// without needing a click on "Refresh" -- important now that comment
+// threads exist (someone might reply while you're looking at the tab).
+// Deliberately simple polling rather than Supabase Realtime, so it needs no
+// extra Supabase configuration (no replication/publication setup required).
+let autoRefreshTimer = null;
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(() => {
+    if (!currentProjectId) return;
+    if (document.visibilityState !== 'visible') return;
+    const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return; // don't interrupt someone typing
+    loadData(true);
+  }, 25000);
+}
+function stopAutoRefresh() {
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+}
 
 function renderNavDots() {
   document.getElementById('navDotTasks').classList.toggle('show', tasks.some(isOverdue));
@@ -2058,6 +2169,14 @@ function renderActivityFeed() {
 }
 
 function renderPhasesTree() {
+  // Rebuilding the tree wipes any expand/collapse + open-comment-panel state
+  // that was on the old DOM -- capture it first and reapply it after, so a
+  // background auto-refresh (or posting a comment) doesn't visually collapse
+  // whatever the person had open.
+  const openPhases = new Set([...document.querySelectorAll('.phase.open')].map(el => el.dataset.phaseId));
+  const openTasks = new Set([...document.querySelectorAll('.task.open')].map(el => el.dataset.taskId));
+  const openComments = new Set([...document.querySelectorAll('.comments-panel')].filter(el => el.style.display === 'block').map(el => el.id));
+
   const html = phases.map(phase => {
     const ts = phaseTasks(phase.id);
     const pct = phaseProgress(phase.id);
@@ -2072,7 +2191,7 @@ function renderPhasesTree() {
                 <span class="subtask-due">${dateRange(s.start_date, s.due_date)}${completedTag(s)}</span>
                 ${badge(s.status)}
               </div>
-              ${detailBlock(s)}
+              ${detailBlock(s, 'subtasks')}
             </div>`).join('')
         : `<div class="no-subtasks">No subtasks yet</div>`;
       return `
@@ -2085,7 +2204,7 @@ function renderPhasesTree() {
             <span class="task-due">${dateRange(t.start_date, t.due_date)}${completedTag(t)}</span>
             ${badge(t.status)}
           </div>
-          ${detailBlock(t)}
+          ${detailBlock(t, 'tasks')}
           <div class="subtasks">
             ${subRows}
             ${quickAddSubtaskFormHtml(t.id)}
@@ -2110,6 +2229,10 @@ function renderPhasesTree() {
   }).join('');
 
   document.getElementById('phasesTree').innerHTML = phases.length ? html : emptyStateHtml('No phases defined yet. Add your first phase to start structuring the project.');
+
+  openPhases.forEach(id => document.querySelector(`.phase[data-phase-id="${id}"]`)?.classList.add('open'));
+  openTasks.forEach(id => document.querySelector(`.task[data-task-id="${id}"]`)?.classList.add('open'));
+  openComments.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'block'; });
 }
 
 window.togglePhase = function(id) {
@@ -2653,7 +2776,7 @@ document.getElementById('tabs').addEventListener('click', (e) => {
   document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
 });
 
-document.getElementById('refreshBtn').addEventListener('click', loadData);
+document.getElementById('refreshBtn').addEventListener('click', () => loadData());
 
 document.getElementById('manageSubnav').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-msub]');
@@ -2698,6 +2821,7 @@ document.getElementById('changePasswordBtn').addEventListener('click', async () 
 document.getElementById('switchProjectLink').addEventListener('click', (e) => { e.preventDefault(); backToProjects(); });
 
 async function doSignOut() {
+  stopAutoRefresh();
   await supabaseClient.auth.signOut();
   currentUser = null;
   currentProjectId = null;
