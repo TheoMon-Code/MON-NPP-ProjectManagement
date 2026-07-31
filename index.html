@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MON Logistics — Project Hub</title>
+<script>
+  // Applied as early as possible (before the stylesheet paints anything) so
+  // there's no flash of the wrong theme on load.
+  (function() {
+    try {
+      var saved = localStorage.getItem('mon-theme');
+      if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    } catch (e) {}
+  })();
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23006EAF'/%3E%3Cstop offset='1' stop-color='%23D31A2B'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial, sans-serif' font-size='36' font-weight='800' fill='white' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -30,6 +41,14 @@
     --color-info: #2F8FCC;      /* lighter tint of the brand blue, for in-progress badges */
     --color-muted: #6B7280;
 
+    /* Shared neutrals (also redefined under [data-theme="dark"] below) */
+    --color-fill: #F1F2F6;
+    --color-fill-hover: #E7E9F0;
+    --color-tag-bg: #EDEEF2;
+    --color-hover-tint: #FAFBFD;
+    --color-hover-tint-2: #F5F6F9;
+    --color-border-hover: #C7CDDA;
+
     --radius-sm: 9px;
     --radius-md: 14px;
     --radius-lg: 20px;
@@ -40,6 +59,48 @@
     --shadow-hover: 0 10px 26px rgba(16,24,40,.10), 0 2px 6px rgba(16,24,40,.05);
     --ease: 160ms cubic-bezier(.4,0,.2,1);
     --brand-gradient: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  }
+
+  /* Dark mode -- same brand colors (primary/accent/ok/warn/blocked/info
+     stay identical, the palette is the MON brand book either way), only
+     the neutrals (page/card backgrounds, text, borders, fills) flip. */
+  html[data-theme="dark"] {
+    --color-bg: #14161B;
+    --color-text: #E7E9EE;
+    --color-card-bg: #1D2027;
+    --color-border: #2C303A;
+    --color-muted: #9096A3;
+    --color-fill: #262A33;
+    --color-fill-hover: #2F343F;
+    --color-tag-bg: #262A33;
+    --color-hover-tint: #23262E;
+    --color-hover-tint-2: #262A33;
+    --color-border-hover: #3A404D;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
+    --shadow-md: 0 6px 18px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.3);
+    --shadow-lg: 0 20px 48px rgba(0,0,0,.55);
+    --shadow-hover: 0 10px 26px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.3);
+  }
+  html[data-theme="dark"] body {
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent) 8%, transparent) 0%, transparent 40%),
+      radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--color-primary) 10%, transparent) 0%, transparent 45%),
+      var(--color-bg);
+  }
+  html[data-theme="dark"] select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%239096A3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 7 10 12 15 7'/%3E%3C/svg%3E");
+  }
+  html[data-theme="dark"] .auth-card input:focus,
+  html[data-theme="dark"] input:focus, html[data-theme="dark"] select:focus, html[data-theme="dark"] textarea:focus {
+    background: var(--color-fill-hover) !important;
+  }
+  html[data-theme="dark"] ::-webkit-scrollbar-thumb { border-color: var(--color-bg); }
+  html[data-theme="dark"] .config-warning { color: #FFD9A6; }
+  html[data-theme="dark"] .m-btn.delete { background: color-mix(in srgb, var(--color-blocked) 22%, var(--color-card-bg)); }
+  html[data-theme="dark"] .badge, html[data-theme="dark"] .prio,
+  html[data-theme="dark"] .overdue-tag, html[data-theme="dark"] .risk-tag,
+  html[data-theme="dark"] .pending-tag, html[data-theme="dark"] .joined-tag {
+    filter: brightness(1.1) saturate(1.05);
   }
 
   * { box-sizing: border-box; }
@@ -59,7 +120,7 @@
   }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #D3D8E2; border-radius: 999px; border: 2px solid var(--color-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--color-border-hover); border-radius: 999px; border: 2px solid var(--color-bg); }
   ::-webkit-scrollbar-thumb:hover { background: #B9C0CE; }
 
   /* ============================================================
@@ -74,7 +135,7 @@
   input[type="text"], input[type="email"], input[type="password"],
   input[type="date"], input[type="number"], input[type="url"],
   textarea, select {
-    background: #F1F2F6 !important;
+    background: var(--color-fill) !important;
     border: 1.5px solid transparent !important;
     border-radius: var(--radius-sm) !important;
     color: var(--color-text);
@@ -84,7 +145,7 @@
   input[type="text"]:hover, input[type="email"]:hover, input[type="password"]:hover,
   input[type="date"]:hover, input[type="number"]:hover, input[type="url"]:hover,
   textarea:hover, select:hover {
-    background: #E7E9F0 !important;
+    background: var(--color-fill-hover) !important;
   }
   input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
   input[type="date"]:focus, input[type="number"]:focus, input[type="url"]:focus,
@@ -95,7 +156,7 @@
     outline: none;
   }
   input:disabled, select:disabled, textarea:disabled {
-    background: #F5F6FA !important; color: var(--color-muted); cursor: not-allowed;
+    background: var(--color-bg) !important; color: var(--color-muted); cursor: not-allowed;
   }
   input::placeholder, textarea::placeholder { color: #9AA1AE; }
 
@@ -144,7 +205,7 @@
     cursor: pointer; text-align: left; transition: background var(--ease), color var(--ease), transform var(--ease);
   }
   .side-nav button svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.75; transition: opacity var(--ease); }
-  .side-nav button:hover { background: #F5F6F9; color: var(--color-text); }
+  .side-nav button:hover { background: var(--color-hover-tint-2); color: var(--color-text); }
   .side-nav button:active { transform: scale(0.98); }
   .side-nav button.active {
     background: var(--brand-gradient); color: white;
@@ -162,7 +223,7 @@
     transition: background var(--ease), border-color var(--ease), box-shadow var(--ease);
   }
   .sidebar-footer .refresh svg { width: 14px; height: 14px; }
-  .sidebar-footer .refresh:hover { background: #F5F6F9; border-color: #D3D8E2; }
+  .sidebar-footer .refresh:hover { background: var(--color-hover-tint-2); border-color: var(--color-border-hover); }
   .sidebar-footer .refresh:active { transform: scale(0.97); }
   .sidebar-footer .updated-at { font-size: 10.5px; color: var(--color-muted); margin-top: 9px; text-align: center; }
 
@@ -201,11 +262,23 @@
     box-shadow: var(--shadow-sm);
     transition: box-shadow var(--ease), transform var(--ease), border-color var(--ease);
   }
-  .kpi-card:hover { border-color: #D3D8E2; box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .kpi-card:hover { border-color: var(--color-border-hover); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
   .kpi-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
   .kpi-icon svg { width: 17px; height: 17px; }
   .kpi-card .value { font-size: 29px; font-weight: 800; color: var(--color-primary); letter-spacing: -0.02em; }
   .kpi-card .label { font-size: 12px; color: var(--color-muted); margin-top: 5px; font-weight: 600; }
+
+  /* Skeleton loading placeholders (shown briefly while a project's data loads) */
+  .skel {
+    display: inline-block; border-radius: 6px;
+    background: linear-gradient(100deg, var(--color-fill) 30%, var(--color-fill-hover) 50%, var(--color-fill) 70%);
+    background-size: 220% 100%; animation: skelShimmer 1.3s ease-in-out infinite;
+  }
+  @keyframes skelShimmer { 0% { background-position: 200% 0; } 100% { background-position: -20% 0; } }
+  .skel-kpi .kpi-icon.skel { width: 34px; height: 34px; margin-bottom: 14px; }
+  .skel-kpi .skel-value { width: 56px; height: 26px; display: block; margin-bottom: 8px; }
+  .skel-kpi .skel-label { width: 84px; height: 12px; display: block; }
+  .skel-row { height: 14px; border-radius: 6px; margin: 10px 0; }
 
   .charts-row {
     display: grid;
@@ -253,14 +326,24 @@
   }
   .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
   .badge.done { background: color-mix(in srgb, var(--color-ok) 16%, white); color: var(--color-ok); }
+  .badge.done::before {
+    content: '✓'; width: auto; height: auto; background: none; border-radius: 0;
+    font-size: 10px; font-weight: 900; line-height: 1;
+    animation: badgeCheckPop 360ms cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes badgeCheckPop {
+    0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+    55% { transform: scale(1.35) rotate(6deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); }
+  }
   .badge.in_progress { background: color-mix(in srgb, var(--color-info) 14%, white); color: var(--color-info); }
-  .badge.not_started { background: #EDEEF2; color: var(--color-muted); }
+  .badge.not_started { background: var(--color-tag-bg); color: var(--color-muted); }
   .badge.blocked { background: color-mix(in srgb, var(--color-blocked) 15%, white); color: var(--color-blocked); }
 
   .prio { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
   .prio.high { background: color-mix(in srgb, var(--color-blocked) 15%, white); color: var(--color-blocked); }
   .prio.medium { background: color-mix(in srgb, #F2A93B 22%, white); color: #92600A; }
-  .prio.low { background: #EDEEF2; color: var(--color-muted); }
+  .prio.low { background: var(--color-tag-bg); color: var(--color-muted); }
 
   /* Phases > Tasks > Subtasks accordion */
   .phase {
@@ -273,7 +356,8 @@
     transition: background var(--ease);
   }
   .phase-header:hover { background: color-mix(in srgb, var(--color-primary) 4%, white); }
-  .caret { font-size: 10px; color: var(--color-muted); width: 12px; transition: transform var(--ease); }
+  .caret { display: inline-flex; color: var(--color-muted); width: 14px; flex-shrink: 0; transition: transform var(--ease); }
+  .caret svg { width: 14px; height: 14px; }
   .phase.open > .phase-header .caret { transform: rotate(90deg); }
   .phase-name { font-weight: 700; font-size: 14px; flex: 0 0 200px; letter-spacing: -0.01em; }
   .phase-progress { flex: 1; display: flex; align-items: center; gap: 10px; }
@@ -289,12 +373,12 @@
     background: var(--color-card-bg);
     transition: box-shadow var(--ease), border-color var(--ease), transform var(--ease);
   }
-  .task:hover { box-shadow: var(--shadow-hover); border-color: #D3D8E2; transform: translateY(-1px); }
+  .task:hover { box-shadow: var(--shadow-hover); border-color: var(--color-border-hover); transform: translateY(-1px); }
   .task-header {
     display: flex; align-items: center; gap: 10px;
     padding: 11px 14px; cursor: pointer; font-size: 13px;
   }
-  .task-header:hover { background: #FAFBFD; }
+  .task-header:hover { background: var(--color-hover-tint); }
   .task-title { flex: 1; font-weight: 600; }
   .task-assignee { font-size: 11.5px; color: var(--color-muted); flex: 0 0 140px; }
   .task-due { font-size: 11.5px; color: var(--color-muted); flex: 0 0 170px; }
@@ -332,12 +416,18 @@
     box-shadow: var(--shadow-sm);
     transition: box-shadow var(--ease), transform var(--ease);
   }
-  .team-card:hover { border-color: #D3D8E2; box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .team-card:hover { border-color: var(--color-border-hover); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
   .avatar {
     width: 44px; height: 44px; border-radius: 50%; color: white;
     display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: 14px; flex-shrink: 0;
     box-shadow: 0 3px 8px rgba(16,24,40,.12);
+  }
+  .mini-avatar {
+    display: inline-flex; width: 18px; height: 18px; border-radius: 50%; color: white;
+    align-items: center; justify-content: center; font-weight: 700; font-size: 8px;
+    margin-right: 6px; vertical-align: middle; flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(16,24,40,.18);
   }
   .team-card .name { font-weight: 700; font-size: 14px; letter-spacing: -0.01em; }
   .team-card .role { font-size: 12px; color: var(--color-muted); margin-top: 1px; }
@@ -358,7 +448,7 @@
     box-shadow: var(--shadow-sm);
     transition: box-shadow var(--ease), transform var(--ease);
   }
-  .objective-card:hover { border-color: #D3D8E2; box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .objective-card:hover { border-color: var(--color-border-hover); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
   .objective-card .title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 7px; }
   .objective-card .title { font-weight: 700; font-size: 14px; letter-spacing: -0.01em; }
   .objective-card .desc { font-size: 12.5px; color: var(--color-muted); margin-bottom: 14px; line-height: 1.5; }
@@ -384,7 +474,7 @@
     font-size: 13px; font-family: inherit; background: white; min-width: 160px;
     transition: border-color var(--ease);
   }
-  .filter-bar select:hover { border-color: #C7CDDA; }
+  .filter-bar select:hover { border-color: var(--color-border-hover); }
   .export-btn {
     display: flex; align-items: center; gap: 7px;
     background: var(--color-card-bg); border: 1px solid var(--color-border); color: var(--color-text);
@@ -393,10 +483,10 @@
     box-shadow: var(--shadow-sm);
   }
   .export-btn svg { width: 14px; height: 14px; }
-  .export-btn:hover { background: #F5F6F9; border-color: #C7CDDA; box-shadow: var(--shadow-hover); }
+  .export-btn:hover { background: var(--color-hover-tint-2); border-color: var(--color-border-hover); box-shadow: var(--shadow-hover); }
   .export-btn:active { transform: scale(0.97); }
   #tasksListTable, #subtasksListTable { width: 100%; border-collapse: collapse; font-size: 13px; }
-  #tasksListTable th, #subtasksListTable th { text-align: left; padding: 12px 18px; color: var(--color-muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 1px solid var(--color-border); }
+  #tasksListTable th, #subtasksListTable th { text-align: left; padding: 12px 18px; color: var(--color-muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 1px solid var(--color-border); position: sticky; top: 0; background: var(--color-card-bg); z-index: 5; }
   #tasksListTable td, #subtasksListTable td { padding: 12px 18px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
   #tasksListTable tr:last-child td, #subtasksListTable tr:last-child td { border-bottom: none; }
   #tasksListTable tr:hover td, #subtasksListTable tr:hover td { background: color-mix(in srgb, var(--color-primary) 4%, white); }
@@ -429,6 +519,7 @@
   #manageTeamTable tr:last-child td, #managePhasesTable tr:last-child td { border-bottom: none; }
   #manageTeamTable th, #managePhasesTable th {
     color: var(--color-muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em;
+    position: sticky; top: 0; background: var(--color-card-bg); z-index: 5;
   }
   .mrow input[type="text"], .mrow input[type="date"], .mrow input[type="number"], .mrow select, .mrow textarea {
     width: 100%; padding: 7px 9px; font-size: 12.5px; border: 1px solid var(--color-border);
@@ -443,7 +534,7 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 16%, transparent);
   }
   .mrow textarea { resize: vertical; min-height: 32px; }
-  .mrow.new-row { background: #FAFBFD; }
+  .mrow.new-row { background: var(--color-hover-tint); }
   .m-actions { display: flex; gap: 6px; white-space: nowrap; }
   .m-btn {
     border: none; border-radius: 999px; padding: 7px 15px; font-size: 12px; font-weight: 700;
@@ -464,7 +555,7 @@
     padding: 9px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer;
     font-family: inherit; transition: background var(--ease), color var(--ease), border-color var(--ease);
   }
-  .subnav button:hover { background: #FAFBFD; color: var(--color-text); }
+  .subnav button:hover { background: var(--color-hover-tint); color: var(--color-text); }
   .subnav button.active { background: var(--brand-gradient); color: white; border-color: transparent; box-shadow: 0 4px 10px color-mix(in srgb, var(--color-primary) 25%, transparent); }
   .manage-subpanel { display: none; animation: fadein 200ms ease; }
   .manage-subpanel.active { display: block; }
@@ -476,7 +567,7 @@
   }
   .mgroup-header {
     display: flex; align-items: center; gap: 10px; padding: 13px 15px; cursor: pointer;
-    background: #FAFBFD; font-size: 13.5px; font-weight: 700; transition: background var(--ease);
+    background: var(--color-hover-tint); font-size: 13.5px; font-weight: 700; transition: background var(--ease);
   }
   .mgroup-header:hover { background: #F5F7FA; }
   .mgroup-header .caret { transition: transform var(--ease); }
@@ -588,6 +679,10 @@
   /* Access sub-tab (project members) */
   #accessTable, #manageAccessTable { width: 100%; border-collapse: collapse; font-size: 13px; }
   #accessTable th, #accessTable td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); text-align: left; }
+  #accessTable th, #manageAccessTable th {
+    color: var(--color-muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em;
+    position: sticky; top: 0; background: var(--color-card-bg); z-index: 5;
+  }
   .invite-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--color-border); }
   .invite-row input[type="email"] { flex: 1; min-width: 200px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; }
   .invite-row select { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; background: white; }
@@ -601,7 +696,7 @@
   .sidebar-search { position: relative; padding: 0 8px 14px; }
   .sidebar-search input {
     width: 100%; padding: 8px 10px 8px 30px; font-size: 12.5px; border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm); font-family: inherit; background: #FAFBFD; transition: border-color var(--ease), background var(--ease);
+    border-radius: var(--radius-sm); font-family: inherit; background: var(--color-hover-tint); transition: border-color var(--ease), background var(--ease);
   }
   .sidebar-search input:focus { outline: none; border-color: var(--color-accent); background: white; }
   .sidebar-search svg { position: absolute; left: 18px; top: 9px; width: 14px; height: 14px; color: var(--color-muted); pointer-events: none; }
@@ -615,7 +710,7 @@
   .search-result:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
   .search-result:last-child { border-bottom: none; border-radius: 0 0 var(--radius-md) var(--radius-md); }
   .search-result:hover { background: color-mix(in srgb, var(--color-primary) 6%, white); }
-  .search-kind { font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: #EDEEF2; padding: 2px 8px; border-radius: 999px; flex-shrink: 0; }
+  .search-kind { font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: var(--color-tag-bg); padding: 2px 8px; border-radius: 999px; flex-shrink: 0; }
   .search-title { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .search-phase { font-size: 10.5px; color: var(--color-muted); flex-shrink: 0; }
   .search-empty { padding: 14px; font-size: 12px; color: var(--color-muted); text-align: center; }
@@ -635,7 +730,7 @@
   /* Recent activity feed on Overview */
   .activity-row { display: flex; align-items: center; gap: 10px; padding: 11px 20px; border-bottom: 1px solid var(--color-border); font-size: 12.5px; flex-wrap: wrap; }
   .activity-row:last-child { border-bottom: none; }
-  .activity-kind { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: #EDEEF2; padding: 2px 9px; border-radius: 999px; flex-shrink: 0; }
+  .activity-kind { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: var(--color-tag-bg); padding: 2px 9px; border-radius: 999px; flex-shrink: 0; }
   .activity-title { font-weight: 600; flex: 1; min-width: 120px; }
   .activity-meta { font-size: 11.5px; color: var(--color-muted); }
   .activity-time { font-size: 11px; color: var(--color-muted); flex: 0 0 70px; text-align: right; }
@@ -659,11 +754,11 @@
   .notif-wrap { position: relative; padding: 0 8px 14px; }
   .notif-bell {
     width: 100%; display: flex; align-items: center; gap: 8px; position: relative;
-    background: #FAFBFD; border: 1px solid var(--color-border); border-radius: 999px;
+    background: var(--color-hover-tint); border: 1px solid var(--color-border); border-radius: 999px;
     padding: 9px 12px; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--color-text);
     cursor: pointer; transition: border-color var(--ease), background var(--ease), box-shadow var(--ease);
   }
-  .notif-bell:hover { border-color: #C7CDDA; background: white; box-shadow: var(--shadow-sm); }
+  .notif-bell:hover { border-color: var(--color-border-hover); background: white; box-shadow: var(--shadow-sm); }
   .notif-bell svg { width: 14px; height: 14px; color: var(--color-muted); flex-shrink: 0; }
   .notif-count {
     background: var(--color-blocked); color: white; font-size: 10px; font-weight: 800;
@@ -837,6 +932,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         Sign out
       </button>
+      <button class="refresh" id="themeToggleBtn" title="Toggle dark mode">
+        <svg id="themeToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <span id="themeToggleLabel">Dark mode</span>
+      </button>
       <div class="updated-at" id="updatedAt">Loading…</div>
     </div>
   </aside>
@@ -899,6 +998,7 @@
       <button class="m-btn save" onclick="applyBulkStatus('tasks')">Apply</button>
       <select id="tasksBulkAssignee"></select>
       <button class="m-btn save" onclick="applyBulkAssignee('tasks')">Assign</button>
+      <button class="m-btn delete" id="tasksBulkDeleteBtn" onclick="applyBulkDelete('tasks')" style="display:none;">Delete selected</button>
       <button class="m-btn delete" onclick="clearBulkSelection('tasks')">Clear selection</button>
     </div>
     <div class="section-card">
@@ -932,6 +1032,7 @@
       <button class="m-btn save" onclick="applyBulkStatus('subtasks')">Apply</button>
       <select id="subtasksBulkAssignee"></select>
       <button class="m-btn save" onclick="applyBulkAssignee('subtasks')">Assign</button>
+      <button class="m-btn delete" id="subtasksBulkDeleteBtn" onclick="applyBulkDelete('subtasks')" style="display:none;">Delete selected</button>
       <button class="m-btn delete" onclick="clearBulkSelection('subtasks')">Clear selection</button>
     </div>
     <div class="section-card">
@@ -1104,13 +1205,29 @@ function initials(name) { if (!name) return "?"; return name.split(' ').map(p=>p
 // A fixed, cheerful palette (Airtable-style) -- each person gets a stable
 // color based on their name, instead of everyone sharing one brand color.
 const AVATAR_PALETTE = ['#F82B60','#FC8619','#CB6E17','#0FA5D8','#4C6EF5','#8B46FF','#1E8E5A','#D6455A'];
+// Each person gets a stable two-tone diagonal gradient (hashed from their
+// name) instead of a flat color -- pairs the base hue with the next hue in
+// the palette so it always reads as an intentional gradient, not random.
+const AVATAR_PALETTE_2 = ['#FF6B9D','#FFAD5C','#E8A33D','#5CC8EC','#7C93FF','#B37CFF','#4CB583','#F0728A'];
 function avatarColor(name) {
   if (!name) return AVATAR_PALETTE[0];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
   return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
 }
+function avatarGradient(name) {
+  if (!name) return `linear-gradient(135deg, ${AVATAR_PALETTE[0]}, ${AVATAR_PALETTE_2[0]})`;
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  const idx = hash % AVATAR_PALETTE.length;
+  return `linear-gradient(135deg, ${AVATAR_PALETTE[idx]}, ${AVATAR_PALETTE_2[idx]})`;
+}
 function memberName(id) { const m = teamMembers.find(t => t.id === id); return m ? m.name : "Unassigned"; }
+function miniAvatar(id) {
+  const m = teamMembers.find(t => t.id === id);
+  if (!m) return '';
+  return `<span class="mini-avatar" style="background:${avatarGradient(m.name)}">${initials(m.name)}</span>`;
+}
 // Each phase gets a stable color (hashed from its id) reused everywhere it's
 // referenced -- phase tree, tasks/subtasks lists, Manage groups, timeline.
 const PHASE_PALETTE = ['#2D7FF9','#8B46FF','#1E8E5A','#DC7A15','#D6455A','#0EA5C4','#C2185B','#5C6BC0'];
@@ -1219,9 +1336,21 @@ async function ensureSupabaseClient() {
 
 // Loads the data for the currently selected project (currentProjectId).
 // Assumes the user is authenticated and a project has already been entered.
+function renderKpiSkeleton() {
+  const card = () => `
+    <div class="kpi-card skel-kpi">
+      <div class="skel kpi-icon"></div>
+      <span class="skel skel-value"></span>
+      <span class="skel skel-label"></span>
+    </div>`;
+  const el = document.getElementById('overviewKpis');
+  if (el) el.innerHTML = card() + card() + card() + card() + card();
+}
+
 async function loadData() {
   if (!currentProjectId) return;
   document.getElementById('updatedAt').textContent = "Loading…";
+  renderKpiSkeleton();
 
   const [tm, ph, tk, sb, ob, pm] = await Promise.all([
     supabaseClient.from('team_members').select('*').eq('project_id', currentProjectId).order('name'),
@@ -1513,7 +1642,22 @@ function renderBulkBar(kind) {
   bar.style.display = set.size ? 'flex' : 'none';
   const countEl = document.getElementById(kind + 'BulkCount');
   if (countEl) countEl.textContent = set.size + ' selected';
+  const delBtn = document.getElementById(kind + 'BulkDeleteBtn');
+  if (delBtn) delBtn.style.display = isOwner() ? '' : 'none';
 }
+window.applyBulkDelete = async function(kind) {
+  if (!isOwner()) { showToast('Only the project Owner can bulk-delete.'); return; }
+  const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
+  if (!set.size || !supabaseClient) return;
+  const noun = kind === 'tasks' ? 'task' : 'subtask';
+  const extra = kind === 'tasks' ? ' Their subtasks will be deleted too.' : '';
+  if (!confirm(`Delete ${set.size} selected ${noun}${set.size === 1 ? '' : 's'}? This can't be undone.${extra}`)) return;
+  const { error } = await supabaseClient.from(kind).delete().in('id', [...set]);
+  if (error) { showToast('Error deleting: ' + error.message); return; }
+  set.clear();
+  showToast('Deleted.', 'success');
+  await loadData();
+};
 window.applyBulkStatus = async function(kind) {
   const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
   const list = kind === 'tasks' ? tasks : subtasks;
@@ -1569,7 +1713,7 @@ function renderTasksListTab() {
       <td class="col-check">${rowCheckbox('tasks', t)}</td>
       <td><strong>${t.title}</strong>${t.description ? `<div class="muted-text">${t.description}</div>` : ''}${t.notes ? `<div class="muted-text ${t.status==='blocked'?'blocked-text':''}">${t.status==='blocked'?'⚠ ':'📝 '}${t.notes}</div>` : ''}${dependencyTag(t) ? `<div class="muted-text">${dependencyTag(t)}</div>` : ''}${t.link_url ? `<div class="muted-text">${linkTag(t)}</div>` : ''}</td>
       <td>${phaseDot(t.phase_id)}${phaseName(t.phase_id)}</td>
-      <td>${memberName(t.assignee_id)}</td>
+      <td>${miniAvatar(t.assignee_id)}${memberName(t.assignee_id)}</td>
       <td>${prioBadge(t.priority)}</td>
       <td>${dateRange(t.start_date, t.due_date)}${completedTag(t)}${isOverdue(t) ? ' <span class="overdue-tag">Overdue</span>' : ''}</td>
       <td>${badge(t.status)}</td>
@@ -1604,7 +1748,7 @@ function renderSubtasksListTab() {
       <td><strong>${s.title}</strong>${s.description ? `<div class="muted-text">${s.description}</div>` : ''}${s.notes ? `<div class="muted-text ${s.status==='blocked'?'blocked-text':''}">${s.status==='blocked'?'⚠ ':'📝 '}${s.notes}</div>` : ''}${s.link_url ? `<div class="muted-text">${linkTag(s)}</div>` : ''}</td>
       <td>${taskName(s.task_id)}</td>
       <td>${phaseDot(taskPhaseId(s.task_id))}${phaseName(taskPhaseId(s.task_id))}</td>
-      <td>${memberName(s.assignee_id)}</td>
+      <td>${miniAvatar(s.assignee_id)}${memberName(s.assignee_id)}</td>
       <td>${dateRange(s.start_date, s.due_date)}${completedTag(s)}${isOverdue(s) ? ' <span class="overdue-tag">Overdue</span>' : ''}</td>
       <td>${badge(s.status)}</td>
     </tr>`).join('');
@@ -1888,7 +2032,7 @@ function renderActivityFeed() {
       <span class="activity-kind">${i._kind}</span>
       <span class="activity-title">${i.title}</span>
       ${badge(i.status)}
-      <span class="activity-meta">${i._phase} · ${memberName(i.assignee_id)}</span>
+      <span class="activity-meta">${i._phase} · ${miniAvatar(i.assignee_id)}${memberName(i.assignee_id)}</span>
       <span class="activity-time">${timeAgo(i.updated_at)}</span>
     </div>`).join('');
 }
@@ -1904,7 +2048,7 @@ function renderPhasesTree() {
             <div class="subtask">
               <div class="subtask-row">
                 <span class="subtask-title">${s.title}</span>
-                <span class="subtask-assignee">${memberName(s.assignee_id)}</span>
+                <span class="subtask-assignee">${miniAvatar(s.assignee_id)}${memberName(s.assignee_id)}</span>
                 <span class="subtask-due">${dateRange(s.start_date, s.due_date)}${completedTag(s)}</span>
                 ${badge(s.status)}
               </div>
@@ -1914,10 +2058,10 @@ function renderPhasesTree() {
       return `
         <div class="task" data-task-id="${t.id}">
           <div class="task-header" onclick="toggleTask('${t.id}')">
-            <span class="caret">▶</span>
+            <span class="caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg></span>
             <span class="task-title">${t.title}</span>
             ${prioBadge(t.priority)}
-            <span class="task-assignee">${memberName(t.assignee_id)}</span>
+            <span class="task-assignee">${miniAvatar(t.assignee_id)}${memberName(t.assignee_id)}</span>
             <span class="task-due">${dateRange(t.start_date, t.due_date)}${completedTag(t)}</span>
             ${badge(t.status)}
           </div>
@@ -1932,7 +2076,7 @@ function renderPhasesTree() {
     return `
       <div class="phase" data-phase-id="${phase.id}">
         <div class="phase-header" onclick="togglePhase('${phase.id}')">
-          <span class="caret">▶</span>
+          <span class="caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg></span>
           <span class="phase-name">${phaseDot(phase.id)}${phase.name}</span>
           <span class="phase-progress">
             <div class="progress-bar"><div style="width:${pct}%"></div></div>
@@ -1964,7 +2108,7 @@ function renderTeam() {
     const overdueOwn = assignedTasks.filter(isOverdue).length + assignedSubtasks.filter(isOverdue).length;
     return `
       <div class="team-card">
-        <div class="avatar" style="background:${avatarColor(m.name)}">${initials(m.name)}</div>
+        <div class="avatar" style="background:${avatarGradient(m.name)}">${initials(m.name)}</div>
         <div>
           <div class="name">${m.name}</div>
           <div class="role">${m.role || '—'}</div>
@@ -2396,7 +2540,7 @@ function renderManageTasksTree() {
     return `
       <div class="mgroup" data-phase-id="${phase.id}">
         <div class="mgroup-header" onclick="toggleMgroup(this)">
-          <span class="caret">▶</span>
+          <span class="caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg></span>
           <span>${phaseDot(phase.id)}${phase.name}</span>
           <span class="mgroup-count">${ts.length} task${ts.length === 1 ? '' : 's'}</span>
         </div>
@@ -2422,7 +2566,7 @@ function renderManageSubtasksTree() {
       return `
         <div class="mgroup mgroup-nested" data-task-id="${t.id}">
           <div class="mgroup-header" onclick="toggleMgroup(this)">
-            <span class="caret">▶</span>
+            <span class="caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg></span>
             <span>${t.title}</span>
             <span class="mgroup-count">${subs.length} subtask${subs.length === 1 ? '' : 's'}</span>
           </div>
@@ -2446,14 +2590,23 @@ function chartColors() {
     style.getPropertyValue('--color-muted').trim(),
   ];
 }
+function chartTextColor() { return getComputedStyle(document.documentElement).getPropertyValue('--color-muted').trim(); }
+function chartGridColor() { return getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim(); }
 
 function drawBarChart(canvasId, labels, values) {
   const ctx = document.getElementById(canvasId).getContext('2d');
   if (charts[canvasId]) charts[canvasId].destroy();
   charts[canvasId] = new Chart(ctx, {
     type: 'bar',
-    data: { labels, datasets: [{ data: values, backgroundColor: chartColors()[0] }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } } }
+    data: { labels, datasets: [{ data: values, backgroundColor: chartColors()[0], borderRadius: 6, maxBarThickness: 46 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 500, easing: 'easeOutQuart' },
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%', color: chartTextColor() }, grid: { color: chartGridColor() } },
+        x: { ticks: { color: chartTextColor() }, grid: { display: false } },
+      }
+    }
   });
 }
 
@@ -2462,8 +2615,11 @@ function drawDoughnutChart(canvasId, labels, values) {
   if (charts[canvasId]) charts[canvasId].destroy();
   charts[canvasId] = new Chart(ctx, {
     type: 'doughnut',
-    data: { labels, datasets: [{ data: values, backgroundColor: chartColors() }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+    data: { labels, datasets: [{ data: values, backgroundColor: chartColors(), borderColor: getComputedStyle(document.documentElement).getPropertyValue('--color-card-bg').trim(), borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 500, easing: 'easeOutQuart' },
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, color: chartTextColor() } } }
+    }
   });
 }
 
@@ -2529,6 +2685,44 @@ async function doSignOut() {
 }
 document.getElementById('signOutBtn').addEventListener('click', doSignOut);
 document.getElementById('signOutBtn2').addEventListener('click', doSignOut);
+
+// Dark mode -- persisted in localStorage, applied instantly at page load
+// (see the tiny inline script in <head>) so there's no flash on refresh.
+function applyThemeToggleUI() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.getElementById('themeToggleLabel').textContent = isDark ? 'Light mode' : 'Dark mode';
+}
+function redrawChartsForTheme() {
+  if (document.getElementById('panel-overview')?.classList.contains('active')) renderOverview();
+}
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('mon-theme', 'light'); } catch (e) {}
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    try { localStorage.setItem('mon-theme', 'dark'); } catch (e) {}
+  }
+  applyThemeToggleUI();
+  redrawChartsForTheme();
+});
+applyThemeToggleUI();
+
+// Keyboard shortcuts: "/" focuses the global search (unless already typing
+// in a field), Escape closes any open dropdown/panel.
+document.addEventListener('keydown', (e) => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+  if (e.key === '/' && !typing) {
+    e.preventDefault();
+    document.getElementById('globalSearch')?.focus();
+  } else if (e.key === 'Escape') {
+    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('notifPanel').style.display = 'none';
+    if (typing) e.target.blur();
+  }
+});
 
 const STARTER_PHASE_TEMPLATE = [
   { name: 'Kickoff', description: 'Align on scope, goals and stakeholders.', sort_order: 1 },
