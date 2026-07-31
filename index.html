@@ -112,12 +112,15 @@
     .app-shell { flex-direction: column; }
     .sidebar { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; padding: 10px 14px; gap: 14px; overflow-x: auto; }
     .sidebar-brand { padding: 0; flex-shrink: 0; }
+    .sidebar-search, .notif-wrap { display: none; } /* use the full-width search/notifications only on larger screens */
     .side-nav { flex-direction: row; overflow-x: auto; }
     .side-nav button { white-space: nowrap; }
     .sidebar-footer { border-top: none; margin-top: 0; padding-top: 0; margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .sidebar-footer .refresh { width: auto; }
     .sidebar-footer .updated-at { display: none; }
     main#app { padding: 20px 18px 40px; }
+    .filter-bar select { min-width: 0; flex: 1; }
+    .bulk-bar { flex-direction: column; align-items: stretch; }
   }
 
   .kpi-row {
@@ -500,8 +503,11 @@
   .project-card .prole { font-size: 10.5px; color: var(--color-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.03em; }
   .project-card .pcard-right { display: flex; align-items: center; gap: 10px; }
   .project-card .pdelete { font-size: 11px; padding: 5px 9px; }
-  .new-project-row { display: flex; gap: 8px; }
-  .new-project-row input { flex: 1; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; }
+  .project-card .pstats { font-size: 11px; color: var(--color-muted); }
+  .project-card .pstats .pstats-overdue { color: var(--color-blocked); font-weight: 700; }
+  .new-project-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .new-project-row input[type="text"] { flex: 1; min-width: 180px; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; }
+  .template-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-muted); white-space: nowrap; }
 
   /* Access sub-tab (project members) */
   #accessTable, #manageAccessTable { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -568,6 +574,57 @@
   .empty-state-cta svg { color: #D3D8E2; margin-bottom: 14px; }
   .empty-state-cta .empty-msg { font-size: 13.5px; margin-bottom: 16px; }
 
+  /* Notification bell */
+  .notif-wrap { position: relative; padding: 0 8px 14px; }
+  .notif-bell {
+    width: 100%; display: flex; align-items: center; gap: 8px; position: relative;
+    background: #FAFBFD; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+    padding: 8px 10px; font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--color-text);
+    cursor: pointer; transition: border-color var(--ease), background var(--ease);
+  }
+  .notif-bell:hover { border-color: #C7CDDA; background: white; }
+  .notif-bell svg { width: 14px; height: 14px; color: var(--color-muted); flex-shrink: 0; }
+  .notif-count {
+    background: var(--color-blocked); color: white; font-size: 10px; font-weight: 800;
+    border-radius: 999px; padding: 1px 7px; margin-left: auto;
+  }
+  .notif-panel {
+    position: absolute; top: 100%; left: 8px; right: 8px; margin-top: 4px; background: white;
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md);
+    z-index: 60; max-height: 340px; overflow-y: auto;
+  }
+  .notif-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--color-border); font-size: 12px; }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-item:hover { background: #FAFBFD; }
+  .notif-item .notif-title { font-weight: 600; margin-bottom: 2px; }
+  .notif-item .notif-sub { color: var(--color-muted); font-size: 11px; }
+  .notif-item .notif-sub.overdue { color: var(--color-blocked); font-weight: 600; }
+  .notif-empty { padding: 18px 12px; text-align: center; font-size: 12px; color: var(--color-muted); }
+
+  /* Bulk actions bar (Tasks / Subtasks tabs) */
+  .bulk-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: color-mix(in srgb, var(--color-primary) 7%, white); border: 1px solid color-mix(in srgb, var(--color-primary) 22%, white);
+    border-radius: var(--radius-md); padding: 10px 16px; margin-bottom: 14px; font-size: 12.5px; font-weight: 600;
+  }
+  .bulk-bar select { padding: 6px 9px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 12.5px; }
+  .col-check { width: 34px; text-align: center !important; }
+
+  /* Link field on tasks/subtasks */
+  .link-tag { color: var(--color-info); font-weight: 600; text-decoration: none; }
+  .link-tag:hover { text-decoration: underline; }
+
+  /* History / activity log (Manage tab) */
+  .history-row { display: flex; align-items: center; gap: 10px; padding: 11px 20px; border-bottom: 1px solid var(--color-border); font-size: 12.5px; flex-wrap: wrap; }
+  .history-row:last-child { border-bottom: none; }
+  .history-action { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; }
+  .history-action.INSERT { background: color-mix(in srgb, var(--color-ok) 14%, white); color: var(--color-ok); }
+  .history-action.UPDATE { background: color-mix(in srgb, var(--color-info) 14%, white); color: var(--color-info); }
+  .history-action.DELETE { background: color-mix(in srgb, var(--color-blocked) 14%, white); color: var(--color-blocked); }
+  .history-summary { font-weight: 600; flex: 1; min-width: 160px; }
+  .history-meta { font-size: 11.5px; color: var(--color-muted); }
+  .history-time { font-size: 11px; color: var(--color-muted); flex: 0 0 90px; text-align: right; }
+
   /* Print — clean snapshot of the current tab, no chrome or edit controls */
   @media print {
     .sidebar { display: none !important; }
@@ -617,6 +674,7 @@
     <div class="project-list" id="projectList"></div>
     <div class="new-project-row" id="newProjectRow" style="display:none;">
       <input type="text" id="newProjectName" placeholder="New project name">
+      <label class="template-check"><input type="checkbox" id="useTemplate" checked> Start with standard phases</label>
       <button class="m-btn add" id="createProjectBtn">+ Create project</button>
     </div>
   </div>
@@ -636,6 +694,15 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <input type="text" id="globalSearch" placeholder="Search tasks & subtasks…" autocomplete="off">
       <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <div class="notif-wrap">
+      <button class="notif-bell" id="notifBell" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        Notifications
+        <span class="notif-count" id="notifCount" style="display:none;">0</span>
+      </button>
+      <div class="notif-panel" id="notifPanel" style="display:none;"></div>
     </div>
 
     <nav class="side-nav" id="tabs">
@@ -738,6 +805,20 @@
       </label>
       <button class="export-btn" id="exportTasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export CSV</button>
     </div>
+    <div class="bulk-bar" id="tasksBulkBar" style="display:none;">
+      <span id="tasksBulkCount">0 selected</span>
+      <select id="tasksBulkStatus">
+        <option value="">Set status…</option>
+        <option value="not_started">Not started</option>
+        <option value="in_progress">In progress</option>
+        <option value="blocked">Blocked</option>
+        <option value="done">Done</option>
+      </select>
+      <button class="m-btn save" onclick="applyBulkStatus('tasks')">Apply</button>
+      <select id="tasksBulkAssignee"></select>
+      <button class="m-btn save" onclick="applyBulkAssignee('tasks')">Assign</button>
+      <button class="m-btn delete" onclick="clearBulkSelection('tasks')">Clear selection</button>
+    </div>
     <div class="section-card">
       <h3>All tasks</h3>
       <div class="table-scroll"><table id="tasksListTable"></table></div>
@@ -756,6 +837,20 @@
         <select id="subtaskFilterAssignee"></select>
       </label>
       <button class="export-btn" id="exportSubtasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export CSV</button>
+    </div>
+    <div class="bulk-bar" id="subtasksBulkBar" style="display:none;">
+      <span id="subtasksBulkCount">0 selected</span>
+      <select id="subtasksBulkStatus">
+        <option value="">Set status…</option>
+        <option value="not_started">Not started</option>
+        <option value="in_progress">In progress</option>
+        <option value="blocked">Blocked</option>
+        <option value="done">Done</option>
+      </select>
+      <button class="m-btn save" onclick="applyBulkStatus('subtasks')">Apply</button>
+      <select id="subtasksBulkAssignee"></select>
+      <button class="m-btn save" onclick="applyBulkAssignee('subtasks')">Assign</button>
+      <button class="m-btn delete" onclick="clearBulkSelection('subtasks')">Clear selection</button>
     </div>
     <div class="section-card">
       <h3>All subtasks</h3>
@@ -780,6 +875,7 @@
       <button data-msub="tasks">Tasks</button>
       <button data-msub="subtasks">Subtasks</button>
       <button data-msub="access">Access</button>
+      <button data-msub="history">History</button>
     </div>
 
     <div class="manage-subpanel active" id="msub-team">
@@ -833,6 +929,14 @@
           <input type="password" id="newPassword" placeholder="New password" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;">
           <button class="m-btn save" id="changePasswordBtn">Change password</button>
         </div>
+      </div>
+    </div>
+
+    <div class="manage-subpanel" id="msub-history">
+      <div class="manage-note">Read-only activity log — who created, edited, or deleted things, and when. Recorded automatically, can't be edited from here.</div>
+      <div class="section-card">
+        <h3>Recent activity (last 100)</h3>
+        <div id="historyList"></div>
       </div>
     </div>
   </section>
@@ -990,13 +1094,19 @@ function dependencyTag(item) {
   if (!dep || dep.status === 'done') return '';
   return `<span class="dep-tag">⛔ Waiting on: ${dep.title}</span>`;
 }
+function linkTag(item) {
+  if (!item.link_url) return '';
+  return `<a href="${item.link_url}" target="_blank" rel="noopener noreferrer" class="link-tag" onclick="event.stopPropagation();">🔗 Link</a>`;
+}
 function detailBlock(item) {
   const depTag = dependencyTag(item);
-  if (!item.description && !item.notes && !depTag) return '';
+  const link = linkTag(item);
+  if (!item.description && !item.notes && !depTag && !link) return '';
   return `<div class="item-detail">
     ${item.description ? `<div>${item.description}</div>` : ''}
     ${item.notes ? `<div class="item-notes ${item.status === 'blocked' ? 'blocked' : ''}">${item.status === 'blocked' ? '⚠ ' : '📝 '}${item.notes}</div>` : ''}
     ${depTag ? `<div>${depTag}</div>` : ''}
+    ${link ? `<div>${link}</div>` : ''}
   </div>`;
 }
 function phaseAtRisk(phaseId) {
@@ -1057,6 +1167,7 @@ async function loadData() {
 
   document.getElementById('updatedAt').textContent = "Last updated: " + new Date().toLocaleString('en-CA');
   renderAll();
+  loadActivityLog();
 }
 
 function renderAll() {
@@ -1068,7 +1179,98 @@ function renderAll() {
   renderObjectives();
   renderManage();
   renderNavDots();
+  computeNotifications();
 }
+
+// Activity log fetch is kept separate from the main loadData() Promise.all
+// on purpose: if migration-activity-log.sql hasn't been run yet, this query
+// fails, but it shouldn't take down the rest of the dashboard with it.
+let activityLog = [];
+async function loadActivityLog() {
+  if (!supabaseClient || !currentProjectId) return;
+  const { data, error } = await supabaseClient
+    .from('activity_log')
+    .select('*')
+    .eq('project_id', currentProjectId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  activityLog = error ? null : (data || []);
+  renderManageHistory();
+}
+function renderManageHistory() {
+  const container = document.getElementById('historyList');
+  if (!container) return;
+  if (activityLog === null) {
+    container.innerHTML = `<div class="empty-state">Activity log isn't set up yet for this project — run <code>migration-activity-log.sql</code> in Supabase.</div>`;
+    return;
+  }
+  if (!activityLog.length) {
+    container.innerHTML = `<div class="empty-state">No activity recorded yet.</div>`;
+    return;
+  }
+  container.innerHTML = activityLog.map(a => `
+    <div class="history-row">
+      <span class="history-action ${a.action}">${a.action}</span>
+      <span class="history-summary">${a.summary || a.table_name}</span>
+      <span class="history-meta">${a.actor_email || 'Unknown'} · ${a.table_name}</span>
+      <span class="history-time">${timeAgo(a.created_at)}</span>
+    </div>`).join('');
+}
+
+// In-app notifications: items assigned to the current user that are overdue
+// or due within the next 3 days. Purely client-side, computed from data
+// already loaded for the current project -- no extra queries, no email.
+let notifItems = [];
+let notifNoLink = false;
+function computeNotifications() {
+  notifItems = [];
+  const myId = myTeamMemberId();
+  notifNoLink = !myId;
+  if (myId) {
+    const soon = new Date();
+    soon.setDate(soon.getDate() + 3);
+    const collect = (list, kind, tab) => {
+      list.forEach(item => {
+        if (item.assignee_id !== myId || item.status === 'done' || !item.due_date) return;
+        const due = new Date(item.due_date);
+        const overdue = isOverdue(item);
+        if (overdue || due <= soon) {
+          notifItems.push({ id: item.id, title: item.title, kind, tab, due: item.due_date, overdue });
+        }
+      });
+    };
+    collect(tasks, 'Task', 'tasks');
+    collect(subtasks, 'Subtask', 'subtasks');
+    notifItems.sort((a, b) => (b.overdue - a.overdue) || (new Date(a.due) - new Date(b.due)));
+  }
+  renderNotifBell();
+}
+function renderNotifBell() {
+  const countEl = document.getElementById('notifCount');
+  const panel = document.getElementById('notifPanel');
+  if (!countEl || !panel) return;
+  if (notifItems.length) { countEl.style.display = 'inline-block'; countEl.textContent = notifItems.length; }
+  else { countEl.style.display = 'none'; }
+  if (notifNoLink) {
+    panel.innerHTML = `<div class="notif-empty">Your account isn't linked to a Team Member yet — ask an Owner/Editor to add your email in Manage &gt; Team.</div>`;
+    return;
+  }
+  panel.innerHTML = notifItems.length
+    ? notifItems.map(n => `
+        <div class="notif-item" onclick="goToNotifItem('${n.tab}','${n.id}')">
+          <div class="notif-title">${n.kind}: ${n.title}</div>
+          <div class="notif-sub ${n.overdue ? 'overdue' : ''}">${n.overdue ? 'Overdue' : 'Due'} ${fmtDate(n.due)}</div>
+        </div>`).join('')
+    : `<div class="notif-empty">Nothing due soon — you're all caught up.</div>`;
+}
+window.goToNotifItem = function(tab, id) {
+  document.getElementById('notifPanel').style.display = 'none';
+  goToSearchResult(tab, id);
+};
+window.toggleNotifPanel = function() {
+  const panel = document.getElementById('notifPanel');
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+};
 
 /* ================================================================
    AUTH + MULTI-PROJECT — sign in/up, project switcher, invites
@@ -1117,6 +1319,25 @@ async function claimPendingInvites() {
   if (error) { showToast('Could not check pending invites: ' + error.message); }
 }
 
+let projectStats = {};
+async function loadProjectPortfolioStats() {
+  projectStats = {};
+  if (!myProjects.length) return;
+  const [tk, sb] = await Promise.all([
+    supabaseClient.from('tasks').select('id, project_id, status, due_date'),
+    supabaseClient.from('subtasks').select('id, project_id, status, due_date'),
+  ]);
+  const today = new Date(new Date().toDateString());
+  [...(tk.data || []), ...(sb.data || [])].forEach(it => {
+    if (!it.project_id) return;
+    if (!projectStats[it.project_id]) projectStats[it.project_id] = { total: 0, overdue: 0 };
+    projectStats[it.project_id].total++;
+    if (it.status !== 'done' && it.due_date && new Date(it.due_date) < today) {
+      projectStats[it.project_id].overdue++;
+    }
+  });
+}
+
 async function loadMyProjects() {
   const { data, error } = await supabaseClient
     .from('project_members')
@@ -1124,6 +1345,7 @@ async function loadMyProjects() {
     .eq('user_id', currentUser.id);
   if (error) { showToast('Error loading projects: ' + error.message); showProjectScreen(); return; }
   myProjects = (data || []).filter(r => r.projects).map(r => ({ id: r.projects.id, name: r.projects.name, role: r.role }));
+  await loadProjectPortfolioStats();
   await checkCanCreateProjects();
   showProjectScreen();
 }
@@ -1131,14 +1353,21 @@ async function loadMyProjects() {
 function renderProjectList() {
   const container = document.getElementById('projectList');
   container.innerHTML = myProjects.length
-    ? myProjects.map(p => `
+    ? myProjects.map(p => {
+        const stats = projectStats[p.id];
+        const statsHtml = stats
+          ? `${stats.total} item${stats.total === 1 ? '' : 's'}${stats.overdue ? ` · <span class="pstats-overdue">${stats.overdue} overdue</span>` : ''}`
+          : 'No items yet';
+        return `
         <div class="project-card" onclick="enterProject('${p.id}')">
           <span class="pname">${p.name}</span>
           <div class="pcard-right">
+            <span class="pstats">${statsHtml}</span>
             <span class="prole">${p.role}</span>
             ${p.role === 'owner' ? `<button class="m-btn delete pdelete" onclick="event.stopPropagation();deleteProjectFromList('${p.id}','${p.name.replace(/'/g, "\\'")}')">Delete</button>` : ''}
           </div>
-        </div>`).join('')
+        </div>`;
+      }).join('')
     : `<div class="empty-state">No projects yet — create your first one below, or ask to be invited to an existing one.</div>`;
 }
 
@@ -1174,6 +1403,70 @@ function phaseName(id) { const p = phases.find(x => x.id === id); return p ? p.n
 function taskName(id) { const t = tasks.find(x => x.id === id); return t ? t.title : '—'; }
 function taskPhaseId(taskId) { const t = tasks.find(x => x.id === taskId); return t ? t.phase_id : null; }
 
+let selectedTaskIds = new Set();
+let selectedSubtaskIds = new Set();
+let lastFilteredTasks = [];
+let lastFilteredSubtasks = [];
+
+function rowCheckbox(kind, item) {
+  const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
+  const editable = canEditItem(item);
+  return `<input type="checkbox" ${set.has(item.id) ? 'checked' : ''} ${editable ? '' : 'disabled'} onclick="event.stopPropagation();" onchange="toggleRowSelect('${kind}','${item.id}',this.checked)">`;
+}
+window.toggleRowSelect = function(kind, id, checked) {
+  const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
+  if (checked) set.add(id); else set.delete(id);
+  renderBulkBar(kind);
+};
+window.toggleSelectAllRows = function(kind, checked) {
+  const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
+  const list = kind === 'tasks' ? lastFilteredTasks : lastFilteredSubtasks;
+  list.forEach(item => { if (canEditItem(item)) { if (checked) set.add(item.id); else set.delete(item.id); } });
+  if (kind === 'tasks') renderTasksListTab(); else renderSubtasksListTab();
+};
+function renderBulkBar(kind) {
+  const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
+  const bar = document.getElementById(kind + 'BulkBar');
+  if (!bar) return;
+  bar.style.display = set.size ? 'flex' : 'none';
+  const countEl = document.getElementById(kind + 'BulkCount');
+  if (countEl) countEl.textContent = set.size + ' selected';
+}
+window.applyBulkStatus = async function(kind) {
+  const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
+  const list = kind === 'tasks' ? tasks : subtasks;
+  const val = document.getElementById(kind + 'BulkStatus').value;
+  if (!val || !set.size || !supabaseClient) return;
+  for (const id of [...set]) {
+    const item = list.find(x => x.id === id);
+    if (!item || !canEditItem(item)) continue;
+    const payload = { status: val, updated_at: new Date().toISOString() };
+    if (val === 'done' && !item.completed_date) payload.completed_date = new Date().toISOString().slice(0, 10);
+    await supabaseClient.from(kind).update(payload).eq('id', id);
+  }
+  set.clear();
+  showToast('Updated.', 'success');
+  await loadData();
+};
+window.applyBulkAssignee = async function(kind) {
+  const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
+  const list = kind === 'tasks' ? tasks : subtasks;
+  const val = document.getElementById(kind + 'BulkAssignee').value;
+  if (!set.size || !supabaseClient) return;
+  for (const id of [...set]) {
+    const item = list.find(x => x.id === id);
+    if (!item || !canEditItem(item)) continue;
+    await supabaseClient.from(kind).update({ assignee_id: val || null, updated_at: new Date().toISOString() }).eq('id', id);
+  }
+  set.clear();
+  showToast('Updated.', 'success');
+  await loadData();
+};
+window.clearBulkSelection = function(kind) {
+  (kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds).clear();
+  if (kind === 'tasks') renderTasksListTab(); else renderSubtasksListTab();
+};
+
 function renderTasksListTab() {
   const phaseSel = document.getElementById('taskFilterPhase');
   const statusSel = document.getElementById('taskFilterStatus');
@@ -1181,15 +1474,18 @@ function renderTasksListTab() {
   phaseSel.innerHTML = '<option value="">All phases</option>' + phases.map(p => opt(p.id, p.name, taskFilters.phase)).join('');
   statusSel.innerHTML = '<option value="">All statuses</option>' + statusOptions(taskFilters.status);
   assigneeSel.innerHTML = '<option value="">Everyone</option>' + teamMembers.map(m => opt(m.id, m.name, taskFilters.assignee)).join('');
+  document.getElementById('tasksBulkAssignee').innerHTML = '<option value="">Unassign</option>' + teamMembers.map(m => opt(m.id, m.name, '')).join('');
 
   const filtered = tasks.filter(t =>
     (!taskFilters.phase || t.phase_id === taskFilters.phase) &&
     (!taskFilters.status || t.status === taskFilters.status) &&
     (!taskFilters.assignee || t.assignee_id === taskFilters.assignee)
   );
+  lastFilteredTasks = filtered;
   const rows = filtered.map(t => `
     <tr data-row-id="${t.id}">
-      <td><strong>${t.title}</strong>${t.description ? `<div class="muted-text">${t.description}</div>` : ''}${t.notes ? `<div class="muted-text ${t.status==='blocked'?'blocked-text':''}">${t.status==='blocked'?'⚠ ':'📝 '}${t.notes}</div>` : ''}${dependencyTag(t) ? `<div class="muted-text">${dependencyTag(t)}</div>` : ''}</td>
+      <td class="col-check">${rowCheckbox('tasks', t)}</td>
+      <td><strong>${t.title}</strong>${t.description ? `<div class="muted-text">${t.description}</div>` : ''}${t.notes ? `<div class="muted-text ${t.status==='blocked'?'blocked-text':''}">${t.status==='blocked'?'⚠ ':'📝 '}${t.notes}</div>` : ''}${dependencyTag(t) ? `<div class="muted-text">${dependencyTag(t)}</div>` : ''}${t.link_url ? `<div class="muted-text">${linkTag(t)}</div>` : ''}</td>
       <td>${phaseDot(t.phase_id)}${phaseName(t.phase_id)}</td>
       <td>${memberName(t.assignee_id)}</td>
       <td>${prioBadge(t.priority)}</td>
@@ -1200,8 +1496,9 @@ function renderTasksListTab() {
     ? `No tasks yet. <a href="#" onclick="goToManage();return false;" style="color:var(--color-accent);font-weight:600;">Add one in Manage →</a>`
     : 'No tasks match these filters.';
   document.getElementById('tasksListTable').innerHTML = filtered.length
-    ? `<thead><tr><th>Title</th><th>Phase</th><th>Assignee</th><th>Priority</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
-    : `<tbody><tr><td class="empty-state" colspan="6">${tasksEmptyMsg}</td></tr></tbody>`;
+    ? `<thead><tr><th class="col-check"><input type="checkbox" onchange="toggleSelectAllRows('tasks', this.checked)"></th><th>Title</th><th>Phase</th><th>Assignee</th><th>Priority</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
+    : `<tbody><tr><td class="empty-state" colspan="7">${tasksEmptyMsg}</td></tr></tbody>`;
+  renderBulkBar('tasks');
 }
 
 function renderSubtasksListTab() {
@@ -1211,15 +1508,18 @@ function renderSubtasksListTab() {
   taskSel.innerHTML = '<option value="">All tasks</option>' + tasks.map(t => opt(t.id, t.title, subtaskFilters.task)).join('');
   statusSel.innerHTML = '<option value="">All statuses</option>' + statusOptions(subtaskFilters.status);
   assigneeSel.innerHTML = '<option value="">Everyone</option>' + teamMembers.map(m => opt(m.id, m.name, subtaskFilters.assignee)).join('');
+  document.getElementById('subtasksBulkAssignee').innerHTML = '<option value="">Unassign</option>' + teamMembers.map(m => opt(m.id, m.name, '')).join('');
 
   const filtered = subtasks.filter(s =>
     (!subtaskFilters.task || s.task_id === subtaskFilters.task) &&
     (!subtaskFilters.status || s.status === subtaskFilters.status) &&
     (!subtaskFilters.assignee || s.assignee_id === subtaskFilters.assignee)
   );
+  lastFilteredSubtasks = filtered;
   const rows = filtered.map(s => `
     <tr data-row-id="${s.id}">
-      <td><strong>${s.title}</strong>${s.description ? `<div class="muted-text">${s.description}</div>` : ''}${s.notes ? `<div class="muted-text ${s.status==='blocked'?'blocked-text':''}">${s.status==='blocked'?'⚠ ':'📝 '}${s.notes}</div>` : ''}</td>
+      <td class="col-check">${rowCheckbox('subtasks', s)}</td>
+      <td><strong>${s.title}</strong>${s.description ? `<div class="muted-text">${s.description}</div>` : ''}${s.notes ? `<div class="muted-text ${s.status==='blocked'?'blocked-text':''}">${s.status==='blocked'?'⚠ ':'📝 '}${s.notes}</div>` : ''}${s.link_url ? `<div class="muted-text">${linkTag(s)}</div>` : ''}</td>
       <td>${taskName(s.task_id)}</td>
       <td>${phaseDot(taskPhaseId(s.task_id))}${phaseName(taskPhaseId(s.task_id))}</td>
       <td>${memberName(s.assignee_id)}</td>
@@ -1230,8 +1530,9 @@ function renderSubtasksListTab() {
     ? `No subtasks yet. <a href="#" onclick="goToManage();return false;" style="color:var(--color-accent);font-weight:600;">Add one in Manage →</a>`
     : 'No subtasks match these filters.';
   document.getElementById('subtasksListTable').innerHTML = filtered.length
-    ? `<thead><tr><th>Title</th><th>Task</th><th>Phase</th><th>Assignee</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
-    : `<tbody><tr><td class="empty-state" colspan="6">${subtasksEmptyMsg}</td></tr></tbody>`;
+    ? `<thead><tr><th class="col-check"><input type="checkbox" onchange="toggleSelectAllRows('subtasks', this.checked)"></th><th>Title</th><th>Task</th><th>Phase</th><th>Assignee</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
+    : `<tbody><tr><td class="empty-state" colspan="7">${subtasksEmptyMsg}</td></tr></tbody>`;
+  renderBulkBar('subtasks');
 }
 
 /* ================================================================
@@ -1764,6 +2065,7 @@ function renderManage() {
   renderManageTasksTree();
   renderManageSubtasksTree();
   renderManageAccess();
+  renderManageHistory();
 }
 
 function renderManageAccess() {
@@ -1970,6 +2272,7 @@ function manageTaskCardHtml(t) {
         <label>Start<input type="date" data-field="start_date" data-type="date" value="${t.start_date || ''}" ${dis}></label>
         <label>Completed<input type="date" data-field="completed_date" data-type="date" value="${t.completed_date || ''}" ${dis}></label>
         <label>Depends on<select data-field="depends_on_task_id" data-type="uuid" ${dis}>${taskOptionsExcluding(t.depends_on_task_id, t.id)}</select></label>
+        <label>Link<input type="url" data-field="link_url" placeholder="https://…" value="${t.link_url || ''}" ${dis}></label>
       </div>
     </div>`;
 }
@@ -1995,6 +2298,7 @@ function manageSubtaskCardHtml(s) {
         <label>Notes<textarea data-field="notes" placeholder="Context, blockers..." ${dis}>${s.notes || ''}</textarea></label>
         <label>Start<input type="date" data-field="start_date" data-type="date" value="${s.start_date || ''}" ${dis}></label>
         <label>Completed<input type="date" data-field="completed_date" data-type="date" value="${s.completed_date || ''}" ${dis}></label>
+        <label>Link<input type="url" data-field="link_url" placeholder="https://…" value="${s.link_url || ''}" ${dis}></label>
       </div>
     </div>`;
 }
@@ -2114,8 +2418,10 @@ document.getElementById('exportExcelBtn').addEventListener('click', exportAllExc
 document.getElementById('printBtn').addEventListener('click', () => window.print());
 
 document.getElementById('globalSearch').addEventListener('input', e => performGlobalSearch(e.target.value));
+document.getElementById('notifBell').addEventListener('click', toggleNotifPanel);
 document.addEventListener('click', e => {
   if (!e.target.closest('.sidebar-search')) document.getElementById('searchResults').style.display = 'none';
+  if (!e.target.closest('.notif-wrap')) document.getElementById('notifPanel').style.display = 'none';
 });
 
 document.getElementById('inviteBtn').addEventListener('click', inviteProjectMember);
@@ -2142,12 +2448,24 @@ async function doSignOut() {
 document.getElementById('signOutBtn').addEventListener('click', doSignOut);
 document.getElementById('signOutBtn2').addEventListener('click', doSignOut);
 
+const STARTER_PHASE_TEMPLATE = [
+  { name: 'Kickoff', description: 'Align on scope, goals and stakeholders.', sort_order: 1 },
+  { name: 'Planning', description: 'Break down the work and assign owners.', sort_order: 2 },
+  { name: 'Execution', description: 'Do the work.', sort_order: 3 },
+  { name: 'Review', description: 'Wrap up, capture learnings, close out.', sort_order: 4 },
+];
 document.getElementById('createProjectBtn').addEventListener('click', async () => {
   const nameInput = document.getElementById('newProjectName');
   const name = nameInput.value.trim();
+  const useTemplate = document.getElementById('useTemplate').checked;
   if (!name) { showToast('Enter a project name first.'); return; }
-  const { error } = await supabaseClient.rpc('create_project', { project_name: name });
+  const { data, error } = await supabaseClient.rpc('create_project', { project_name: name });
   if (error) { showToast('Error: ' + error.message); return; }
+  if (useTemplate && data && data.id) {
+    await supabaseClient.from('phases').insert(
+      STARTER_PHASE_TEMPLATE.map(p => ({ ...p, project_id: data.id, created_by: currentUser?.id }))
+    );
+  }
   showToast('Project created.', 'success');
   nameInput.value = '';
   await loadMyProjects();
