@@ -62,28 +62,57 @@
   ::-webkit-scrollbar-thumb { background: #D3D8E2; border-radius: 999px; border: 2px solid var(--color-bg); }
   ::-webkit-scrollbar-thumb:hover { background: #B9C0CE; }
 
+  /* ============================================================
+     FORM CONTROLS — every text/date/number/url input, textarea and
+     select in the app gets one consistent, modern treatment: a soft
+     filled background and NO visible border by default (no boxy
+     "1995 form" look), a colored ring that only appears on focus,
+     and a custom select arrow. This intentionally overrides the
+     older per-section input rules further down (.mrow, .mtask-*,
+     .filter-bar, .invite-row, .bulk-bar, .minline-add, etc).
+     ============================================================ */
+  input[type="text"], input[type="email"], input[type="password"],
+  input[type="date"], input[type="number"], input[type="url"],
+  textarea, select {
+    background: #F1F2F6 !important;
+    border: 1.5px solid transparent !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--color-text);
+    font-family: inherit;
+    transition: background var(--ease), border-color var(--ease), box-shadow var(--ease);
+  }
+  input[type="text"]:hover, input[type="email"]:hover, input[type="password"]:hover,
+  input[type="date"]:hover, input[type="number"]:hover, input[type="url"]:hover,
+  textarea:hover, select:hover {
+    background: #E7E9F0 !important;
+  }
+  input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
+  input[type="date"]:focus, input[type="number"]:focus, input[type="url"]:focus,
+  textarea:focus, select:focus {
+    background: white !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 16%, transparent);
+    outline: none;
+  }
+  input:disabled, select:disabled, textarea:disabled {
+    background: #F5F6FA !important; color: var(--color-muted); cursor: not-allowed;
+  }
+  input::placeholder, textarea::placeholder { color: #9AA1AE; }
+
   /* Dropdowns everywhere (filters, priority/status/assignee, invite role,
-     bulk actions...) -- one consistent look: custom chevron, rounder
-     corners, a real hover/focus state instead of the plain browser default. */
+     bulk actions...) -- custom chevron so it doesn't look like a bare
+     OS-native <select>. */
   select {
     appearance: none; -webkit-appearance: none; -moz-appearance: none;
-    background-color: white;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 7 10 12 15 7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 11px;
     padding-right: 30px !important;
-    border-radius: var(--radius-sm) !important;
     cursor: pointer;
-    transition: border-color var(--ease), box-shadow var(--ease), background-color var(--ease);
   }
   select::-ms-expand { display: none; }
-  select:hover { border-color: #C7CDDA !important; background-color: #FAFBFD; }
-  select:focus {
-    outline: none; border-color: var(--color-accent) !important;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 14%, transparent);
-  }
-  select:disabled { cursor: not-allowed; opacity: 0.6; }
+  select:disabled { cursor: not-allowed; opacity: 0.65; }
 
   /* App shell: left sidebar + content, Airtable-style */
   .app-shell { display: flex; min-height: 100vh; align-items: stretch; }
@@ -243,7 +272,7 @@
     padding: 17px 20px; cursor: pointer;
     transition: background var(--ease);
   }
-  .phase-header:hover { background: #FAFBFD; }
+  .phase-header:hover { background: color-mix(in srgb, var(--color-primary) 4%, white); }
   .caret { font-size: 10px; color: var(--color-muted); width: 12px; transition: transform var(--ease); }
   .phase.open > .phase-header .caret { transform: rotate(90deg); }
   .phase-name { font-weight: 700; font-size: 14px; flex: 0 0 200px; letter-spacing: -0.01em; }
@@ -442,8 +471,8 @@
 
   /* Manage > Tasks/Subtasks grouped accordion */
   .mgroup {
-    border: 1px solid var(--color-border); border-radius: var(--radius-sm); margin-bottom: 10px; overflow: hidden;
-    background: var(--color-card-bg);
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent); border-radius: var(--radius-md); margin-bottom: 12px; overflow: hidden;
+    background: var(--color-card-bg); box-shadow: var(--shadow-sm);
   }
   .mgroup-header {
     display: flex; align-items: center; gap: 10px; padding: 13px 15px; cursor: pointer;
@@ -463,8 +492,8 @@
   .mphase-label:first-child { margin-top: 0; }
 
   /* Manage > individual editable task/subtask card */
-  .mcard { border: 1px solid var(--color-border); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--color-card-bg); transition: box-shadow var(--ease); }
-  .mcard:hover { box-shadow: var(--shadow-hover); }
+  .mcard { border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent); border-radius: var(--radius-md); margin-bottom: 10px; background: var(--color-card-bg); box-shadow: var(--shadow-sm); transition: box-shadow var(--ease), border-color var(--ease); }
+  .mcard:hover { box-shadow: var(--shadow-hover); border-color: color-mix(in srgb, var(--color-border) 40%, transparent); }
   .mtask-summary { display: flex; align-items: center; gap: 8px; padding: 9px 11px; flex-wrap: wrap; }
   .mtask-summary input[type="text"] { flex: 1; min-width: 140px; }
   .mtask-summary select, .mtask-summary input[type="date"] {
@@ -472,11 +501,11 @@
     font-family: inherit; min-width: 110px; background: white;
   }
   .m-expand {
-    border: 1px solid var(--color-border); background: #FAFBFD; cursor: pointer; color: var(--color-muted);
-    font-size: 11px; font-weight: 700; padding: 5px 9px; border-radius: var(--radius-sm); font-family: inherit;
+    border: none; background: transparent; cursor: pointer; color: var(--color-muted);
+    font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 999px; font-family: inherit;
     white-space: nowrap; transition: color var(--ease), background var(--ease);
   }
-  .m-expand:hover { color: var(--color-text); background: white; }
+  .m-expand:hover { color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 8%, white); }
   .m-expand-arrow { display: inline-block; transition: transform var(--ease); }
   .mcard.expanded .m-expand-arrow { transform: rotate(90deg); }
   .mtask-detail {
@@ -506,19 +535,20 @@
 
   /* Toast notifications (replaces alert()) */
   #toast {
-    position: fixed; bottom: 22px; right: 22px; z-index: 9999;
-    background: var(--color-blocked); color: white; padding: 13px 20px;
-    border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; box-shadow: var(--shadow-lg);
-    opacity: 0; transform: translateY(14px); transition: opacity 220ms ease, transform 220ms ease;
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: var(--color-blocked); color: white; padding: 14px 22px;
+    border-radius: var(--radius-md); font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lg);
+    opacity: 0; transform: translateY(14px) scale(0.98); transition: opacity 220ms ease, transform 220ms ease;
     pointer-events: none; max-width: 360px;
   }
-  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.show { opacity: 1; transform: translateY(0) scale(1); }
   #toast.success { background: var(--color-ok); }
 
   .config-warning {
     background: color-mix(in srgb, var(--color-warn) 10%, white); border-bottom: 1px solid color-mix(in srgb, var(--color-warn) 30%, white); color: #8A4B0C;
     padding: 15px 18px; font-size: 13.5px; line-height: 1.55;
     position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
+    box-shadow: var(--shadow-md);
   }
   .config-warning code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
 
@@ -585,7 +615,7 @@
   .search-result:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
   .search-result:last-child { border-bottom: none; border-radius: 0 0 var(--radius-md) var(--radius-md); }
   .search-result:hover { background: color-mix(in srgb, var(--color-primary) 6%, white); }
-  .search-kind { font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: #EDEEF2; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+  .search-kind { font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: #EDEEF2; padding: 2px 8px; border-radius: 999px; flex-shrink: 0; }
   .search-title { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .search-phase { font-size: 10.5px; color: var(--color-muted); flex-shrink: 0; }
   .search-empty { padding: 14px; font-size: 12px; color: var(--color-muted); text-align: center; }
@@ -605,7 +635,7 @@
   /* Recent activity feed on Overview */
   .activity-row { display: flex; align-items: center; gap: 10px; padding: 11px 20px; border-bottom: 1px solid var(--color-border); font-size: 12.5px; flex-wrap: wrap; }
   .activity-row:last-child { border-bottom: none; }
-  .activity-kind { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: #EDEEF2; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; }
+  .activity-kind { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-muted); background: #EDEEF2; padding: 2px 9px; border-radius: 999px; flex-shrink: 0; }
   .activity-title { font-weight: 600; flex: 1; min-width: 120px; }
   .activity-meta { font-size: 11.5px; color: var(--color-muted); }
   .activity-time { font-size: 11px; color: var(--color-muted); flex: 0 0 70px; text-align: right; }
@@ -618,9 +648,12 @@
   .objective-info .metric-row { margin-bottom: 0; }
 
   /* Friendlier empty states with a call to action */
-  .empty-state-cta { text-align: center; padding: 50px 20px; color: var(--color-muted); }
-  .empty-state-cta svg { color: #D3D8E2; margin-bottom: 14px; }
-  .empty-state-cta .empty-msg { font-size: 13.5px; margin-bottom: 16px; }
+  .empty-state-cta { text-align: center; padding: 54px 20px; color: var(--color-muted); }
+  .empty-state-cta svg {
+    color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 9%, white);
+    padding: 15px; border-radius: 50%; margin-bottom: 16px; box-sizing: content-box;
+  }
+  .empty-state-cta .empty-msg { font-size: 13.5px; margin-bottom: 18px; }
 
   /* Notification bell */
   .notif-wrap { position: relative; padding: 0 8px 14px; }
@@ -666,7 +699,7 @@
   /* History / activity log (Manage tab) */
   .history-row { display: flex; align-items: center; gap: 10px; padding: 11px 20px; border-bottom: 1px solid var(--color-border); font-size: 12.5px; flex-wrap: wrap; }
   .history-row:last-child { border-bottom: none; }
-  .history-action { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; }
+  .history-action { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 9px; border-radius: 999px; flex-shrink: 0; }
   .history-action.INSERT { background: color-mix(in srgb, var(--color-ok) 14%, white); color: var(--color-ok); }
   .history-action.UPDATE { background: color-mix(in srgb, var(--color-info) 14%, white); color: var(--color-info); }
   .history-action.DELETE { background: color-mix(in srgb, var(--color-blocked) 14%, white); color: var(--color-blocked); }
