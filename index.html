@@ -1,8 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Tells Chrome/Edge not to offer their own "Translate this page" feature.
+     The dashboard already has its own English/Thai toggle -- if the browser's
+     generic machine translation runs on top of that, it re-translates our
+     Thai text using its own (unrelated) engine and can produce bizarre
+     results, e.g. "เฟส" (our word for "Phase") is also common Thai internet
+     shorthand for "Facebook", so Chrome mistranslates "Phases" as "Facebook". -->
+<meta name="google" content="notranslate">
 <title>MON Logistics — Project Hub</title>
 <script>
   // Applied as early as possible (before the stylesheet paints anything) so
@@ -904,7 +911,7 @@
   }
 </style>
 </head>
-<body>
+<body class="notranslate" translate="no">
 
 <div id="toast"></div>
 
