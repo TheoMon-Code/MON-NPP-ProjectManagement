@@ -15,6 +15,18 @@
   })();
 </script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23006EAF'/%3E%3Cstop offset='1' stop-color='%23D31A2B'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial, sans-serif' font-size='36' font-weight='800' fill='white' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+<!-- PWA: lets the dashboard be "installed" to a phone/desktop home screen -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0B2545">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MON Dashboard">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -237,6 +249,7 @@
   .theme-toggle-btn svg { width: 13px; height: 13px; }
   .theme-toggle-btn:hover { background: var(--color-hover-tint-2); border-color: var(--color-border-hover); color: var(--color-text); }
   .theme-toggle-btn:active { transform: scale(0.93); }
+  .sidebar-footer > div > .theme-toggle-btn { margin: 0; }
 
   .app-main { flex: 1; min-width: 0; }
   main#app { padding: 28px 36px 56px; max-width: 1180px; margin: 0; }
@@ -430,6 +443,35 @@
   .no-comments { font-size: 12px; color: var(--color-muted); font-style: italic; margin-bottom: 8px; }
   .comment-add-row { display: flex; gap: 8px; }
   .comment-input { flex: 1; min-width: 0; font-size: 12.5px; padding: 7px 10px; }
+  .detail-tools-row { display: flex; gap: 18px; margin-top: 8px; flex-wrap: wrap; }
+  .detail-tools-row .comments-block, .detail-tools-row .attachments-block { margin-top: 0; }
+
+  /* Attachments (Phases tab, per task/subtask) */
+  .attachment-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 0; }
+  .attachment-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .attachment-size { color: var(--color-muted); font-size: 10.5px; flex-shrink: 0; }
+  .link-btn {
+    background: none; border: none; padding: 0; margin: 0; font-family: inherit;
+    font-size: 11.5px; font-weight: 700; color: var(--color-primary); cursor: pointer; flex-shrink: 0;
+  }
+  .link-btn:hover { text-decoration: underline; }
+  .link-btn.danger { color: var(--color-blocked); }
+  .attachment-file-input { flex: 1; min-width: 0; font-size: 11.5px; }
+
+  /* Collaborators (extra people on a task/subtask, alongside the main assignee) */
+  .collab-block { font-size: 12px; margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .collab-label { color: var(--color-muted); }
+  .collab-chip {
+    display: inline-flex; align-items: center; gap: 4px; background: var(--color-tag-bg);
+    border-radius: 999px; padding: 2px 4px 2px 2px; font-size: 11.5px;
+  }
+  .collab-remove {
+    background: none; border: none; padding: 0 3px; margin: 0; color: var(--color-muted);
+    cursor: pointer; font-size: 13px; line-height: 1; font-family: inherit;
+  }
+  .collab-remove:hover { color: var(--color-blocked); }
+  .collab-add { display: inline-flex; gap: 6px; align-items: center; }
+  .collab-add select { font-size: 11.5px; padding: 4px 8px; }
 
   /* Team */
   .team-grid {
@@ -871,12 +913,12 @@
   <div class="auth-card">
     <div class="brand-mark" style="margin: 0 auto;">M</div>
     <h2>MON Logistics — Project Hub</h2>
-    <p class="auth-sub" id="authModeLabel">Sign in to continue</p>
-    <input type="email" id="authEmail" placeholder="Email" autocomplete="username">
-    <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password">
+    <p class="auth-sub" id="authModeLabel" data-i18n="auth_signin_label">Sign in to continue</p>
+    <input type="email" id="authEmail" placeholder="Email" data-i18n-placeholder="auth_email_placeholder" autocomplete="username">
+    <input type="password" id="authPassword" placeholder="Password" data-i18n-placeholder="auth_password_placeholder" autocomplete="current-password">
     <div class="auth-error" id="authError" style="display:none;"></div>
-    <button class="m-btn save auth-submit" id="authSubmitBtn">Sign in</button>
-    <button class="auth-toggle" id="authToggleBtn">Don't have an account? Sign up</button>
+    <button class="m-btn save auth-submit" id="authSubmitBtn" data-i18n="auth_signin_btn">Sign in</button>
+    <button class="auth-toggle" id="authToggleBtn" data-i18n="auth_toggle_to_signup">Don't have an account? Sign up</button>
   </div>
 </div>
 
@@ -884,16 +926,16 @@
   <div class="project-screen-inner">
     <div class="project-screen-header">
       <div>
-        <div class="brand-title" style="font-size:18px;">Your projects</div>
+        <div class="brand-title" style="font-size:18px;" data-i18n="your_projects">Your projects</div>
         <div class="brand-subtitle" id="currentUserEmail"></div>
       </div>
-      <button class="m-btn delete" id="signOutBtn">Sign out</button>
+      <button class="m-btn delete" id="signOutBtn" data-i18n="sign_out">Sign out</button>
     </div>
     <div class="project-list" id="projectList"></div>
     <div class="new-project-row" id="newProjectRow" style="display:none;">
-      <input type="text" id="newProjectName" placeholder="New project name">
-      <label class="template-check"><input type="checkbox" id="useTemplate" checked> Start with standard phases</label>
-      <button class="m-btn add" id="createProjectBtn">+ Create project</button>
+      <input type="text" id="newProjectName" placeholder="New project name" data-i18n-placeholder="new_project_placeholder">
+      <label class="template-check"><input type="checkbox" id="useTemplate" checked> <span data-i18n="start_with_template">Start with standard phases</span></label>
+      <button class="m-btn add" id="createProjectBtn" data-i18n="create_project_btn">+ Create project</button>
     </div>
   </div>
 </div>
@@ -904,20 +946,20 @@
       <div class="brand-mark">M</div>
       <div>
         <div class="brand-title" id="sidebarProjectName">MON Logistics</div>
-        <div class="brand-subtitle"><a href="#" id="switchProjectLink" style="color:inherit;">Switch project</a></div>
+        <div class="brand-subtitle"><a href="#" id="switchProjectLink" style="color:inherit;" data-i18n="switch_project">Switch project</a></div>
       </div>
     </div>
 
     <div class="sidebar-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" id="globalSearch" placeholder="Search tasks & subtasks…" autocomplete="off">
+      <input type="text" id="globalSearch" placeholder="Search tasks & subtasks…" data-i18n-placeholder="search_placeholder" autocomplete="off">
       <div class="search-results" id="searchResults"></div>
     </div>
 
     <div class="notif-wrap">
       <button class="notif-bell" id="notifBell" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        Notifications
+        <span data-i18n="notifications_label">Notifications</span>
         <span class="notif-count" id="notifCount" style="display:none;">0</span>
       </button>
       <div class="notif-panel" id="notifPanel" style="display:none;"></div>
@@ -926,57 +968,62 @@
     <nav class="side-nav" id="tabs">
       <button data-tab="overview" class="active">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        Overview
+        <span data-i18n="nav_overview">Overview</span>
       </button>
       <button data-tab="phases">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-        Phases
+        <span data-i18n="nav_phases">Phases</span>
       </button>
       <button data-tab="tasks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-        Tasks
+        <span data-i18n="nav_tasks">Tasks</span>
         <span class="nav-dot" id="navDotTasks" title="Overdue tasks"></span>
       </button>
       <button data-tab="subtasks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-        Subtasks
+        <span data-i18n="nav_subtasks">Subtasks</span>
         <span class="nav-dot" id="navDotSubtasks" title="Overdue subtasks"></span>
       </button>
       <button data-tab="team">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        Team
+        <span data-i18n="nav_team">Team</span>
       </button>
       <button data-tab="objectives">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-        Objectives
+        <span data-i18n="nav_objectives">Objectives</span>
       </button>
       <button data-tab="manage">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
-        Manage
+        <span data-i18n="nav_manage">Manage</span>
       </button>
     </nav>
 
     <div class="sidebar-footer">
       <button class="refresh" id="exportExcelBtn" title="Export everything to Excel">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Export Excel
+        <span data-i18n="export_excel">Export Excel</span>
       </button>
       <button class="refresh" id="refreshBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path></svg>
-        Refresh
+        <span data-i18n="refresh">Refresh</span>
       </button>
       <button class="refresh" id="printBtn" title="Print a clean snapshot of the current tab">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-        Print
+        <span data-i18n="print">Print</span>
       </button>
       <button class="refresh" id="signOutBtn2" title="Sign out">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        Sign out
+        <span data-i18n="sign_out">Sign out</span>
       </button>
-      <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle dark mode">
-        <svg id="themeToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-        <span id="themeToggleLabel" class="sr-only">Dark mode</span>
-      </button>
+      <div style="display:flex; gap:6px; justify-content:center;">
+        <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle dark mode">
+          <svg id="themeToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <span id="themeToggleLabel" class="sr-only">Dark mode</span>
+        </button>
+        <button class="theme-toggle-btn" id="langToggleBtn" title="ภาษาไทย (Switch to Thai)">
+          <span id="langToggleLabel" style="font-size:10.5px; font-weight:800;">TH</span>
+        </button>
+      </div>
       <div class="updated-at" id="updatedAt">Loading…</div>
     </div>
   </aside>
@@ -987,97 +1034,97 @@
     <div class="kpi-row" id="overviewKpis"></div>
     <div class="charts-row">
       <div class="chart-card">
-        <h3>Progress by phase</h3>
+        <h3 data-i18n="chart_progress_by_phase">Progress by phase</h3>
         <div class="chart-wrap"><canvas id="chartByPhase"></canvas></div>
       </div>
       <div class="chart-card">
-        <h3>Task status breakdown</h3>
+        <h3 data-i18n="chart_status_breakdown">Task status breakdown</h3>
         <div class="chart-wrap"><canvas id="chartByStatus"></canvas></div>
       </div>
     </div>
 
     <div class="section-card">
-      <h3>Phase timeline</h3>
+      <h3 data-i18n="section_phase_timeline">Phase timeline</h3>
       <div id="phaseTimeline" style="padding: 20px 20px 14px;"></div>
     </div>
 
     <div class="section-card">
-      <h3>Recent activity</h3>
+      <h3 data-i18n="section_recent_activity">Recent activity</h3>
       <div id="activityFeed"></div>
     </div>
   </section>
 
   <section class="tab-panel" id="panel-phases">
     <div class="section-card">
-      <h3>Phases → Tasks → Subtasks</h3>
+      <h3 data-i18n="section_phases_tree">Phases → Tasks → Subtasks</h3>
       <div id="phasesTree"></div>
     </div>
   </section>
 
   <section class="tab-panel" id="panel-tasks">
     <div class="filter-bar">
-      <label>Phase
+      <label><span data-i18n="filter_phase">Phase</span>
         <select id="taskFilterPhase"></select>
       </label>
-      <label>Status
+      <label><span data-i18n="filter_status">Status</span>
         <select id="taskFilterStatus"></select>
       </label>
-      <label>Assignee
+      <label><span data-i18n="filter_assignee">Assignee</span>
         <select id="taskFilterAssignee"></select>
       </label>
-      <button class="export-btn" id="exportTasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export CSV</button>
+      <button class="export-btn" id="exportTasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span data-i18n="export_csv">Export CSV</span></button>
     </div>
     <div class="bulk-bar" id="tasksBulkBar" style="display:none;">
       <span id="tasksBulkCount">0 selected</span>
       <select id="tasksBulkStatus">
-        <option value="">Set status…</option>
-        <option value="not_started">Not started</option>
-        <option value="in_progress">In progress</option>
-        <option value="blocked">Blocked</option>
-        <option value="done">Done</option>
+        <option value="" data-i18n="bulk_set_status">Set status…</option>
+        <option value="not_started" data-i18n="opt_not_started">Not started</option>
+        <option value="in_progress" data-i18n="opt_in_progress">In progress</option>
+        <option value="blocked" data-i18n="opt_blocked">Blocked</option>
+        <option value="done" data-i18n="opt_done">Done</option>
       </select>
-      <button class="m-btn save" onclick="applyBulkStatus('tasks')">Apply</button>
+      <button class="m-btn save" onclick="applyBulkStatus('tasks')" data-i18n="bulk_apply">Apply</button>
       <select id="tasksBulkAssignee"></select>
-      <button class="m-btn save" onclick="applyBulkAssignee('tasks')">Assign</button>
-      <button class="m-btn delete" id="tasksBulkDeleteBtn" onclick="applyBulkDelete('tasks')" style="display:none;">Delete selected</button>
-      <button class="m-btn delete" onclick="clearBulkSelection('tasks')">Clear selection</button>
+      <button class="m-btn save" onclick="applyBulkAssignee('tasks')" data-i18n="bulk_assign">Assign</button>
+      <button class="m-btn delete" id="tasksBulkDeleteBtn" onclick="applyBulkDelete('tasks')" style="display:none;" data-i18n="bulk_delete_selected">Delete selected</button>
+      <button class="m-btn delete" onclick="clearBulkSelection('tasks')" data-i18n="bulk_clear_selection">Clear selection</button>
     </div>
     <div class="section-card">
-      <h3>All tasks</h3>
+      <h3 data-i18n="section_all_tasks">All tasks</h3>
       <div class="table-scroll"><table id="tasksListTable"></table></div>
     </div>
   </section>
 
   <section class="tab-panel" id="panel-subtasks">
     <div class="filter-bar">
-      <label>Task
+      <label><span data-i18n="filter_task">Task</span>
         <select id="subtaskFilterTask"></select>
       </label>
-      <label>Status
+      <label><span data-i18n="filter_status">Status</span>
         <select id="subtaskFilterStatus"></select>
       </label>
-      <label>Assignee
+      <label><span data-i18n="filter_assignee">Assignee</span>
         <select id="subtaskFilterAssignee"></select>
       </label>
-      <button class="export-btn" id="exportSubtasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export CSV</button>
+      <button class="export-btn" id="exportSubtasksCsv" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span data-i18n="export_csv">Export CSV</span></button>
     </div>
     <div class="bulk-bar" id="subtasksBulkBar" style="display:none;">
       <span id="subtasksBulkCount">0 selected</span>
       <select id="subtasksBulkStatus">
-        <option value="">Set status…</option>
-        <option value="not_started">Not started</option>
-        <option value="in_progress">In progress</option>
-        <option value="blocked">Blocked</option>
-        <option value="done">Done</option>
+        <option value="" data-i18n="bulk_set_status">Set status…</option>
+        <option value="not_started" data-i18n="opt_not_started">Not started</option>
+        <option value="in_progress" data-i18n="opt_in_progress">In progress</option>
+        <option value="blocked" data-i18n="opt_blocked">Blocked</option>
+        <option value="done" data-i18n="opt_done">Done</option>
       </select>
-      <button class="m-btn save" onclick="applyBulkStatus('subtasks')">Apply</button>
+      <button class="m-btn save" onclick="applyBulkStatus('subtasks')" data-i18n="bulk_apply">Apply</button>
       <select id="subtasksBulkAssignee"></select>
-      <button class="m-btn save" onclick="applyBulkAssignee('subtasks')">Assign</button>
-      <button class="m-btn delete" id="subtasksBulkDeleteBtn" onclick="applyBulkDelete('subtasks')" style="display:none;">Delete selected</button>
-      <button class="m-btn delete" onclick="clearBulkSelection('subtasks')">Clear selection</button>
+      <button class="m-btn save" onclick="applyBulkAssignee('subtasks')" data-i18n="bulk_assign">Assign</button>
+      <button class="m-btn delete" id="subtasksBulkDeleteBtn" onclick="applyBulkDelete('subtasks')" style="display:none;" data-i18n="bulk_delete_selected">Delete selected</button>
+      <button class="m-btn delete" onclick="clearBulkSelection('subtasks')" data-i18n="bulk_clear_selection">Clear selection</button>
     </div>
     <div class="section-card">
-      <h3>All subtasks</h3>
+      <h3 data-i18n="section_all_subtasks">All subtasks</h3>
       <div class="table-scroll"><table id="subtasksListTable"></table></div>
     </div>
   </section>
@@ -1091,75 +1138,75 @@
   </section>
 
   <section class="tab-panel" id="panel-manage">
-    <div class="manage-note">Add, edit or delete phases, tasks, subtasks and team members below. Changes save straight to Supabase — everyone with this link sees them after a refresh.</div>
+    <div class="manage-note" data-i18n="manage_note">Add, edit or delete phases, tasks, subtasks and team members below. Changes save straight to Supabase — everyone with this link sees them after a refresh.</div>
 
     <div class="subnav" id="manageSubnav">
-      <button data-msub="team" class="active">Team</button>
-      <button data-msub="phases">Phases</button>
-      <button data-msub="tasks">Tasks</button>
-      <button data-msub="subtasks">Subtasks</button>
-      <button data-msub="access">Access</button>
-      <button data-msub="history">History</button>
+      <button data-msub="team" class="active" data-i18n="subnav_team">Team</button>
+      <button data-msub="phases" data-i18n="subnav_phases">Phases</button>
+      <button data-msub="tasks" data-i18n="subnav_tasks">Tasks</button>
+      <button data-msub="subtasks" data-i18n="subnav_subtasks">Subtasks</button>
+      <button data-msub="access" data-i18n="subnav_access">Access</button>
+      <button data-msub="history" data-i18n="subnav_history">History</button>
     </div>
 
     <div class="manage-subpanel active" id="msub-team">
       <div class="section-card">
-        <h3>Team Members</h3>
+        <h3 data-i18n="manage_team_members_header">Team Members</h3>
         <div class="table-scroll"><table id="manageTeamTable"></table></div>
       </div>
     </div>
 
     <div class="manage-subpanel" id="msub-phases">
       <div class="section-card">
-        <h3>Phases</h3>
+        <h3 data-i18n="manage_phases_header">Phases</h3>
         <div class="table-scroll"><table id="managePhasesTable"></table></div>
       </div>
     </div>
 
     <div class="manage-subpanel" id="msub-tasks">
       <div class="section-card">
-        <h3>Tasks, grouped by phase</h3>
+        <h3 data-i18n="manage_tasks_header">Tasks, grouped by phase</h3>
         <div id="manageTasksTree" style="padding: 14px 18px;"></div>
       </div>
     </div>
 
     <div class="manage-subpanel" id="msub-subtasks">
       <div class="section-card">
-        <h3>Subtasks, grouped by task</h3>
+        <h3 data-i18n="manage_subtasks_header">Subtasks, grouped by task</h3>
         <div id="manageSubtasksTree" style="padding: 14px 18px;"></div>
       </div>
     </div>
 
     <div class="manage-subpanel" id="msub-access">
-      <div class="manage-note">Who can sign in and see this project. Inviting someone by email doesn't send them anything automatically — tell them to go to the dashboard link, sign up with their email and the shared default password, confirm their email, then sign back in.</div>
+      <div class="manage-note" data-i18n="manage_access_note">Who can sign in and see this project. Inviting someone by email doesn't send them anything automatically — tell them to go to the dashboard link, sign up with their email and the shared default password, confirm their email, then sign back in.</div>
       <div class="section-card">
-        <h3>Project access</h3>
+        <h3 data-i18n="manage_project_access_header">Project access</h3>
         <div class="table-scroll"><table id="accessTable"></table></div>
         <div class="invite-row" style="padding: 0 18px 18px;">
-          <input type="email" id="inviteEmail" placeholder="person@company.com">
+          <input type="email" id="inviteEmail" placeholder="person@company.com" data-i18n-placeholder="invite_email_placeholder">
           <select id="inviteRole">
-            <option value="owner">Owner — full control</option>
-            <option value="editor">Editor — can edit anything, can't delete</option>
-            <option value="member" selected>Member — can edit only their own/assigned items</option>
-            <option value="viewer">Viewer — read-only</option>
+            <option value="owner" data-i18n="invite_role_owner">Owner — full control</option>
+            <option value="editor" data-i18n="invite_role_editor">Editor — can edit anything, can't delete</option>
+            <option value="member" selected data-i18n="invite_role_member">Member — can edit only their own/assigned items</option>
+            <option value="viewer" data-i18n="invite_role_viewer">Viewer — read-only</option>
           </select>
-          <button class="m-btn add" id="inviteBtn">+ Invite</button>
+          <button class="m-btn add" id="inviteBtn" data-i18n="invite_btn">+ Invite</button>
         </div>
       </div>
 
       <div class="section-card">
-        <h3>Your account</h3>
+        <h3 data-i18n="your_account_header">Your account</h3>
         <div class="invite-row" style="padding: 18px;">
-          <input type="password" id="newPassword" placeholder="New password" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;">
-          <button class="m-btn save" id="changePasswordBtn">Change password</button>
+          <input type="password" id="newPassword" placeholder="New password" data-i18n-placeholder="new_password_placeholder" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;">
+          <button class="m-btn save" id="changePasswordBtn" data-i18n="change_password_btn">Change password</button>
         </div>
       </div>
     </div>
 
     <div class="manage-subpanel" id="msub-history">
-      <div class="manage-note">Read-only activity log — who created, edited, or deleted things, and when. Recorded automatically, can't be edited from here.</div>
+      <div class="manage-note" data-i18n="manage_history_note">Read-only activity log — who created, edited, or deleted things, and when. Recorded automatically, can't be edited from here.</div>
       <div class="section-card">
-        <h3>Recent activity (last 100)</h3>
+        <h3 data-i18n="manage_history_header">Recent activity (last 100)</h3>
         <div id="historyList"></div>
       </div>
     </div>
@@ -1196,6 +1243,134 @@ async function fetchConfig() {
   }
 }
 
+/* ================================================================
+   LANGUAGE (English / Thai)
+   Covers the interface chrome -- navigation, buttons, headers, status
+   and priority labels, empty states, the comments/attachments/
+   collaborators panels. Deliberately does NOT translate: free-text data
+   people type in (task titles, notes, comments...), CSV/Excel export
+   column headers (kept in English so exported files stay consistent
+   regardless of who exports them), or raw error messages coming back
+   from Supabase. Add more keys to TRANSLATIONS.th as needed -- anything
+   missing there silently falls back to English rather than breaking.
+   ================================================================ */
+let currentLang = (function () { try { return localStorage.getItem('mon-lang') || 'en'; } catch (e) { return 'en'; } })();
+const TRANSLATIONS = {
+  en: {
+    nav_overview: 'Overview', nav_phases: 'Phases', nav_tasks: 'Tasks', nav_subtasks: 'Subtasks',
+    nav_team: 'Team', nav_objectives: 'Objectives', nav_manage: 'Manage',
+    search_placeholder: 'Search tasks & subtasks…', notifications_label: 'Notifications',
+    switch_project: 'Switch project', export_excel: 'Export Excel', refresh: 'Refresh', print: 'Print',
+    sign_out: 'Sign out', dark_mode: 'Dark mode', light_mode: 'Light mode',
+    kpi_phases: 'Phases', kpi_overall_progress: 'Overall progress', kpi_blocked_tasks: 'Blocked tasks',
+    kpi_overdue: 'Overdue (tasks + subtasks)', kpi_team_members: 'Team members',
+    chart_progress_by_phase: 'Progress by phase', chart_status_breakdown: 'Task status breakdown',
+    section_phase_timeline: 'Phase timeline', section_recent_activity: 'Recent activity',
+    section_phases_tree: 'Phases → Tasks → Subtasks',
+    filter_phase: 'Phase', filter_status: 'Status', filter_assignee: 'Assignee', filter_task: 'Task',
+    export_csv: 'Export CSV', section_all_tasks: 'All tasks', section_all_subtasks: 'All subtasks',
+    bulk_set_status: 'Set status…', opt_not_started: 'Not started', opt_in_progress: 'In progress',
+    opt_blocked: 'Blocked', opt_done: 'Done', bulk_apply: 'Apply', bulk_assign: 'Assign',
+    bulk_delete_selected: 'Delete selected', bulk_clear_selection: 'Clear selection',
+    manage_note: "Add, edit or delete phases, tasks, subtasks and team members below. Changes save straight to Supabase — everyone with this link sees them after a refresh.",
+    subnav_team: 'Team', subnav_phases: 'Phases', subnav_tasks: 'Tasks', subnav_subtasks: 'Subtasks',
+    subnav_access: 'Access', subnav_history: 'History',
+    manage_team_members_header: 'Team Members', manage_phases_header: 'Phases',
+    manage_tasks_header: 'Tasks, grouped by phase', manage_subtasks_header: 'Subtasks, grouped by task',
+    manage_access_note: "Who can sign in and see this project. Inviting someone by email doesn't send them anything automatically — tell them to go to the dashboard link, sign up with their email and the shared default password, confirm their email, then sign back in.",
+    manage_project_access_header: 'Project access', invite_email_placeholder: 'person@company.com',
+    invite_role_owner: 'Owner — full control', invite_role_editor: "Editor — can edit anything, can't delete",
+    invite_role_member: "Member — can edit only their own/assigned items", invite_role_viewer: 'Viewer — read-only',
+    invite_btn: '+ Invite', your_account_header: 'Your account', new_password_placeholder: 'New password',
+    change_password_btn: 'Change password',
+    manage_history_note: "Read-only activity log — who created, edited, or deleted things, and when. Recorded automatically, can't be edited from here.",
+    manage_history_header: 'Recent activity (last 100)',
+    auth_signin_label: 'Sign in to continue', auth_signup_label: 'Create your account',
+    auth_signin_btn: 'Sign in', auth_signup_btn: 'Sign up',
+    auth_toggle_to_signup: "Don't have an account? Sign up", auth_toggle_to_signin: 'Already have an account? Sign in',
+    auth_email_placeholder: 'Email', auth_password_placeholder: 'Password',
+    auth_enter_email_password: 'Enter an email and password.',
+    your_projects: 'Your projects', new_project_placeholder: 'New project name',
+    start_with_template: 'Start with standard phases', create_project_btn: '+ Create project',
+    no_projects_yet: "No projects yet — create your first one below, or ask to be invited to an existing one.",
+    status_not_started: 'Not started', status_in_progress: 'In progress', status_blocked: 'Blocked', status_done: 'Done',
+    priority_high: 'High', priority_medium: 'Medium', priority_low: 'Low',
+    nothing_due: "Nothing due soon — you're all caught up.",
+    notif_no_link: "Your account isn't linked to a Team Member yet — ask an Owner/Editor to add your email in Manage &gt; Team.",
+    comments_btn_default: 'Comment', comment_unit: 'comment', comment_unit_plural: 'comments',
+    comment_placeholder: 'Write a comment…', comment_post: 'Post', no_comments_yet: 'No comments yet.',
+    attachments_btn: 'Attachments', attachment_upload_btn: 'Upload', no_attachments_yet: 'No attachments yet.',
+    also_involved_label: 'Also involved:', collab_add_btn: '+ Add', selected_unit: 'selected',
+    lang_toggle_tooltip: 'ภาษาไทย (Switch to Thai)', notif_overdue: 'Overdue', notif_due: 'Due',
+  },
+  th: {
+    nav_overview: 'ภาพรวม', nav_phases: 'เฟส', nav_tasks: 'งาน', nav_subtasks: 'งานย่อย',
+    nav_team: 'ทีม', nav_objectives: 'เป้าหมาย', nav_manage: 'จัดการ',
+    search_placeholder: 'ค้นหางานและงานย่อย…', notifications_label: 'การแจ้งเตือน',
+    switch_project: 'เปลี่ยนโปรเจกต์', export_excel: 'ส่งออก Excel', refresh: 'รีเฟรช', print: 'พิมพ์',
+    sign_out: 'ออกจากระบบ', dark_mode: 'โหมดมืด', light_mode: 'โหมดสว่าง',
+    kpi_phases: 'เฟสทั้งหมด', kpi_overall_progress: 'ความคืบหน้ารวม', kpi_blocked_tasks: 'งานที่ติดขัด',
+    kpi_overdue: 'เลยกำหนด (งาน + งานย่อย)', kpi_team_members: 'สมาชิกทีม',
+    chart_progress_by_phase: 'ความคืบหน้าตามเฟส', chart_status_breakdown: 'สรุปสถานะงาน',
+    section_phase_timeline: 'ไทม์ไลน์เฟส', section_recent_activity: 'กิจกรรมล่าสุด',
+    section_phases_tree: 'เฟส → งาน → งานย่อย',
+    filter_phase: 'เฟส', filter_status: 'สถานะ', filter_assignee: 'ผู้รับผิดชอบ', filter_task: 'งาน',
+    export_csv: 'ส่งออก CSV', section_all_tasks: 'งานทั้งหมด', section_all_subtasks: 'งานย่อยทั้งหมด',
+    bulk_set_status: 'ตั้งสถานะ…', opt_not_started: 'ยังไม่เริ่ม', opt_in_progress: 'กำลังดำเนินการ',
+    opt_blocked: 'ติดขัด', opt_done: 'เสร็จแล้ว', bulk_apply: 'ใช้', bulk_assign: 'มอบหมาย',
+    bulk_delete_selected: 'ลบที่เลือก', bulk_clear_selection: 'ล้างการเลือก',
+    manage_note: 'เพิ่ม แก้ไข หรือลบเฟส งาน งานย่อย และสมาชิกทีมด้านล่าง การเปลี่ยนแปลงจะถูกบันทึกลง Supabase ทันที — ทุกคนที่มีลิงก์นี้จะเห็นการเปลี่ยนแปลงหลังรีเฟรช',
+    subnav_team: 'ทีม', subnav_phases: 'เฟส', subnav_tasks: 'งาน', subnav_subtasks: 'งานย่อย',
+    subnav_access: 'การเข้าถึง', subnav_history: 'ประวัติ',
+    manage_team_members_header: 'สมาชิกทีม', manage_phases_header: 'เฟส',
+    manage_tasks_header: 'งาน แบ่งตามเฟส', manage_subtasks_header: 'งานย่อย แบ่งตามงาน',
+    manage_access_note: 'ใครสามารถเข้าสู่ระบบและดูโปรเจกต์นี้ได้บ้าง การเชิญด้วยอีเมลจะไม่ส่งอะไรให้อัตโนมัติ — บอกให้เขาไปที่ลิงก์แดชบอร์ด สมัครด้วยอีเมลของเขาและรหัสผ่านเริ่มต้นที่ใช้ร่วมกัน แล้วเข้าสู่ระบบอีกครั้ง',
+    manage_project_access_header: 'การเข้าถึงโปรเจกต์', invite_email_placeholder: 'person@company.com',
+    invite_role_owner: 'Owner — ควบคุมทั้งหมด', invite_role_editor: 'Editor — แก้ไขได้ทุกอย่าง ลบไม่ได้',
+    invite_role_member: 'Member — แก้ไขได้เฉพาะของตัวเองหรือที่ได้รับมอบหมาย', invite_role_viewer: 'Viewer — ดูได้อย่างเดียว',
+    invite_btn: '+ เชิญ', your_account_header: 'บัญชีของคุณ', new_password_placeholder: 'รหัสผ่านใหม่',
+    change_password_btn: 'เปลี่ยนรหัสผ่าน',
+    manage_history_note: 'บันทึกกิจกรรมแบบอ่านอย่างเดียว — ใครสร้าง แก้ไข หรือลบอะไร และเมื่อไหร่ บันทึกอัตโนมัติ แก้ไขจากหน้านี้ไม่ได้',
+    manage_history_header: 'กิจกรรมล่าสุด (100 รายการล่าสุด)',
+    auth_signin_label: 'เข้าสู่ระบบเพื่อดำเนินการต่อ', auth_signup_label: 'สร้างบัญชีของคุณ',
+    auth_signin_btn: 'เข้าสู่ระบบ', auth_signup_btn: 'สมัครสมาชิก',
+    auth_toggle_to_signup: 'ยังไม่มีบัญชี? สมัครสมาชิก', auth_toggle_to_signin: 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ',
+    auth_email_placeholder: 'อีเมล', auth_password_placeholder: 'รหัสผ่าน',
+    auth_enter_email_password: 'กรอกอีเมลและรหัสผ่าน',
+    your_projects: 'โปรเจกต์ของคุณ', new_project_placeholder: 'ชื่อโปรเจกต์ใหม่',
+    start_with_template: 'เริ่มด้วยเฟสมาตรฐาน', create_project_btn: '+ สร้างโปรเจกต์',
+    no_projects_yet: 'ยังไม่มีโปรเจกต์ — สร้างโปรเจกต์แรกของคุณด้านล่าง หรือขอให้มีคนเชิญคุณเข้าโปรเจกต์ที่มีอยู่แล้ว',
+    status_not_started: 'ยังไม่เริ่ม', status_in_progress: 'กำลังดำเนินการ', status_blocked: 'ติดขัด', status_done: 'เสร็จแล้ว',
+    priority_high: 'สูง', priority_medium: 'กลาง', priority_low: 'ต่ำ',
+    nothing_due: 'ไม่มีอะไรใกล้ครบกำหนด — คุณทำงานทันเวลาหมดแล้ว',
+    notif_no_link: 'บัญชีของคุณยังไม่ได้เชื่อมกับสมาชิกทีม — ขอให้ Owner หรือ Editor เพิ่มอีเมลของคุณใน Manage &gt; Team',
+    comments_btn_default: 'แสดงความคิดเห็น', comment_unit: 'ความคิดเห็น', comment_unit_plural: 'ความคิดเห็น',
+    comment_placeholder: 'เขียนความคิดเห็น…', comment_post: 'โพสต์', no_comments_yet: 'ยังไม่มีความคิดเห็น',
+    attachments_btn: 'ไฟล์แนบ', attachment_upload_btn: 'อัปโหลด', no_attachments_yet: 'ยังไม่มีไฟล์แนบ',
+    also_involved_label: 'ผู้เกี่ยวข้องเพิ่มเติม:', collab_add_btn: '+ เพิ่ม', selected_unit: 'รายการที่เลือก',
+    lang_toggle_tooltip: 'English (สลับเป็นภาษาอังกฤษ)', notif_overdue: 'เลยกำหนด', notif_due: 'ครบกำหนด',
+  },
+};
+function t(key) {
+  return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || TRANSLATIONS.en[key] || key;
+}
+// Simple pluralization helper -- Thai doesn't inflect for number, so it just
+// uses one word regardless of count; English keeps its singular/plural pair.
+function pluralLabel(n, enSingular, enPlural, thWord) {
+  if (currentLang === 'th') return `${n} ${thWord}`;
+  return `${n} ${n === 1 ? enSingular : enPlural}`;
+}
+// Applies the current language to every static (non-JS-generated) element
+// tagged with data-i18n / data-i18n-placeholder. Dynamic content (rendered
+// via JS template strings) picks up the language the next time it renders,
+// which is why switching languages triggers a full re-render (see the
+// language toggle button handler near the bottom of this script).
+function applyStaticTranslations() {
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
+}
+
 const STATUS_LABELS = { not_started: "Not started", in_progress: "In progress", blocked: "Blocked", done: "Done" };
 const STATUS_PROGRESS = { not_started: 0, in_progress: 50, blocked: 50, done: 100 };
 
@@ -1203,6 +1378,7 @@ let supabaseClient = null;
 let teamMembers = [], phases = [], tasks = [], subtasks = [], objectives = [];
 let projectMembers = []; // access-role rows (owner/editor/member/viewer) for the current project
 let comments = []; // discussion threads on tasks/subtasks (see migration-comments.sql)
+let taskCollaborators = [], subtaskCollaborators = []; // extra people on an item, see migration-collaborators.sql
 let charts = {};
 let taskFilters = { phase: '', status: '', assignee: '' };
 let subtaskFilters = { task: '', status: '', assignee: '' };
@@ -1240,8 +1416,10 @@ function showToast(message, type) {
   toastTimer = setTimeout(() => { toast.className = ''; }, 4000);
 }
 
-function badge(status) { return `<span class="badge ${status}">${STATUS_LABELS[status] || status || "—"}</span>`; }
-function prioBadge(p) { return `<span class="prio ${p}">${p || '—'}</span>`; }
+function statusLabel(status) { return status ? (t('status_' + status) || STATUS_LABELS[status] || status) : "—"; }
+function priorityLabel(p) { return p ? (t('priority_' + p) || p) : '—'; }
+function badge(status) { return `<span class="badge ${status}">${statusLabel(status)}</span>`; }
+function prioBadge(p) { return `<span class="prio ${p}">${priorityLabel(p)}</span>`; }
 function fmtDate(d) { if (!d) return "—"; try { return new Date(d).toLocaleDateString('en-CA'); } catch(e) { return d; } }
 function initials(name) { if (!name) return "?"; return name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase(); }
 // A fixed, cheerful palette (Airtable-style) -- each person gets a stable
@@ -1343,13 +1521,16 @@ function detailBlock(item, itemTable) {
   const depTag = dependencyTag(item);
   const link = linkTag(item);
   const commentsHtml = itemTable ? commentsBlock(item, itemTable) : '';
-  if (!item.description && !item.notes && !depTag && !link && !commentsHtml) return '';
+  const attachmentsHtml = itemTable ? attachmentsBlock(item, itemTable) : '';
+  const collabHtml = itemTable ? collaboratorsBlock(item, itemTable) : '';
+  if (!item.description && !item.notes && !depTag && !link && !commentsHtml && !attachmentsHtml && !collabHtml) return '';
   return `<div class="item-detail">
     ${item.description ? `<div>${item.description}</div>` : ''}
     ${item.notes ? `<div class="item-notes ${item.status === 'blocked' ? 'blocked' : ''}">${item.status === 'blocked' ? '⚠ ' : '📝 '}${item.notes}</div>` : ''}
     ${depTag ? `<div>${depTag}</div>` : ''}
     ${link ? `<div>${link}</div>` : ''}
-    ${commentsHtml}
+    ${collabHtml}
+    <div class="detail-tools-row">${commentsHtml}${attachmentsHtml}</div>
   </div>`;
 }
 function phaseAtRisk(phaseId) {
@@ -1426,6 +1607,7 @@ async function loadData(silent) {
   renderAll();
   loadActivityLog();
   loadComments();
+  loadCollaborators();
 }
 
 function renderAll() {
@@ -1452,6 +1634,7 @@ async function loadComments() {
     .order('created_at', { ascending: true });
   comments = error ? null : (data || []);
   renderPhasesTree();
+  computeNotifications();
 }
 function commentsForItem(itemTable, itemId) {
   return (comments || []).filter(c => c.item_table === itemTable && c.item_id === itemId);
@@ -1470,12 +1653,12 @@ function commentsBlock(item, itemTable) {
       </div>`).join('');
   return `
     <div class="comments-block">
-      <button class="comments-toggle" onclick="event.stopPropagation(); toggleComments('${key}')">💬 ${list.length ? list.length + ' comment' + (list.length === 1 ? '' : 's') : 'Comment'}</button>
+      <button class="comments-toggle" onclick="event.stopPropagation(); toggleComments('${key}')">💬 ${list.length ? pluralLabel(list.length, 'comment', 'comments', t('comment_unit')) : t('comments_btn_default')}</button>
       <div class="comments-panel" id="comments-${key}" style="display:none;">
-        ${list.length ? `<div class="comments-list">${rows}</div>` : `<div class="no-comments">No comments yet.</div>`}
+        ${list.length ? `<div class="comments-list">${rows}</div>` : `<div class="no-comments">${t('no_comments_yet')}</div>`}
         <div class="comment-add-row">
-          <input type="text" class="comment-input" id="comment-input-${key}" placeholder="Write a comment…" onkeydown="event.stopPropagation(); if(event.key==='Enter'){event.preventDefault();addComment('${itemTable}','${item.id}');}" onclick="event.stopPropagation();">
-          <button class="m-btn save" onclick="event.stopPropagation(); addComment('${itemTable}','${item.id}')">Post</button>
+          <input type="text" class="comment-input" id="comment-input-${key}" placeholder="${t('comment_placeholder')}" onkeydown="event.stopPropagation(); if(event.key==='Enter'){event.preventDefault();addComment('${itemTable}','${item.id}');}" onclick="event.stopPropagation();">
+          <button class="m-btn save" onclick="event.stopPropagation(); addComment('${itemTable}','${item.id}')">${t('comment_post')}</button>
         </div>
       </div>
     </div>`;
@@ -1500,6 +1683,155 @@ window.addComment = async function(itemTable, itemId) {
   await loadComments();
   const panel = document.getElementById('comments-' + key);
   if (panel) panel.style.display = 'block';
+};
+
+// File attachments (see migration-attachments.sql). Uses Supabase Storage
+// directly (list/upload/remove/createSignedUrl) instead of a metadata table
+// -- there's nothing to keep in sync. Filenames are sanitized at upload time
+// so they're always safe to embed in an inline onclick handler.
+function sanitizeFilename(name) {
+  const idx = name.lastIndexOf('.');
+  const base = idx > 0 ? name.slice(0, idx) : name;
+  const ext = idx > 0 ? name.slice(idx) : '';
+  const cleanBase = base.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 60) || 'file';
+  const cleanExt = ext.replace(/[^a-zA-Z0-9.]+/g, '').slice(0, 10);
+  return cleanBase + cleanExt;
+}
+function attachmentFolder(itemTable, itemId) {
+  return `${currentProjectId}/${itemTable}/${itemId}`;
+}
+function formatFileSize(bytes) {
+  if (!bytes && bytes !== 0) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+function attachmentsBlock(item, itemTable) {
+  const key = itemTable + '-' + item.id;
+  return `
+    <div class="attachments-block">
+      <button class="comments-toggle" onclick="event.stopPropagation(); toggleAttachments('${key}','${itemTable}','${item.id}')">📎 ${t('attachments_btn')}</button>
+      <div class="attachments-panel" id="attachments-${key}" style="display:none;">
+        <div class="attachments-list" id="attachments-list-${key}"><div class="no-comments">Loading…</div></div>
+        <div class="comment-add-row">
+          <input type="file" class="attachment-file-input" id="attachment-file-${key}" onclick="event.stopPropagation();">
+          <button class="m-btn save" onclick="event.stopPropagation(); uploadAttachment('${itemTable}','${item.id}')">${t('attachment_upload_btn')}</button>
+        </div>
+      </div>
+    </div>`;
+}
+window.toggleAttachments = async function(key, itemTable, itemId) {
+  const panel = document.getElementById('attachments-' + key);
+  if (!panel) return;
+  const opening = panel.style.display !== 'block';
+  panel.style.display = opening ? 'block' : 'none';
+  if (opening) await refreshAttachmentsList(key, itemTable, itemId);
+};
+async function refreshAttachmentsList(key, itemTable, itemId) {
+  const listEl = document.getElementById('attachments-list-' + key);
+  if (!listEl || !supabaseClient) return;
+  listEl.innerHTML = `<div class="no-comments">Loading…</div>`;
+  const { data, error } = await supabaseClient.storage
+    .from('attachments')
+    .list(attachmentFolder(itemTable, itemId), { sortBy: { column: 'created_at', order: 'desc' } });
+  if (error) {
+    listEl.innerHTML = `<div class="no-comments">Attachments aren't set up yet for this project — run <code>migration-attachments.sql</code>.</div>`;
+    return;
+  }
+  const files = (data || []).filter(f => f.name && f.id);
+  if (!files.length) { listEl.innerHTML = `<div class="no-comments">${t('no_attachments_yet')}</div>`; return; }
+  listEl.innerHTML = files.map(f => `
+    <div class="attachment-row">
+      <span class="attachment-name" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name.replace(/^\d+-/, ''))}</span>
+      <span class="attachment-size">${formatFileSize(f.metadata?.size)}</span>
+      <button class="link-btn" onclick="event.stopPropagation(); downloadAttachment('${itemTable}','${itemId}','${f.name}')">Download</button>
+      <button class="link-btn danger" onclick="event.stopPropagation(); deleteAttachment('${key}','${itemTable}','${itemId}','${f.name}')">Delete</button>
+    </div>`).join('');
+}
+window.uploadAttachment = async function(itemTable, itemId) {
+  const key = itemTable + '-' + itemId;
+  const input = document.getElementById('attachment-file-' + key);
+  if (!input || !input.files || !input.files[0]) { showToast('Choose a file first.'); return; }
+  const file = input.files[0];
+  if (file.size > 15 * 1024 * 1024) { showToast('File is too large (max 15 MB).'); return; }
+  const path = `${attachmentFolder(itemTable, itemId)}/${Date.now()}-${sanitizeFilename(file.name)}`;
+  const { error } = await supabaseClient.storage.from('attachments').upload(path, file);
+  if (error) { showToast('Error uploading: ' + error.message); return; }
+  input.value = '';
+  showToast('Uploaded.', 'success');
+  await refreshAttachmentsList(key, itemTable, itemId);
+};
+window.downloadAttachment = async function(itemTable, itemId, fileName) {
+  const path = `${attachmentFolder(itemTable, itemId)}/${fileName}`;
+  const { data, error } = await supabaseClient.storage.from('attachments').createSignedUrl(path, 60);
+  if (error) { showToast('Error: ' + error.message); return; }
+  window.open(data.signedUrl, '_blank');
+};
+window.deleteAttachment = async function(key, itemTable, itemId, fileName) {
+  if (!confirm('Delete this attachment?')) return;
+  const path = `${attachmentFolder(itemTable, itemId)}/${fileName}`;
+  const { error } = await supabaseClient.storage.from('attachments').remove([path]);
+  if (error) { showToast('Error deleting: ' + error.message); return; }
+  await refreshAttachmentsList(key, itemTable, itemId);
+};
+
+// Collaborators (see migration-collaborators.sql) -- extra people linked to
+// a task/subtask alongside the main assignee. Fetched separately (after
+// tasks/subtasks are loaded) for the same "don't break the app if the
+// migration hasn't run yet" reason as comments/activity log above.
+async function loadCollaborators() {
+  if (!supabaseClient) return;
+  const taskIds = tasks.map(t => t.id);
+  const subtaskIds = subtasks.map(s => s.id);
+  const [tc, sc] = await Promise.all([
+    taskIds.length ? supabaseClient.from('task_collaborators').select('*').in('task_id', taskIds) : Promise.resolve({ data: [], error: null }),
+    subtaskIds.length ? supabaseClient.from('subtask_collaborators').select('*').in('subtask_id', subtaskIds) : Promise.resolve({ data: [], error: null }),
+  ]);
+  taskCollaborators = tc.error ? null : (tc.data || []);
+  subtaskCollaborators = sc.error ? null : (sc.data || []);
+  renderPhasesTree();
+}
+function collaboratorsForItem(itemTable, itemId) {
+  const list = itemTable === 'tasks' ? taskCollaborators : subtaskCollaborators;
+  if (list === null) return null;
+  const field = itemTable === 'tasks' ? 'task_id' : 'subtask_id';
+  return list.filter(c => c[field] === itemId);
+}
+function collaboratorSelectOptions() {
+  return teamMembers.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
+function collaboratorsBlock(item, itemTable) {
+  const rows = collaboratorsForItem(itemTable, item.id);
+  if (rows === null) return ''; // migration-collaborators.sql hasn't been run yet
+  const iCanManage = canCreateItems();
+  if (!rows.length && !iCanManage) return '';
+  const chips = rows.map(c => `
+    <span class="collab-chip">${miniAvatar(c.team_member_id)}${memberName(c.team_member_id)}${iCanManage ? `<button class="collab-remove" onclick="event.stopPropagation(); removeCollaborator('${itemTable}','${item.id}','${c.team_member_id}')" title="Remove">×</button>` : ''}</span>`).join('');
+  const addControl = iCanManage && teamMembers.length ? `
+    <span class="collab-add">
+      <select id="collab-select-${itemTable}-${item.id}" onclick="event.stopPropagation();">${collaboratorSelectOptions()}</select>
+      <button class="link-btn" onclick="event.stopPropagation(); addCollaborator('${itemTable}','${item.id}')">${t('collab_add_btn')}</button>
+    </span>` : '';
+  if (!chips && !addControl) return '';
+  return `<div class="collab-block"><span class="collab-label">${t('also_involved_label')}</span>${chips}${addControl}</div>`;
+}
+window.addCollaborator = async function(itemTable, itemId) {
+  const select = document.getElementById(`collab-select-${itemTable}-${itemId}`);
+  if (!select || !select.value || !supabaseClient) return;
+  const table = itemTable === 'tasks' ? 'task_collaborators' : 'subtask_collaborators';
+  const payload = itemTable === 'tasks'
+    ? { task_id: itemId, team_member_id: select.value }
+    : { subtask_id: itemId, team_member_id: select.value };
+  const { error } = await supabaseClient.from(table).insert(payload);
+  if (error) { showToast('Error adding: ' + error.message); return; }
+  await loadCollaborators();
+};
+window.removeCollaborator = async function(itemTable, itemId, teamMemberId) {
+  const table = itemTable === 'tasks' ? 'task_collaborators' : 'subtask_collaborators';
+  const field = itemTable === 'tasks' ? 'task_id' : 'subtask_id';
+  const { error } = await supabaseClient.from(table).delete().eq(field, itemId).eq('team_member_id', teamMemberId);
+  if (error) { showToast('Error removing: ' + error.message); return; }
+  await loadCollaborators();
 };
 
 // Activity log fetch is kept separate from the main loadData() Promise.all
@@ -1549,19 +1881,42 @@ function computeNotifications() {
   if (myId) {
     const soon = new Date();
     soon.setDate(soon.getDate() + 3);
+    const dueItems = [];
     const collect = (list, kind, tab) => {
       list.forEach(item => {
         if (item.assignee_id !== myId || item.status === 'done' || !item.due_date) return;
         const due = new Date(item.due_date);
         const overdue = isOverdue(item);
         if (overdue || due <= soon) {
-          notifItems.push({ id: item.id, title: item.title, kind, tab, due: item.due_date, overdue });
+          dueItems.push({ id: item.id, title: item.title, kind, tab, due: item.due_date, overdue, type: 'due' });
         }
       });
     };
     collect(tasks, 'Task', 'tasks');
     collect(subtasks, 'Subtask', 'subtasks');
-    notifItems.sort((a, b) => (b.overdue - a.overdue) || (new Date(a.due) - new Date(b.due)));
+    dueItems.sort((a, b) => (b.overdue - a.overdue) || (new Date(a.due) - new Date(b.due)));
+
+    // New comments (last 48h, not written by me) on items I'm assigned to or created.
+    const commentItems = [];
+    if (comments && comments.length) {
+      const since = new Date();
+      since.setHours(since.getHours() - 48);
+      const myItemIds = new Set([
+        ...tasks.filter(t => t.assignee_id === myId || t.created_by === currentUser?.id).map(t => t.id),
+        ...subtasks.filter(s => s.assignee_id === myId || s.created_by === currentUser?.id).map(s => s.id),
+      ]);
+      comments.forEach(c => {
+        if (c.author_id === currentUser?.id) return;
+        if (new Date(c.created_at) < since) return;
+        if (!myItemIds.has(c.item_id)) return;
+        const list = c.item_table === 'tasks' ? tasks : subtasks;
+        const item = list.find(x => x.id === c.item_id);
+        if (!item) return;
+        commentItems.push({ id: c.item_id, title: item.title, kind: c.item_table === 'tasks' ? 'Task' : 'Subtask', tab: c.item_table, due: c.created_at, overdue: false, type: 'comment', author: c.author_email });
+      });
+      commentItems.sort((a, b) => new Date(b.due) - new Date(a.due));
+    }
+    notifItems = [...commentItems, ...dueItems];
   }
   renderNotifBell();
 }
@@ -1572,16 +1927,20 @@ function renderNotifBell() {
   if (notifItems.length) { countEl.style.display = 'inline-block'; countEl.textContent = notifItems.length; }
   else { countEl.style.display = 'none'; }
   if (notifNoLink) {
-    panel.innerHTML = `<div class="notif-empty">Your account isn't linked to a Team Member yet — ask an Owner/Editor to add your email in Manage &gt; Team.</div>`;
+    panel.innerHTML = `<div class="notif-empty">${t('notif_no_link')}</div>`;
     return;
   }
   panel.innerHTML = notifItems.length
-    ? notifItems.map(n => `
+    ? notifItems.map(n => n.type === 'comment' ? `
+        <div class="notif-item" onclick="goToNotifItem('${n.tab}','${n.id}')">
+          <div class="notif-title">💬 ${n.kind}: ${n.title}</div>
+          <div class="notif-sub">${n.author ? escapeHtml(n.author) + ' · ' : ''}${timeAgo(n.due)}</div>
+        </div>` : `
         <div class="notif-item" onclick="goToNotifItem('${n.tab}','${n.id}')">
           <div class="notif-title">${n.kind}: ${n.title}</div>
-          <div class="notif-sub ${n.overdue ? 'overdue' : ''}">${n.overdue ? 'Overdue' : 'Due'} ${fmtDate(n.due)}</div>
+          <div class="notif-sub ${n.overdue ? 'overdue' : ''}">${n.overdue ? t('notif_overdue') : t('notif_due')} ${fmtDate(n.due)}</div>
         </div>`).join('')
-    : `<div class="notif-empty">Nothing due soon — you're all caught up.</div>`;
+    : `<div class="notif-empty">${t('nothing_due')}</div>`;
 }
 window.goToNotifItem = function(tab, id) {
   document.getElementById('notifPanel').style.display = 'none';
@@ -1688,7 +2047,7 @@ function renderProjectList() {
           </div>
         </div>`;
       }).join('')
-    : `<div class="empty-state">No projects yet — create your first one below, or ask to be invited to an existing one.</div>`;
+    : `<div class="empty-state">${t('no_projects_yet')}</div>`;
 }
 
 window.deleteProjectFromList = async function(projectId, projectName) {
@@ -1772,7 +2131,7 @@ function renderBulkBar(kind) {
   if (!bar) return;
   bar.style.display = set.size ? 'flex' : 'none';
   const countEl = document.getElementById(kind + 'BulkCount');
-  if (countEl) countEl.textContent = set.size + ' selected';
+  if (countEl) countEl.textContent = set.size + ' ' + t('selected_unit');
   const delBtn = document.getElementById(kind + 'BulkDeleteBtn');
   if (delBtn) delBtn.style.display = isOwner() ? '' : 'none';
 }
@@ -2082,23 +2441,23 @@ function renderOverview() {
   document.getElementById('overviewKpis').innerHTML = `
     <div class="kpi-card">
       ${kpiIcon('layers', 'var(--color-primary)')}
-      <div class="value">${phases.length}</div><div class="label">Phases</div>
+      <div class="value">${phases.length}</div><div class="label">${t('kpi_phases')}</div>
     </div>
     <div class="kpi-card">
       ${kpiIcon('trending-up', 'var(--color-ok)')}
-      <div class="value">${overallProgress}%</div><div class="label">Overall progress</div>
+      <div class="value">${overallProgress}%</div><div class="label">${t('kpi_overall_progress')}</div>
     </div>
     <div class="kpi-card">
       ${kpiIcon('alert-triangle', 'var(--color-blocked)')}
-      <div class="value" style="color:var(--color-blocked)">${blockedTasks}</div><div class="label">Blocked tasks</div>
+      <div class="value" style="color:var(--color-blocked)">${blockedTasks}</div><div class="label">${t('kpi_blocked_tasks')}</div>
     </div>
     <div class="kpi-card">
       ${kpiIcon('clock', 'var(--color-blocked)')}
-      <div class="value" style="color:var(--color-blocked)">${overdueCount}</div><div class="label">Overdue (tasks + subtasks)</div>
+      <div class="value" style="color:var(--color-blocked)">${overdueCount}</div><div class="label">${t('kpi_overdue')}</div>
     </div>
     <div class="kpi-card">
       ${kpiIcon('users', 'var(--color-info)')}
-      <div class="value">${teamMembers.length}</div><div class="label">Team members</div>
+      <div class="value">${teamMembers.length}</div><div class="label">${t('kpi_team_members')}</div>
     </div>
   `;
 
@@ -2106,7 +2465,7 @@ function renderOverview() {
 
   const byStatus = { not_started:0, in_progress:0, blocked:0, done:0 };
   tasks.forEach(t => byStatus[t.status] = (byStatus[t.status]||0) + 1);
-  drawDoughnutChart('chartByStatus', Object.keys(byStatus).map(k => STATUS_LABELS[k]), Object.values(byStatus));
+  drawDoughnutChart('chartByStatus', Object.keys(byStatus).map(k => statusLabel(k)), Object.values(byStatus));
 
   renderPhaseTimeline();
   renderActivityFeed();
@@ -2299,10 +2658,10 @@ function opt(value, label, selected) {
   return `<option value="${value}" ${selected === value ? 'selected' : ''}>${label}</option>`;
 }
 function statusOptions(current) {
-  return STATUS_OPTIONS.map(s => opt(s, STATUS_LABELS[s], current)).join('');
+  return STATUS_OPTIONS.map(s => opt(s, statusLabel(s), current)).join('');
 }
 function priorityOptions(current) {
-  return PRIORITY_OPTIONS.map(p => opt(p, p.charAt(0).toUpperCase()+p.slice(1), current)).join('');
+  return PRIORITY_OPTIONS.map(p => opt(p, priorityLabel(p), current)).join('');
 }
 function memberOptions(current) {
   return '<option value="">Unassigned</option>' + teamMembers.map(m => opt(m.id, m.name, current)).join('');
@@ -2835,7 +3194,7 @@ document.getElementById('signOutBtn2').addEventListener('click', doSignOut);
 // (see the tiny inline script in <head>) so there's no flash on refresh.
 function applyThemeToggleUI() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  document.getElementById('themeToggleLabel').textContent = isDark ? 'Light mode' : 'Dark mode';
+  document.getElementById('themeToggleLabel').textContent = isDark ? t('light_mode') : t('dark_mode');
 }
 function redrawChartsForTheme() {
   if (document.getElementById('panel-overview')?.classList.contains('active')) renderOverview();
@@ -2853,6 +3212,28 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
   redrawChartsForTheme();
 });
 applyThemeToggleUI();
+
+// Language (English / Thai) -- see the TRANSLATIONS block near the top of
+// this script for what's covered and what's deliberately left in English.
+function applyLangToggleUI() {
+  document.getElementById('langToggleLabel').textContent = currentLang === 'th' ? 'EN' : 'TH';
+  document.getElementById('langToggleBtn').title = t('lang_toggle_tooltip');
+}
+function refreshEverythingForLanguage() {
+  applyStaticTranslations();
+  applyLangToggleUI();
+  applyThemeToggleUI();
+  updateAuthModeUI();
+  if (currentProjectId) renderAll();
+  renderProjectList();
+}
+document.getElementById('langToggleBtn').addEventListener('click', () => {
+  currentLang = currentLang === 'th' ? 'en' : 'th';
+  try { localStorage.setItem('mon-lang', currentLang); } catch (e) {}
+  refreshEverythingForLanguage();
+});
+applyStaticTranslations();
+applyLangToggleUI();
 
 // Keyboard shortcuts: "/" focuses the global search (unless already typing
 // in a field), Escape closes any open dropdown/panel.
@@ -2894,11 +3275,14 @@ document.getElementById('createProjectBtn').addEventListener('click', async () =
 
 // Auth form (sign in / sign up toggle)
 let authMode = 'signin';
+function updateAuthModeUI() {
+  document.getElementById('authSubmitBtn').textContent = authMode === 'signin' ? t('auth_signin_btn') : t('auth_signup_btn');
+  document.getElementById('authModeLabel').textContent = authMode === 'signin' ? t('auth_signin_label') : t('auth_signup_label');
+  document.getElementById('authToggleBtn').textContent = authMode === 'signin' ? t('auth_toggle_to_signup') : t('auth_toggle_to_signin');
+}
 document.getElementById('authToggleBtn').addEventListener('click', () => {
   authMode = authMode === 'signin' ? 'signup' : 'signin';
-  document.getElementById('authSubmitBtn').textContent = authMode === 'signin' ? 'Sign in' : 'Sign up';
-  document.getElementById('authModeLabel').textContent = authMode === 'signin' ? 'Sign in to continue' : 'Create your account';
-  document.getElementById('authToggleBtn').textContent = authMode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in';
+  updateAuthModeUI();
   document.getElementById('authError').style.display = 'none';
   document.getElementById('authError').classList.remove('success');
 });
@@ -2908,7 +3292,7 @@ document.getElementById('authSubmitBtn').addEventListener('click', async () => {
   const errEl = document.getElementById('authError');
   errEl.style.display = 'none';
   errEl.classList.remove('success');
-  if (!email || !password) { errEl.textContent = 'Enter an email and password.'; errEl.style.display = 'block'; return; }
+  if (!email || !password) { errEl.textContent = t('auth_enter_email_password'); errEl.style.display = 'block'; return; }
   const action = authMode === 'signin'
     ? supabaseClient.auth.signInWithPassword({ email, password })
     : supabaseClient.auth.signUp({ email, password });
