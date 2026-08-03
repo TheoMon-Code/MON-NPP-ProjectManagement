@@ -77,21 +77,24 @@
      stay identical, the palette is the MON brand book either way), only
      the neutrals (page/card backgrounds, text, borders, fills) flip. */
   html[data-theme="dark"] {
-    --color-bg: #14161B;
-    --color-text: #E7E9EE;
-    --color-card-bg: #1D2027;
-    --color-border: #2C303A;
-    --color-muted: #9096A3;
-    --color-fill: #262A33;
-    --color-fill-hover: #2F343F;
-    --color-tag-bg: #262A33;
-    --color-hover-tint: #23262E;
-    --color-hover-tint-2: #262A33;
-    --color-border-hover: #3A404D;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
-    --shadow-md: 0 6px 18px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.3);
-    --shadow-lg: 0 20px 48px rgba(0,0,0,.55);
-    --shadow-hover: 0 10px 26px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.3);
+    /* A softer, warmer dark mode -- lighter charcoal instead of near-black,
+       text dimmed a touch below pure white, and lighter shadows so panels
+       don't look like they're floating in a void. */
+    --color-bg: #1B1E24;
+    --color-text: #D8DAE2;
+    --color-card-bg: #24272E;
+    --color-border: #343841;
+    --color-muted: #8D93A0;
+    --color-fill: #2C2F37;
+    --color-fill-hover: #343841;
+    --color-tag-bg: #2C2F37;
+    --color-hover-tint: #292C33;
+    --color-hover-tint-2: #2C2F37;
+    --color-border-hover: #40444E;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.22);
+    --shadow-md: 0 6px 18px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
+    --shadow-lg: 0 20px 48px rgba(0,0,0,.38);
+    --shadow-hover: 0 10px 26px rgba(0,0,0,.28), 0 2px 6px rgba(0,0,0,.2);
   }
   html[data-theme="dark"] body {
     background:
@@ -112,7 +115,7 @@
   html[data-theme="dark"] .badge, html[data-theme="dark"] .prio,
   html[data-theme="dark"] .overdue-tag, html[data-theme="dark"] .risk-tag,
   html[data-theme="dark"] .pending-tag, html[data-theme="dark"] .joined-tag {
-    filter: brightness(1.1) saturate(1.05);
+    filter: brightness(1.03);
   }
 
   * { box-sizing: border-box; }
@@ -1634,6 +1637,8 @@ async function loadComments() {
     .order('created_at', { ascending: true });
   comments = error ? null : (data || []);
   renderPhasesTree();
+  renderTasksListTab();
+  renderSubtasksListTab();
   computeNotifications();
 }
 function commentsForItem(itemTable, itemId) {
@@ -1642,9 +1647,14 @@ function commentsForItem(itemTable, itemId) {
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
-function commentsBlock(item, itemTable) {
+// `context` disambiguates DOM ids when the same task/subtask is rendered in
+// more than one place at once (e.g. the Phases accordion AND the flat
+// Tasks/Subtasks list both stay in the DOM -- only hidden by CSS -- so
+// without a per-location prefix their ids would collide and only one of the
+// two copies would actually respond to clicks).
+function commentsBlock(item, itemTable, context) {
   if (comments === null) return ''; // migration-comments.sql hasn't been run yet -- stay quiet
-  const key = itemTable + '-' + item.id;
+  const domKey = (context ? context + '-' : '') + itemTable + '-' + item.id;
   const list = commentsForItem(itemTable, item.id);
   const rows = list.map(c => `
       <div class="comment-row">
@@ -1653,24 +1663,23 @@ function commentsBlock(item, itemTable) {
       </div>`).join('');
   return `
     <div class="comments-block">
-      <button class="comments-toggle" onclick="event.stopPropagation(); toggleComments('${key}')">💬 ${list.length ? pluralLabel(list.length, 'comment', 'comments', t('comment_unit')) : t('comments_btn_default')}</button>
-      <div class="comments-panel" id="comments-${key}" style="display:none;">
+      <button class="comments-toggle" onclick="event.stopPropagation(); toggleComments('${domKey}')">💬 ${list.length ? pluralLabel(list.length, 'comment', 'comments', t('comment_unit')) : t('comments_btn_default')}</button>
+      <div class="comments-panel" id="comments-${domKey}" style="display:none;">
         ${list.length ? `<div class="comments-list">${rows}</div>` : `<div class="no-comments">${t('no_comments_yet')}</div>`}
         <div class="comment-add-row">
-          <input type="text" class="comment-input" id="comment-input-${key}" placeholder="${t('comment_placeholder')}" onkeydown="event.stopPropagation(); if(event.key==='Enter'){event.preventDefault();addComment('${itemTable}','${item.id}');}" onclick="event.stopPropagation();">
-          <button class="m-btn save" onclick="event.stopPropagation(); addComment('${itemTable}','${item.id}')">${t('comment_post')}</button>
+          <input type="text" class="comment-input" id="comment-input-${domKey}" placeholder="${t('comment_placeholder')}" onkeydown="event.stopPropagation(); if(event.key==='Enter'){event.preventDefault();addComment('${itemTable}','${item.id}','${domKey}');}" onclick="event.stopPropagation();">
+          <button class="m-btn save" onclick="event.stopPropagation(); addComment('${itemTable}','${item.id}','${domKey}')">${t('comment_post')}</button>
         </div>
       </div>
     </div>`;
 }
-window.toggleComments = function(key) {
-  const panel = document.getElementById('comments-' + key);
+window.toggleComments = function(domKey) {
+  const panel = document.getElementById('comments-' + domKey);
   if (!panel) return;
   panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
 };
-window.addComment = async function(itemTable, itemId) {
-  const key = itemTable + '-' + itemId;
-  const input = document.getElementById('comment-input-' + key);
+window.addComment = async function(itemTable, itemId, domKey) {
+  const input = document.getElementById('comment-input-' + domKey);
   if (!input) return;
   const body = input.value.trim();
   if (!body || !supabaseClient || !currentProjectId) return;
@@ -1681,7 +1690,7 @@ window.addComment = async function(itemTable, itemId) {
   if (error) { showToast('Error posting comment: ' + error.message); return; }
   input.value = '';
   await loadComments();
-  const panel = document.getElementById('comments-' + key);
+  const panel = document.getElementById('comments-' + domKey);
   if (panel) panel.style.display = 'block';
 };
 
@@ -1706,16 +1715,16 @@ function formatFileSize(bytes) {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
-function attachmentsBlock(item, itemTable) {
-  const key = itemTable + '-' + item.id;
+function attachmentsBlock(item, itemTable, context) {
+  const domKey = (context ? context + '-' : '') + itemTable + '-' + item.id;
   return `
     <div class="attachments-block">
-      <button class="comments-toggle" onclick="event.stopPropagation(); toggleAttachments('${key}','${itemTable}','${item.id}')">📎 ${t('attachments_btn')}</button>
-      <div class="attachments-panel" id="attachments-${key}" style="display:none;">
-        <div class="attachments-list" id="attachments-list-${key}"><div class="no-comments">Loading…</div></div>
+      <button class="comments-toggle" onclick="event.stopPropagation(); toggleAttachments('${domKey}','${itemTable}','${item.id}')">📎 ${t('attachments_btn')}</button>
+      <div class="attachments-panel" id="attachments-${domKey}" style="display:none;">
+        <div class="attachments-list" id="attachments-list-${domKey}"><div class="no-comments">Loading…</div></div>
         <div class="comment-add-row">
-          <input type="file" class="attachment-file-input" id="attachment-file-${key}" onclick="event.stopPropagation();">
-          <button class="m-btn save" onclick="event.stopPropagation(); uploadAttachment('${itemTable}','${item.id}')">${t('attachment_upload_btn')}</button>
+          <input type="file" class="attachment-file-input" id="attachment-file-${domKey}" onclick="event.stopPropagation();">
+          <button class="m-btn save" onclick="event.stopPropagation(); uploadAttachment('${itemTable}','${item.id}','${domKey}')">${t('attachment_upload_btn')}</button>
         </div>
       </div>
     </div>`;
@@ -1748,9 +1757,8 @@ async function refreshAttachmentsList(key, itemTable, itemId) {
       <button class="link-btn danger" onclick="event.stopPropagation(); deleteAttachment('${key}','${itemTable}','${itemId}','${f.name}')">Delete</button>
     </div>`).join('');
 }
-window.uploadAttachment = async function(itemTable, itemId) {
-  const key = itemTable + '-' + itemId;
-  const input = document.getElementById('attachment-file-' + key);
+window.uploadAttachment = async function(itemTable, itemId, domKey) {
+  const input = document.getElementById('attachment-file-' + domKey);
   if (!input || !input.files || !input.files[0]) { showToast('Choose a file first.'); return; }
   const file = input.files[0];
   if (file.size > 15 * 1024 * 1024) { showToast('File is too large (max 15 MB).'); return; }
@@ -1759,7 +1767,7 @@ window.uploadAttachment = async function(itemTable, itemId) {
   if (error) { showToast('Error uploading: ' + error.message); return; }
   input.value = '';
   showToast('Uploaded.', 'success');
-  await refreshAttachmentsList(key, itemTable, itemId);
+  await refreshAttachmentsList(domKey, itemTable, itemId);
 };
 window.downloadAttachment = async function(itemTable, itemId, fileName) {
   const path = `${attachmentFolder(itemTable, itemId)}/${fileName}`;
@@ -1790,6 +1798,8 @@ async function loadCollaborators() {
   taskCollaborators = tc.error ? null : (tc.data || []);
   subtaskCollaborators = sc.error ? null : (sc.data || []);
   renderPhasesTree();
+  renderTasksListTab();
+  renderSubtasksListTab();
 }
 function collaboratorsForItem(itemTable, itemId) {
   const list = itemTable === 'tasks' ? taskCollaborators : subtaskCollaborators;
@@ -1797,26 +1807,37 @@ function collaboratorsForItem(itemTable, itemId) {
   const field = itemTable === 'tasks' ? 'task_id' : 'subtask_id';
   return list.filter(c => c[field] === itemId);
 }
+// Comments/attachments panels get rebuilt from scratch on every render (new
+// data, filter change, auto-refresh...) which would otherwise silently close
+// any panel someone had open. These two helpers snapshot which panel ids
+// were visible right before a render and reopen the same ones right after.
+function captureOpenPanelIds() {
+  return new Set([...document.querySelectorAll('.comments-panel, .attachments-panel')].filter(el => el.style.display === 'block').map(el => el.id));
+}
+function restoreOpenPanelIds(ids) {
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'block'; });
+}
 function collaboratorSelectOptions() {
   return teamMembers.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 }
-function collaboratorsBlock(item, itemTable) {
+function collaboratorsBlock(item, itemTable, context) {
   const rows = collaboratorsForItem(itemTable, item.id);
   if (rows === null) return ''; // migration-collaborators.sql hasn't been run yet
+  const domKey = (context ? context + '-' : '') + itemTable + '-' + item.id;
   const iCanManage = canCreateItems();
   if (!rows.length && !iCanManage) return '';
   const chips = rows.map(c => `
     <span class="collab-chip">${miniAvatar(c.team_member_id)}${memberName(c.team_member_id)}${iCanManage ? `<button class="collab-remove" onclick="event.stopPropagation(); removeCollaborator('${itemTable}','${item.id}','${c.team_member_id}')" title="Remove">×</button>` : ''}</span>`).join('');
   const addControl = iCanManage && teamMembers.length ? `
     <span class="collab-add">
-      <select id="collab-select-${itemTable}-${item.id}" onclick="event.stopPropagation();">${collaboratorSelectOptions()}</select>
-      <button class="link-btn" onclick="event.stopPropagation(); addCollaborator('${itemTable}','${item.id}')">${t('collab_add_btn')}</button>
+      <select id="collab-select-${domKey}" onclick="event.stopPropagation();">${collaboratorSelectOptions()}</select>
+      <button class="link-btn" onclick="event.stopPropagation(); addCollaborator('${itemTable}','${item.id}','${domKey}')">${t('collab_add_btn')}</button>
     </span>` : '';
   if (!chips && !addControl) return '';
   return `<div class="collab-block"><span class="collab-label">${t('also_involved_label')}</span>${chips}${addControl}</div>`;
 }
-window.addCollaborator = async function(itemTable, itemId) {
-  const select = document.getElementById(`collab-select-${itemTable}-${itemId}`);
+window.addCollaborator = async function(itemTable, itemId, domKey) {
+  const select = document.getElementById(`collab-select-${domKey}`);
   if (!select || !select.value || !supabaseClient) return;
   const table = itemTable === 'tasks' ? 'task_collaborators' : 'subtask_collaborators';
   const payload = itemTable === 'tasks'
@@ -2184,6 +2205,7 @@ window.clearBulkSelection = function(kind) {
 };
 
 function renderTasksListTab() {
+  const openPanels = captureOpenPanelIds();
   const phaseSel = document.getElementById('taskFilterPhase');
   const statusSel = document.getElementById('taskFilterStatus');
   const assigneeSel = document.getElementById('taskFilterAssignee');
@@ -2201,7 +2223,7 @@ function renderTasksListTab() {
   const rows = filtered.map(t => `
     <tr data-row-id="${t.id}">
       <td class="col-check">${rowCheckbox('tasks', t)}</td>
-      <td><strong>${t.title}</strong>${t.description ? `<div class="muted-text">${t.description}</div>` : ''}${t.notes ? `<div class="muted-text ${t.status==='blocked'?'blocked-text':''}">${t.status==='blocked'?'⚠ ':'📝 '}${t.notes}</div>` : ''}${dependencyTag(t) ? `<div class="muted-text">${dependencyTag(t)}</div>` : ''}${t.link_url ? `<div class="muted-text">${linkTag(t)}</div>` : ''}</td>
+      <td><strong>${t.title}</strong>${t.description ? `<div class="muted-text">${t.description}</div>` : ''}${t.notes ? `<div class="muted-text ${t.status==='blocked'?'blocked-text':''}">${t.status==='blocked'?'⚠ ':'📝 '}${t.notes}</div>` : ''}${dependencyTag(t) ? `<div class="muted-text">${dependencyTag(t)}</div>` : ''}${t.link_url ? `<div class="muted-text">${linkTag(t)}</div>` : ''}${collaboratorsBlock(t, 'tasks', 'list')}<div class="detail-tools-row" style="margin-top:6px;">${commentsBlock(t, 'tasks', 'list')}${attachmentsBlock(t, 'tasks', 'list')}</div></td>
       <td>${phaseDot(t.phase_id)}${phaseName(t.phase_id)}</td>
       <td>${miniAvatar(t.assignee_id)}${memberName(t.assignee_id)}</td>
       <td>${prioBadge(t.priority)}</td>
@@ -2215,9 +2237,11 @@ function renderTasksListTab() {
     ? `<thead><tr><th class="col-check"><input type="checkbox" onchange="toggleSelectAllRows('tasks', this.checked)"></th><th>Title</th><th>Phase</th><th>Assignee</th><th>Priority</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
     : `<tbody><tr><td class="empty-state" colspan="7">${tasksEmptyMsg}</td></tr></tbody>`;
   renderBulkBar('tasks');
+  restoreOpenPanelIds(openPanels);
 }
 
 function renderSubtasksListTab() {
+  const openPanels = captureOpenPanelIds();
   const taskSel = document.getElementById('subtaskFilterTask');
   const statusSel = document.getElementById('subtaskFilterStatus');
   const assigneeSel = document.getElementById('subtaskFilterAssignee');
@@ -2235,7 +2259,7 @@ function renderSubtasksListTab() {
   const rows = filtered.map(s => `
     <tr data-row-id="${s.id}">
       <td class="col-check">${rowCheckbox('subtasks', s)}</td>
-      <td><strong>${s.title}</strong>${s.description ? `<div class="muted-text">${s.description}</div>` : ''}${s.notes ? `<div class="muted-text ${s.status==='blocked'?'blocked-text':''}">${s.status==='blocked'?'⚠ ':'📝 '}${s.notes}</div>` : ''}${s.link_url ? `<div class="muted-text">${linkTag(s)}</div>` : ''}</td>
+      <td><strong>${s.title}</strong>${s.description ? `<div class="muted-text">${s.description}</div>` : ''}${s.notes ? `<div class="muted-text ${s.status==='blocked'?'blocked-text':''}">${s.status==='blocked'?'⚠ ':'📝 '}${s.notes}</div>` : ''}${s.link_url ? `<div class="muted-text">${linkTag(s)}</div>` : ''}${collaboratorsBlock(s, 'subtasks', 'list')}<div class="detail-tools-row" style="margin-top:6px;">${commentsBlock(s, 'subtasks', 'list')}${attachmentsBlock(s, 'subtasks', 'list')}</div></td>
       <td>${taskName(s.task_id)}</td>
       <td>${phaseDot(taskPhaseId(s.task_id))}${phaseName(taskPhaseId(s.task_id))}</td>
       <td>${miniAvatar(s.assignee_id)}${memberName(s.assignee_id)}</td>
@@ -2249,6 +2273,7 @@ function renderSubtasksListTab() {
     ? `<thead><tr><th class="col-check"><input type="checkbox" onchange="toggleSelectAllRows('subtasks', this.checked)"></th><th>Title</th><th>Task</th><th>Phase</th><th>Assignee</th><th>Dates</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`
     : `<tbody><tr><td class="empty-state" colspan="7">${subtasksEmptyMsg}</td></tr></tbody>`;
   renderBulkBar('subtasks');
+  restoreOpenPanelIds(openPanels);
 }
 
 /* ================================================================
@@ -2534,7 +2559,7 @@ function renderPhasesTree() {
   // whatever the person had open.
   const openPhases = new Set([...document.querySelectorAll('.phase.open')].map(el => el.dataset.phaseId));
   const openTasks = new Set([...document.querySelectorAll('.task.open')].map(el => el.dataset.taskId));
-  const openComments = new Set([...document.querySelectorAll('.comments-panel')].filter(el => el.style.display === 'block').map(el => el.id));
+  const openPanels = captureOpenPanelIds();
 
   const html = phases.map(phase => {
     const ts = phaseTasks(phase.id);
@@ -2591,7 +2616,7 @@ function renderPhasesTree() {
 
   openPhases.forEach(id => document.querySelector(`.phase[data-phase-id="${id}"]`)?.classList.add('open'));
   openTasks.forEach(id => document.querySelector(`.task[data-task-id="${id}"]`)?.classList.add('open'));
-  openComments.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'block'; });
+  restoreOpenPanelIds(openPanels);
 }
 
 window.togglePhase = function(id) {
