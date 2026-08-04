@@ -747,6 +747,24 @@
   }
   .config-warning code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
 
+  /* Global runtime-error banner -- surfaces uncaught JS errors instead of
+     letting things fail silently (see window 'error'/'unhandledrejection'
+     handlers). Distinct from #toast: it doesn't auto-dismiss, since the
+     point is to give the person something concrete to describe/report. */
+  .error-banner {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10001;
+    background: color-mix(in srgb, var(--color-blocked) 12%, var(--color-mix-base));
+    border-bottom: 1px solid color-mix(in srgb, var(--color-blocked) 30%, var(--color-mix-base));
+    color: var(--color-blocked); padding: 12px 18px; font-size: 13px; font-weight: 600;
+    box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .error-banner-actions { display: flex; gap: 10px; }
+  .error-banner-actions button {
+    background: none; border: 1px solid currentColor; color: inherit; border-radius: var(--radius-sm);
+    padding: 4px 12px; font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+
   /* Auth screen (sign in / sign up) */
   .auth-screen, .project-screen { min-height: 100vh; display: none; align-items: center; justify-content: center; background: var(--color-bg); padding: 20px; }
   .auth-card { background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); padding: 40px 34px; width: 100%; max-width: 360px; text-align: center; }
@@ -802,14 +820,19 @@
     width: 100%; padding: 8px 10px 8px 30px; font-size: 12.5px; border: 1px solid var(--color-border);
     border-radius: var(--radius-sm); font-family: inherit; background: var(--color-hover-tint); transition: border-color var(--ease), background var(--ease);
   }
-  .sidebar-search input:focus { outline: none; border-color: var(--color-accent); background: white; }
+  .sidebar-search input:focus { outline: none; border-color: var(--color-accent); background: var(--color-card-bg); }
   .sidebar-search svg { position: absolute; left: 18px; top: 9px; width: 14px; height: 14px; color: var(--color-muted); pointer-events: none; }
   .search-results {
-    position: absolute; top: 100%; left: 8px; right: 8px; margin-top: 6px; background: white;
+    position: absolute; top: 100%; left: 8px; right: 8px; margin-top: 6px; background: var(--color-card-bg);
     border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
     z-index: 50; display: none; max-height: 300px; overflow-y: auto; overflow-x: hidden;
     animation: fadein 140ms ease;
   }
+  .search-section-label {
+    padding: 8px 13px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.03em; color: var(--color-muted); background: var(--color-card-bg);
+  }
+  .search-section-label:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
   .search-result { padding: 10px 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 12px; border-bottom: 1px solid var(--color-border); transition: background var(--ease); }
   .search-result:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
   .search-result:last-child { border-bottom: none; border-radius: 0 0 var(--radius-md) var(--radius-md); }
@@ -925,6 +948,14 @@
 <body class="notranslate" translate="no">
 
 <div id="toast"></div>
+
+<div class="error-banner" id="errorBanner" style="display:none;">
+  <span id="errorBannerText"></span>
+  <span class="error-banner-actions">
+    <button onclick="location.reload()" data-i18n="error_banner_reload">Reload</button>
+    <button onclick="dismissErrorBanner()" data-i18n="error_banner_dismiss">Dismiss</button>
+  </span>
+</div>
 
 <div class="config-warning" id="configWarning" style="display:none;">
   ⚠️ The dashboard isn't connected to Supabase yet.
@@ -1168,6 +1199,7 @@
       <button data-msub="subtasks" data-i18n="subnav_subtasks">Subtasks</button>
       <button data-msub="access" data-i18n="subnav_access">Access</button>
       <button data-msub="history" data-i18n="subnav_history">History</button>
+      <button data-msub="trash" data-i18n="subnav_trash">Trash</button>
     </div>
 
     <div class="manage-subpanel active" id="msub-team">
@@ -1229,6 +1261,14 @@
       <div class="section-card">
         <h3 data-i18n="manage_history_header">Recent activity (last 100)</h3>
         <div id="historyList"></div>
+      </div>
+    </div>
+
+    <div class="manage-subpanel" id="msub-trash">
+      <div class="manage-note" data-i18n="trash_note">Deleted tasks/subtasks stay here for 30 days before being permanently removed, in case something was deleted by mistake.</div>
+      <div class="section-card">
+        <h3 data-i18n="trash_btn">Trash</h3>
+        <div id="manageTrashList" style="padding: 0 18px 18px;"></div>
       </div>
     </div>
   </section>
@@ -1295,7 +1335,7 @@ const TRANSLATIONS = {
     bulk_delete_selected: 'Delete selected', bulk_clear_selection: 'Clear selection',
     manage_note: "Add, edit or delete phases, tasks, subtasks and team members below. Changes save straight to Supabase — everyone with this link sees them after a refresh.",
     subnav_team: 'Team', subnav_phases: 'Phases', subnav_tasks: 'Tasks', subnav_subtasks: 'Subtasks',
-    subnav_access: 'Access', subnav_history: 'History',
+    subnav_access: 'Access', subnav_history: 'History', subnav_trash: 'Trash',
     manage_team_members_header: 'Team Members', manage_phases_header: 'Phases',
     manage_tasks_header: 'Tasks, grouped by phase', manage_subtasks_header: 'Subtasks, grouped by task',
     manage_access_note: "Who can sign in and see this project. Inviting someone by email doesn't send them anything automatically — tell them to go to the dashboard link, sign up with their email and the shared default password, confirm their email, then sign back in.",
@@ -1323,6 +1363,12 @@ const TRANSLATIONS = {
     attachments_btn: 'Attachments', attachment_upload_btn: 'Upload', no_attachments_yet: 'No attachments yet.',
     also_involved_label: 'Also involved:', collab_add_btn: '+ Add', selected_unit: 'selected',
     lang_toggle_tooltip: 'ภาษาไทย (Switch to Thai)', notif_overdue: 'Overdue', notif_due: 'Due',
+    search_no_matches: 'No matches.', search_this_project: 'This project', search_other_projects: 'Other projects',
+    search_loading: 'Searching other projects…',
+    trash_btn: 'Trash', trash_empty: 'Trash is empty.', trash_restore: 'Restore', trash_delete_forever: 'Delete forever',
+    trash_deleted_label: 'Deleted', trash_note: 'Deleted tasks/subtasks stay here for 30 days before being permanently removed, in case something was deleted by mistake.',
+    error_banner_text: 'Something went wrong. Try again, or reload the page.', error_banner_reload: 'Reload',
+    error_banner_dismiss: 'Dismiss',
   },
   th: {
     nav_overview: 'ภาพรวม', nav_phases: 'เฟส', nav_tasks: 'งาน', nav_subtasks: 'งานย่อย',
@@ -1342,7 +1388,7 @@ const TRANSLATIONS = {
     bulk_delete_selected: 'ลบที่เลือก', bulk_clear_selection: 'ล้างการเลือก',
     manage_note: 'เพิ่ม แก้ไข หรือลบเฟส งาน งานย่อย และสมาชิกทีมด้านล่าง การเปลี่ยนแปลงจะถูกบันทึกลง Supabase ทันที — ทุกคนที่มีลิงก์นี้จะเห็นการเปลี่ยนแปลงหลังรีเฟรช',
     subnav_team: 'ทีม', subnav_phases: 'เฟส', subnav_tasks: 'งาน', subnav_subtasks: 'งานย่อย',
-    subnav_access: 'การเข้าถึง', subnav_history: 'ประวัติ',
+    subnav_access: 'การเข้าถึง', subnav_history: 'ประวัติ', subnav_trash: 'ถังขยะ',
     manage_team_members_header: 'สมาชิกทีม', manage_phases_header: 'เฟส',
     manage_tasks_header: 'งาน แบ่งตามเฟส', manage_subtasks_header: 'งานย่อย แบ่งตามงาน',
     manage_access_note: 'ใครสามารถเข้าสู่ระบบและดูโปรเจกต์นี้ได้บ้าง การเชิญด้วยอีเมลจะไม่ส่งอะไรให้อัตโนมัติ — บอกให้เขาไปที่ลิงก์แดชบอร์ด สมัครด้วยอีเมลของเขาและรหัสผ่านเริ่มต้นที่ใช้ร่วมกัน แล้วเข้าสู่ระบบอีกครั้ง',
@@ -1370,6 +1416,12 @@ const TRANSLATIONS = {
     attachments_btn: 'ไฟล์แนบ', attachment_upload_btn: 'อัปโหลด', no_attachments_yet: 'ยังไม่มีไฟล์แนบ',
     also_involved_label: 'ผู้เกี่ยวข้องเพิ่มเติม:', collab_add_btn: '+ เพิ่ม', selected_unit: 'รายการที่เลือก',
     lang_toggle_tooltip: 'English (สลับเป็นภาษาอังกฤษ)', notif_overdue: 'เลยกำหนด', notif_due: 'ครบกำหนด',
+    search_no_matches: 'ไม่พบผลลัพธ์', search_this_project: 'โปรเจกต์นี้', search_other_projects: 'โปรเจกต์อื่น',
+    search_loading: 'กำลังค้นหาในโปรเจกต์อื่น…',
+    trash_btn: 'ถังขยะ', trash_empty: 'ถังขยะว่างเปล่า', trash_restore: 'กู้คืน', trash_delete_forever: 'ลบถาวร',
+    trash_deleted_label: 'ลบเมื่อ', trash_note: 'งาน/งานย่อยที่ลบจะอยู่ที่นี่ 30 วันก่อนถูกลบถาวร เผื่อกรณีลบผิดพลาด',
+    error_banner_text: 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง หรือโหลดหน้าใหม่', error_banner_reload: 'โหลดใหม่',
+    error_banner_dismiss: 'ปิด',
   },
 };
 function t(key) {
@@ -1436,6 +1488,25 @@ function showToast(message, type) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { toast.className = ''; }, 4000);
 }
+
+// Surfaces otherwise-silent failures (a bug that used to look like "nothing
+// happens, no error shown" now shows this banner instead). The technical
+// detail always goes to the console for debugging; the banner itself stays
+// generic and calm on purpose, so it's informative without being alarming.
+function showErrorBanner(detail) {
+  if (detail) console.error('[MON Dashboard] Uncaught error:', detail);
+  const banner = document.getElementById('errorBanner');
+  const textEl = document.getElementById('errorBannerText');
+  if (!banner || !textEl) return;
+  textEl.textContent = t('error_banner_text');
+  banner.style.display = 'flex';
+}
+window.dismissErrorBanner = function() {
+  const banner = document.getElementById('errorBanner');
+  if (banner) banner.style.display = 'none';
+};
+window.addEventListener('error', (e) => showErrorBanner(e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => showErrorBanner(e.reason));
 
 function statusLabel(status) { return status ? (t('status_' + status) || STATUS_LABELS[status] || status) : "—"; }
 function priorityLabel(p) { return p ? (t('priority_' + p) || p) : '—'; }
@@ -1619,8 +1690,11 @@ async function loadData(silent) {
 
   teamMembers = tm.data || [];
   phases = ph.data || [];
-  tasks = tk.data || [];
-  subtasks = sb.data || [];
+  // deleted_at is only present once migration-trash.sql has been run; until
+  // then every row's deleted_at is simply absent/undefined, which is falsy,
+  // so this filter is a harmless no-op rather than something that can break.
+  tasks = (tk.data || []).filter(x => !x.deleted_at);
+  subtasks = (sb.data || []).filter(x => !x.deleted_at);
   objectives = ob.data || [];
   projectMembers = pm.data || [];
 
@@ -1693,7 +1767,7 @@ function commentsBlock(item, itemTable, context) {
 }
 window.toggleComments = function(domKey) {
   const panel = document.getElementById('comments-' + domKey);
-  if (!panel) return;
+  if (!panel) { console.warn('toggleComments: no element with id', 'comments-' + domKey); return; }
   panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
 };
 window.addComment = async function(itemTable, itemId, domKey) {
@@ -1749,7 +1823,7 @@ function attachmentsBlock(item, itemTable, context) {
 }
 window.toggleAttachments = async function(key, itemTable, itemId) {
   const panel = document.getElementById('attachments-' + key);
-  if (!panel) return;
+  if (!panel) { console.warn('toggleAttachments: no element with id', 'attachments-' + key); return; }
   const opening = panel.style.display !== 'block';
   panel.style.display = opening ? 'block' : 'none';
   if (opening) await refreshAttachmentsList(key, itemTable, itemId);
@@ -2099,12 +2173,12 @@ window.deleteProjectFromList = async function(projectId, projectName) {
   await loadMyProjects();
 };
 
-window.enterProject = function(projectId) {
+window.enterProject = async function(projectId) {
   currentProjectId = projectId;
   const proj = myProjects.find(p => p.id === projectId);
   currentUserRole = proj ? proj.role : null;
   showDashboardScreen();
-  loadData();
+  await loadData();
   startAutoRefresh();
 };
 
@@ -2129,9 +2203,57 @@ function startAutoRefresh() {
     if (tag === 'input' || tag === 'textarea' || tag === 'select') return; // don't interrupt someone typing
     loadData(true);
   }, 25000);
+  setupRealtimeSubscription();
 }
 function stopAutoRefresh() {
   if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+  teardownRealtimeSubscription();
+}
+
+// Supabase Realtime (see migration-realtime.sql) -- purely additive on top of
+// the 25s poll above. When it's available, changes made by teammates show up
+// almost immediately instead of waiting for the next poll; the poll keeps
+// running regardless, so if the migration hasn't been run yet, or the
+// realtime connection drops, the dashboard behaves exactly as it did before
+// (nothing breaks, it just relies on the 25s poll like it always has).
+let realtimeChannel = null;
+let realtimeReloadTimer = null;
+function requestRealtimeReload() {
+  // Several tables can change in the same instant (e.g. a task update also
+  // touches activity_log) -- debounce so a burst of events triggers one
+  // reload, not several back-to-back ones.
+  clearTimeout(realtimeReloadTimer);
+  realtimeReloadTimer = setTimeout(() => { if (currentProjectId) loadData(true); }, 400);
+}
+function setupRealtimeSubscription() {
+  teardownRealtimeSubscription();
+  if (!supabaseClient || !currentProjectId) return;
+  const pid = currentProjectId;
+  try {
+    realtimeChannel = supabaseClient.channel('project-changes-' + pid)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `project_id=eq.${pid}` }, requestRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subtasks', filter: `project_id=eq.${pid}` }, requestRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'phases', filter: `project_id=eq.${pid}` }, requestRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members', filter: `project_id=eq.${pid}` }, requestRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'objectives', filter: `project_id=eq.${pid}` }, requestRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter: `project_id=eq.${pid}` }, requestRealtimeReload)
+      // These two don't have a project_id column of their own (only
+      // task_id/subtask_id), so no filter here -- Supabase Realtime still
+      // only delivers rows the current user's RLS policies allow them to see.
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'task_collaborators' }, requestRealtimeReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subtask_collaborators' }, requestRealtimeReload)
+      .subscribe();
+  } catch (e) {
+    // Realtime not configured/available -- silently keep relying on the 25s poll.
+    realtimeChannel = null;
+  }
+}
+function teardownRealtimeSubscription() {
+  clearTimeout(realtimeReloadTimer);
+  if (realtimeChannel && supabaseClient) {
+    try { supabaseClient.removeChannel(realtimeChannel); } catch (e) {}
+  }
+  realtimeChannel = null;
 }
 
 function renderNavDots() {
@@ -2179,13 +2301,78 @@ window.applyBulkDelete = async function(kind) {
   const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
   if (!set.size || !supabaseClient) return;
   const noun = kind === 'tasks' ? 'task' : 'subtask';
-  const extra = kind === 'tasks' ? ' Their subtasks will be deleted too.' : '';
-  if (!confirm(`Delete ${set.size} selected ${noun}${set.size === 1 ? '' : 's'}? This can't be undone.${extra}`)) return;
-  const { error } = await supabaseClient.from(kind).delete().in('id', [...set]);
-  if (error) { showToast('Error deleting: ' + error.message); return; }
+  const extra = kind === 'tasks' ? ' Their subtasks move to Trash too.' : '';
+  if (!confirm(`Move ${set.size} selected ${noun}${set.size === 1 ? '' : 's'} to Trash?${extra} You can restore from Manage > Trash.`)) return;
+  const now = new Date().toISOString();
+  const { error } = await supabaseClient.from(kind).update({ deleted_at: now }).in('id', [...set]);
+  if (error) {
+    if (/deleted_at/.test(error.message || '')) {
+      showToast("Trash isn't set up yet for this project — run migration-trash.sql.");
+    } else {
+      showToast('Error deleting: ' + error.message);
+    }
+    return;
+  }
+  if (kind === 'tasks') {
+    // Soft-deleting a task doesn't cascade like a real delete would -- move
+    // its subtasks to Trash too so they don't linger, orphaned, in the
+    // Subtasks tab under a task that's no longer visible.
+    await supabaseClient.from('subtasks').update({ deleted_at: now }).in('task_id', [...set]);
+  }
   set.clear();
-  showToast('Deleted.', 'success');
+  showToast('Moved to Trash.', 'success');
   await loadData();
+};
+
+/* ================================================================
+   TRASH — soft-deleted tasks/subtasks (see migration-trash.sql).
+   Fetched on demand only when the Trash sub-tab is opened, not as part
+   of the normal loadData() cycle, since it's rarely needed.
+   ================================================================ */
+let trashItems = null; // null = not loaded yet / migration not run; [] = loaded, empty
+async function loadTrash() {
+  if (!supabaseClient || !currentProjectId) return;
+  const [tk, sb] = await Promise.all([
+    supabaseClient.from('tasks').select('id, title, deleted_at').eq('project_id', currentProjectId).not('deleted_at', 'is', null),
+    supabaseClient.from('subtasks').select('id, title, deleted_at, task_id').eq('project_id', currentProjectId).not('deleted_at', 'is', null),
+  ]);
+  if (tk.error || sb.error) { trashItems = null; renderManageTrash(); return; }
+  trashItems = [
+    ...(tk.data || []).map(x => ({ id: x.id, title: x.title, deletedAt: x.deleted_at, kind: 'tasks' })),
+    ...(sb.data || []).map(x => ({ id: x.id, title: x.title, deletedAt: x.deleted_at, kind: 'subtasks' })),
+  ].sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
+  renderManageTrash();
+}
+function renderManageTrash() {
+  const el = document.getElementById('manageTrashList');
+  if (!el) return;
+  if (trashItems === null) {
+    el.innerHTML = `<div class="no-comments">Trash isn't set up yet for this project — run <code>migration-trash.sql</code>.</div>`;
+    return;
+  }
+  if (!trashItems.length) { el.innerHTML = `<div class="no-comments">${t('trash_empty')}</div>`; return; }
+  el.innerHTML = trashItems.map(it => `
+    <div class="attachment-row">
+      <span class="attachment-name" title="${escapeHtml(it.title)}">${it.kind === 'tasks' ? '📋' : '📝'} ${escapeHtml(it.title)}</span>
+      <span class="attachment-size">${t('trash_deleted_label')} ${timeAgo(it.deletedAt)}</span>
+      <button class="link-btn" onclick="restoreFromTrash('${it.kind}','${it.id}')">${t('trash_restore')}</button>
+      <button class="link-btn danger" onclick="deleteForeverFromTrash('${it.kind}','${it.id}','${it.title.replace(/'/g, "\\'")}')">${t('trash_delete_forever')}</button>
+    </div>`).join('');
+}
+window.restoreFromTrash = async function(kind, id) {
+  const { error } = await supabaseClient.from(kind).update({ deleted_at: null }).eq('id', id);
+  if (error) { showToast('Error restoring: ' + error.message); return; }
+  showToast('Restored.', 'success');
+  await loadTrash();
+  await loadData();
+};
+window.deleteForeverFromTrash = async function(kind, id, title) {
+  if (!isOwner()) { showToast('Only the project Owner can permanently delete.'); return; }
+  if (!confirm(`Permanently delete "${title}"? This cannot be undone.`)) return;
+  const { error } = await supabaseClient.from(kind).delete().eq('id', id);
+  if (error) { showToast('Error: ' + error.message); return; }
+  showToast('Permanently deleted.', 'success');
+  await loadTrash();
 };
 window.applyBulkStatus = async function(kind) {
   const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
@@ -2414,23 +2601,79 @@ function exportAllExcel() {
    GLOBAL SEARCH — sidebar box, matches task/subtask titles
    ================================================================ */
 let highlightRowId = null;
+let searchQueryToken = 0;
+let crossProjectSearchTimer = null;
 function performGlobalSearch(query) {
   const q = query.trim().toLowerCase();
   const results = document.getElementById('searchResults');
+  clearTimeout(crossProjectSearchTimer);
+  searchQueryToken++; // invalidate any cross-project search still in flight
   if (!q) { results.style.display = 'none'; results.innerHTML = ''; return; }
   const taskMatches = tasks.filter(t => t.title.toLowerCase().includes(q))
     .map(t => ({ id: t.id, title: t.title, kind: 'Task', phase: phaseName(t.phase_id), tab: 'tasks' }));
   const subMatches = subtasks.filter(s => s.title.toLowerCase().includes(q))
     .map(s => ({ id: s.id, title: s.title, kind: 'Subtask', phase: phaseName(taskPhaseId(s.task_id)), tab: 'subtasks' }));
   const all = [...taskMatches, ...subMatches].slice(0, 8);
-  results.innerHTML = all.length
-    ? all.map(r => `
+
+  const otherProjectIds = myProjects.map(p => p.id).filter(id => id !== currentProjectId);
+  const searchOtherProjects = otherProjectIds.length && q.length >= 2 && supabaseClient;
+  renderSearchResults(all, searchOtherProjects ? null : undefined);
+
+  if (searchOtherProjects) {
+    const myToken = searchQueryToken;
+    const rawQuery = query.trim();
+    crossProjectSearchTimer = setTimeout(async () => {
+      const [tk, sb] = await Promise.all([
+        supabaseClient.from('tasks').select('id, title, project_id').in('project_id', otherProjectIds).ilike('title', `%${rawQuery}%`).limit(5),
+        supabaseClient.from('subtasks').select('id, title, project_id').in('project_id', otherProjectIds).ilike('title', `%${rawQuery}%`).limit(5),
+      ]);
+      if (myToken !== searchQueryToken) return; // query changed while this was in flight -- discard
+      const projectName = pid => (myProjects.find(p => p.id === pid) || {}).name || '';
+      const otherMatches = [
+        ...((tk.data || []).map(x => ({ id: x.id, title: x.title, kind: 'Task', tab: 'tasks', projectId: x.project_id, projectName: projectName(x.project_id) }))),
+        ...((sb.data || []).map(x => ({ id: x.id, title: x.title, kind: 'Subtask', tab: 'subtasks', projectId: x.project_id, projectName: projectName(x.project_id) }))),
+      ].slice(0, 6);
+      renderSearchResults(all, otherMatches);
+    }, 350);
+  }
+}
+// `otherMatches`: undefined = don't show an "other projects" section at all
+// (single-project account, or query too short); null = section shown with a
+// "searching…" placeholder while the cross-project query is in flight;
+// array = the actual (possibly empty) results.
+function renderSearchResults(localMatches, otherMatches) {
+  const results = document.getElementById('searchResults');
+  const localHtml = localMatches.length
+    ? localMatches.map(r => `
         <div class="search-result" onclick="goToSearchResult('${r.tab}','${r.id}')">
           <span class="search-kind">${r.kind}</span>
           <span class="search-title">${r.title}</span>
           <span class="search-phase">${r.phase}</span>
         </div>`).join('')
-    : `<div class="search-empty">No matches.</div>`;
+    : `<div class="search-empty">${t('search_no_matches')}</div>`;
+
+  if (otherMatches === undefined) {
+    results.innerHTML = localHtml;
+    results.style.display = 'block';
+    return;
+  }
+
+  let otherHtml;
+  if (otherMatches === null) {
+    otherHtml = `<div class="search-empty">${t('search_loading')}</div>`;
+  } else if (otherMatches.length) {
+    otherHtml = otherMatches.map(r => `
+        <div class="search-result" onclick="goToSearchResultOtherProject('${r.projectId}','${r.tab}','${r.id}')">
+          <span class="search-kind">${r.kind}</span>
+          <span class="search-title">${r.title}</span>
+          <span class="search-phase">${escapeHtml(r.projectName)}</span>
+        </div>`).join('');
+  } else {
+    otherHtml = `<div class="search-empty">${t('search_no_matches')}</div>`;
+  }
+  results.innerHTML = `
+    <div class="search-section-label">${t('search_this_project')}</div>${localHtml}
+    <div class="search-section-label">${t('search_other_projects')}</div>${otherHtml}`;
   results.style.display = 'block';
 }
 window.goToSearchResult = function(tab, id) {
@@ -2450,6 +2693,15 @@ window.goToSearchResult = function(tab, id) {
       setTimeout(() => row.classList.remove('row-flash'), 1600);
     }
   }, 60);
+};
+// Cross-project result: switch projects first (and wait for its data to
+// actually load), then reuse the normal same-project navigation above.
+window.goToSearchResultOtherProject = async function(projectId, tab, id) {
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('globalSearch').value = '';
+  showToast('Switching project…');
+  await enterProject(projectId);
+  goToSearchResult(tab, id);
 };
 
 function phaseTasks(phaseId) { return tasks.filter(t => t.phase_id === phaseId); }
@@ -3187,6 +3439,7 @@ document.getElementById('manageSubnav').addEventListener('click', (e) => {
   document.querySelectorAll('.manage-subpanel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('msub-' + btn.dataset.msub).classList.add('active');
+  if (btn.dataset.msub === 'trash') loadTrash();
 });
 
 document.getElementById('taskFilterPhase').addEventListener('change', e => { taskFilters.phase = e.target.value; renderTasksListTab(); });
