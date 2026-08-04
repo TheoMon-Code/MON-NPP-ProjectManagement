@@ -1739,7 +1739,7 @@ function attachmentsBlock(item, itemTable, context) {
     <div class="attachments-block">
       <button class="comments-toggle" onclick="event.stopPropagation(); toggleAttachments('${domKey}','${itemTable}','${item.id}')">📎 ${t('attachments_btn')}</button>
       <div class="attachments-panel" id="attachments-${domKey}" style="display:none;">
-        <div class="attachments-list" id="attachments-list-${domKey}"><div class="no-comments">Loading…</div></div>
+        <div class="attachments-list" id="attachments-files-${domKey}"><div class="no-comments">Loading…</div></div>
         <div class="comment-add-row">
           <input type="file" class="attachment-file-input" id="attachment-file-${domKey}" onclick="event.stopPropagation();">
           <button class="m-btn save" onclick="event.stopPropagation(); uploadAttachment('${itemTable}','${item.id}','${domKey}')">${t('attachment_upload_btn')}</button>
@@ -1755,7 +1755,7 @@ window.toggleAttachments = async function(key, itemTable, itemId) {
   if (opening) await refreshAttachmentsList(key, itemTable, itemId);
 };
 async function refreshAttachmentsList(key, itemTable, itemId) {
-  const listEl = document.getElementById('attachments-list-' + key);
+  const listEl = document.getElementById('attachments-files-' + key);
   if (!listEl || !supabaseClient) return;
   listEl.innerHTML = `<div class="no-comments">Loading…</div>`;
   const { data, error } = await supabaseClient.storage
