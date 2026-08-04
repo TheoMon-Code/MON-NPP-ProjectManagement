@@ -179,7 +179,7 @@
   input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
   input[type="date"]:focus, input[type="number"]:focus, input[type="url"]:focus,
   textarea:focus, select:focus {
-    background: white !important;
+    background: var(--color-card-bg) !important;
     border-color: var(--color-accent) !important;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 16%, transparent);
     outline: none;
@@ -358,7 +358,7 @@
     background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 5%, var(--color-card-bg)), transparent);
   }
 
-  .progress-bar { width: 100%; height: 8px; background: #EEF0F5; border-radius: 999px; overflow: hidden; }
+  .progress-bar { width: 100%; height: 8px; background: var(--color-fill); border-radius: 999px; overflow: hidden; }
   .progress-bar > div { height: 100%; background: var(--brand-gradient); border-radius: 999px; transition: width 300ms ease; }
 
   .badge {
@@ -559,6 +559,54 @@
   .objective-card .metric-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--color-muted); margin-bottom: 8px; }
   .objective-card .metric-row strong { color: var(--color-text); font-weight: 700; }
 
+  /* Risk register */
+  .risk-summary-row { display: flex; gap: 18px; margin-bottom: 16px; flex-wrap: wrap; }
+  .risk-summary-chip {
+    background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    padding: 10px 18px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-sm);
+  }
+  .risk-summary-chip strong { font-size: 15px; }
+  .risk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .risk-card {
+    background: var(--color-card-bg); border: 1px solid var(--color-border); border-left: 4px solid var(--color-muted);
+    border-radius: var(--radius-md); padding: 16px 18px; box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--ease), transform var(--ease);
+  }
+  .risk-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .risk-card.risk-closed { opacity: 0.6; }
+  .risk-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .risk-title { font-weight: 700; font-size: 14px; letter-spacing: -0.01em; }
+  .severity-badge { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+  .risk-desc { font-size: 12.5px; color: var(--color-muted); line-height: 1.5; margin-bottom: 8px; }
+  .risk-mitigation { font-size: 12.5px; line-height: 1.5; margin-bottom: 12px; }
+  .risk-card-foot { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--color-muted); }
+  .risk-owner { display: flex; align-items: center; gap: 6px; }
+
+  /* Project health (RAG) */
+  #projectHealthCard { margin-bottom: 18px; }
+  .health-display {
+    background: var(--color-card-bg); border: 1px solid var(--color-border); border-left: 4px solid var(--color-muted);
+    border-radius: var(--radius-md); padding: 14px 18px; box-shadow: var(--shadow-sm);
+  }
+  .health-status-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .health-pill { font-size: 13px; font-weight: 700; padding: 5px 14px; border-radius: 999px; }
+  .health-note { font-size: 12.5px; color: var(--color-muted); margin-top: 8px; line-height: 1.5; }
+  .health-edit {
+    background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    padding: 16px 18px; box-shadow: var(--shadow-sm);
+  }
+  .health-status-picker { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .health-pick {
+    font-family: inherit; font-size: 12.5px; font-weight: 700; padding: 7px 14px; border-radius: 999px;
+    border: 1.5px solid var(--color-border); background: none; color: var(--color-muted); cursor: pointer;
+    transition: all var(--ease);
+  }
+  .health-pick.active { border-color: var(--pick-color); color: var(--pick-color); background: color-mix(in srgb, var(--pick-color) 12%, var(--color-mix-base)); }
+  .health-edit textarea {
+    width: 100%; min-height: 60px; font-family: inherit; font-size: 12.5px; padding: 9px 11px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm); resize: vertical; margin-bottom: 10px;
+  }
+
   .empty-state, .error-state { text-align: center; padding: 60px 20px; color: var(--color-muted); font-size: 13.5px; }
   .error-state { color: var(--color-blocked); }
 
@@ -575,7 +623,7 @@
   }
   .filter-bar select {
     padding: 7px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-    font-size: 13px; font-family: inherit; background: white; min-width: 160px;
+    font-size: 13px; font-family: inherit; background: var(--color-card-bg); min-width: 160px;
     transition: border-color var(--ease);
   }
   .filter-bar select:hover { border-color: var(--color-border-hover); }
@@ -627,7 +675,7 @@
   }
   .mrow input[type="text"], .mrow input[type="date"], .mrow input[type="number"], .mrow select, .mrow textarea {
     width: 100%; padding: 7px 9px; font-size: 12.5px; border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm); font-family: inherit; background: white;
+    border-radius: var(--radius-sm); font-family: inherit; background: var(--color-card-bg);
     transition: border-color var(--ease), box-shadow var(--ease);
   }
   .mrow input:focus, .mrow select:focus, .mrow textarea:focus,
@@ -673,7 +721,7 @@
     display: flex; align-items: center; gap: 10px; padding: 13px 15px; cursor: pointer;
     background: var(--color-hover-tint); font-size: 13.5px; font-weight: 700; transition: background var(--ease);
   }
-  .mgroup-header:hover { background: #F5F7FA; }
+  .mgroup-header:hover { background: var(--color-fill-hover); }
   .mgroup-header .caret { transition: transform var(--ease); }
   .mgroup.open > .mgroup-header .caret { transform: rotate(90deg); }
   .mgroup-count { margin-left: auto; font-size: 11.5px; color: var(--color-muted); font-weight: 600; }
@@ -693,7 +741,7 @@
   .mtask-summary input[type="text"] { flex: 1; min-width: 140px; }
   .mtask-summary select, .mtask-summary input[type="date"] {
     padding: 7px 9px; font-size: 12.5px; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-    font-family: inherit; min-width: 110px; background: white;
+    font-family: inherit; min-width: 110px; background: var(--color-card-bg);
   }
   .m-expand {
     border: none; background: transparent; cursor: pointer; color: var(--color-muted);
@@ -713,7 +761,7 @@
   }
   .mtask-detail textarea, .mtask-detail input {
     padding: 7px 9px; font-size: 12.5px; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-    font-family: inherit; background: white; text-transform: none; letter-spacing: normal; font-weight: 400;
+    font-family: inherit; background: var(--color-card-bg); text-transform: none; letter-spacing: normal; font-weight: 400;
   }
   .mtask-detail textarea { resize: vertical; min-height: 32px; }
 
@@ -725,7 +773,7 @@
   .minline-add input[type="text"] { flex: 1; min-width: 160px; }
   .minline-add input, .minline-add select {
     padding: 7px 9px; font-size: 12.5px; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-    font-family: inherit; background: white;
+    font-family: inherit; background: var(--color-card-bg);
   }
 
   /* Toast notifications (replaces alert()) */
@@ -807,7 +855,7 @@
   }
   .invite-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--color-border); }
   .invite-row input[type="email"] { flex: 1; min-width: 200px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; }
-  .invite-row select { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; background: white; }
+  .invite-row select { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; background: var(--color-card-bg); }
   .pending-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-warn); background: color-mix(in srgb, var(--color-warn) 14%, var(--color-mix-base)); padding: 2px 8px; border-radius: 999px; }
   .joined-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-ok); background: color-mix(in srgb, var(--color-ok) 14%, var(--color-mix-base)); padding: 2px 8px; border-radius: 999px; }
 
@@ -847,7 +895,7 @@
   .tl-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
   .tl-row:last-child { margin-bottom: 4px; }
   .tl-label { flex: 0 0 220px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
-  .tl-track { flex: 1; position: relative; height: 14px; background: #F2F3F7; border-radius: 999px; }
+  .tl-track { flex: 1; position: relative; height: 14px; background: var(--color-fill); border-radius: 999px; }
   .tl-bar { position: absolute; top: 0; height: 100%; border-radius: 999px; overflow: hidden; min-width: 6px; }
   .tl-bar-fill { height: 100%; }
   .tl-today { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--color-accent); border-radius: 1px; }
@@ -885,14 +933,14 @@
     padding: 9px 12px; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--color-text);
     cursor: pointer; transition: border-color var(--ease), background var(--ease), box-shadow var(--ease);
   }
-  .notif-bell:hover { border-color: var(--color-border-hover); background: white; box-shadow: var(--shadow-sm); }
+  .notif-bell:hover { border-color: var(--color-border-hover); background: var(--color-card-bg); box-shadow: var(--shadow-sm); }
   .notif-bell svg { width: 14px; height: 14px; color: var(--color-muted); flex-shrink: 0; }
   .notif-count {
     background: var(--color-blocked); color: white; font-size: 10px; font-weight: 800;
     border-radius: 999px; padding: 1px 7px; margin-left: auto;
   }
   .notif-panel {
-    position: absolute; top: 100%; left: 8px; right: 8px; margin-top: 6px; background: white;
+    position: absolute; top: 100%; left: 8px; right: 8px; margin-top: 6px; background: var(--color-card-bg);
     border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
     z-index: 60; max-height: 340px; overflow-y: auto; overflow-x: hidden; animation: fadein 140ms ease;
   }
@@ -1044,6 +1092,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
         <span data-i18n="nav_objectives">Objectives</span>
       </button>
+      <button data-tab="risks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span data-i18n="nav_risks">Risks</span>
+      </button>
       <button data-tab="manage">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
         <span data-i18n="nav_manage">Manage</span>
@@ -1083,6 +1135,7 @@
   <div class="app-main">
 <main id="app">
   <section class="tab-panel active" id="panel-overview">
+    <div id="projectHealthCard"></div>
     <div class="kpi-row" id="overviewKpis"></div>
     <div class="charts-row">
       <div class="chart-card">
@@ -1189,6 +1242,11 @@
     <div class="objective-grid" id="objectivesGrid"></div>
   </section>
 
+  <section class="tab-panel" id="panel-risks">
+    <div class="risk-summary-row" id="risksSummary"></div>
+    <div class="risk-grid" id="risksGrid"></div>
+  </section>
+
   <section class="tab-panel" id="panel-manage">
     <div class="manage-note" data-i18n="manage_note">Add, edit or delete phases, tasks, subtasks and team members below. Changes save straight to Supabase — everyone with this link sees them after a refresh.</div>
 
@@ -1196,6 +1254,7 @@
       <button data-msub="team" class="active" data-i18n="subnav_team">Team</button>
       <button data-msub="phases" data-i18n="subnav_phases">Phases</button>
       <button data-msub="tasks" data-i18n="subnav_tasks">Tasks</button>
+      <button data-msub="risks" data-i18n="subnav_risks">Risks</button>
       <button data-msub="subtasks" data-i18n="subnav_subtasks">Subtasks</button>
       <button data-msub="access" data-i18n="subnav_access">Access</button>
       <button data-msub="history" data-i18n="subnav_history">History</button>
@@ -1227,6 +1286,13 @@
       <div class="section-card">
         <h3 data-i18n="manage_subtasks_header">Subtasks, grouped by task</h3>
         <div id="manageSubtasksTree" style="padding: 14px 18px;"></div>
+      </div>
+    </div>
+
+    <div class="manage-subpanel" id="msub-risks">
+      <div class="section-card">
+        <h3 data-i18n="manage_risks_header">Risk register</h3>
+        <div id="manageRisksList" style="padding: 14px 18px;"></div>
       </div>
     </div>
 
@@ -1369,6 +1435,19 @@ const TRANSLATIONS = {
     trash_deleted_label: 'Deleted', trash_note: 'Deleted tasks/subtasks stay here for 30 days before being permanently removed, in case something was deleted by mistake.',
     error_banner_text: 'Something went wrong. Try again, or reload the page.', error_banner_reload: 'Reload',
     error_banner_dismiss: 'Dismiss',
+    nav_risks: 'Risks', subnav_risks: 'Risks', manage_risks_header: 'Risk register',
+    severity_low: 'Low', severity_medium: 'Medium', severity_high: 'High',
+    likelihood_low: 'Low likelihood', likelihood_medium: 'Medium likelihood', likelihood_high: 'High likelihood',
+    impact_low: 'Low impact', impact_medium: 'Medium impact', impact_high: 'High impact',
+    risk_status_open: 'Open', risk_status_mitigated: 'Mitigated', risk_status_closed: 'Closed',
+    risks_not_set_up: "Risk register isn't set up yet for this project — run migration-risks-health.sql.",
+    no_risks_yet: 'No risks logged yet.', risk_no_owner: 'No owner', risk_mitigation_label: 'Mitigation',
+    risk_description_label: 'Description', risk_mitigation_placeholder: 'How is this being managed?',
+    risk_title_placeholder: 'New risk title', risk_add_btn: '+ Add risk',
+    health_not_set_up: "Project health isn't set up yet — run migration-risks-health.sql.",
+    health_green: 'On track', health_amber: 'At risk', health_red: 'Off track',
+    health_note_placeholder: "What's driving this status?", health_save_btn: 'Save', health_cancel_btn: 'Cancel',
+    health_edit_btn: 'Edit',
   },
   th: {
     nav_overview: 'ภาพรวม', nav_phases: 'เฟส', nav_tasks: 'งาน', nav_subtasks: 'งานย่อย',
@@ -1422,6 +1501,19 @@ const TRANSLATIONS = {
     trash_deleted_label: 'ลบเมื่อ', trash_note: 'งาน/งานย่อยที่ลบจะอยู่ที่นี่ 30 วันก่อนถูกลบถาวร เผื่อกรณีลบผิดพลาด',
     error_banner_text: 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง หรือโหลดหน้าใหม่', error_banner_reload: 'โหลดใหม่',
     error_banner_dismiss: 'ปิด',
+    nav_risks: 'ความเสี่ยง', subnav_risks: 'ความเสี่ยง', manage_risks_header: 'ทะเบียนความเสี่ยง',
+    severity_low: 'ต่ำ', severity_medium: 'กลาง', severity_high: 'สูง',
+    likelihood_low: 'โอกาสเกิดต่ำ', likelihood_medium: 'โอกาสเกิดปานกลาง', likelihood_high: 'โอกาสเกิดสูง',
+    impact_low: 'ผลกระทบต่ำ', impact_medium: 'ผลกระทบปานกลาง', impact_high: 'ผลกระทบสูง',
+    risk_status_open: 'เปิดอยู่', risk_status_mitigated: 'บรรเทาแล้ว', risk_status_closed: 'ปิดแล้ว',
+    risks_not_set_up: 'ทะเบียนความเสี่ยงยังไม่พร้อมใช้งานสำหรับโปรเจกต์นี้ — รัน migration-risks-health.sql',
+    no_risks_yet: 'ยังไม่มีความเสี่ยงที่บันทึกไว้', risk_no_owner: 'ยังไม่มีผู้รับผิดชอบ', risk_mitigation_label: 'การบรรเทา',
+    risk_description_label: 'รายละเอียด', risk_mitigation_placeholder: 'จัดการเรื่องนี้อย่างไร?',
+    risk_title_placeholder: 'ชื่อความเสี่ยงใหม่', risk_add_btn: '+ เพิ่มความเสี่ยง',
+    health_not_set_up: 'สถานะโปรเจกต์ยังไม่พร้อมใช้งาน — รัน migration-risks-health.sql',
+    health_green: 'เป็นไปตามแผน', health_amber: 'มีความเสี่ยง', health_red: 'หลุดแผน',
+    health_note_placeholder: 'อะไรทำให้เป็นสถานะนี้?', health_save_btn: 'บันทึก', health_cancel_btn: 'ยกเลิก',
+    health_edit_btn: 'แก้ไข',
   },
 };
 function t(key) {
@@ -1452,6 +1544,7 @@ let teamMembers = [], phases = [], tasks = [], subtasks = [], objectives = [];
 let projectMembers = []; // access-role rows (owner/editor/member/viewer) for the current project
 let comments = []; // discussion threads on tasks/subtasks (see migration-comments.sql)
 let taskCollaborators = [], subtaskCollaborators = []; // extra people on an item, see migration-collaborators.sql
+let risks = null; // null = migration-risks-health.sql not run yet; [] = run, just empty
 let charts = {};
 let taskFilters = { phase: '', status: '', assignee: '' };
 let subtaskFilters = { task: '', status: '', assignee: '' };
@@ -1461,6 +1554,7 @@ let currentUser = null;
 let currentProjectId = null;
 let myProjects = [];
 let currentUserRole = null; // 'owner' | 'editor' | 'member' | 'viewer' for currentProjectId
+let currentProjectDetails = null; // full `projects` row for currentProjectId (name, health_status, health_note...)
 let canCreateProjects = false;
 
 function isOwner() { return currentUserRole === 'owner'; }
@@ -1557,7 +1651,7 @@ function radialGauge(pct, color) {
   const r = 24, c = 2 * Math.PI * r;
   const offset = c - (Math.max(0, Math.min(100, pct)) / 100) * c;
   return `<svg width="62" height="62" viewBox="0 0 62 62" style="transform:rotate(-90deg);">
-    <circle cx="31" cy="31" r="${r}" fill="none" stroke="#EEF0F5" stroke-width="6"></circle>
+    <circle cx="31" cy="31" r="${r}" fill="none" style="stroke:var(--color-fill)" stroke-width="6"></circle>
     <circle cx="31" cy="31" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"></circle>
   </svg>`;
 }
@@ -1671,13 +1765,14 @@ async function loadData(silent) {
     renderKpiSkeleton();
   }
 
-  const [tm, ph, tk, sb, ob, pm] = await Promise.all([
+  const [tm, ph, tk, sb, ob, pm, pr] = await Promise.all([
     supabaseClient.from('team_members').select('*').eq('project_id', currentProjectId).order('name'),
     supabaseClient.from('phases').select('*').eq('project_id', currentProjectId).order('sort_order'),
     supabaseClient.from('tasks').select('*').eq('project_id', currentProjectId).order('sort_order'),
     supabaseClient.from('subtasks').select('*').eq('project_id', currentProjectId).order('sort_order'),
     supabaseClient.from('objectives').select('*').eq('project_id', currentProjectId).order('sort_order'),
     supabaseClient.from('project_members').select('*').eq('project_id', currentProjectId).order('invited_at'),
+    supabaseClient.from('projects').select('*').eq('id', currentProjectId).maybeSingle(),
   ]);
 
   const firstError = [tm, ph, tk, sb, ob, pm].find(r => r.error);
@@ -1697,12 +1792,17 @@ async function loadData(silent) {
   subtasks = (sb.data || []).filter(x => !x.deleted_at);
   objectives = ob.data || [];
   projectMembers = pm.data || [];
+  // pr.error is deliberately not fatal (kept out of firstError above) --
+  // an older Supabase project without this project row shouldn't take down
+  // the whole dashboard just to show a health badge.
+  currentProjectDetails = pr.error ? null : (pr.data || null);
 
   document.getElementById('updatedAt').textContent = "Last updated: " + new Date().toLocaleString('en-CA');
   renderAll();
   loadActivityLog();
   loadComments();
   loadCollaborators();
+  loadRisks();
 }
 
 function renderAll() {
@@ -1715,6 +1815,8 @@ function renderAll() {
   renderManage();
   renderNavDots();
   computeNotifications();
+  renderRisksTab();
+  renderManageRisks();
 }
 
 // Comment threads (see migration-comments.sql), fetched separately for the
@@ -2077,6 +2179,7 @@ function showProjectScreen() {
   document.getElementById('projectScreen').style.display = 'flex';
   document.getElementById('appShell').style.display = 'none';
   document.getElementById('currentUserEmail').textContent = currentUser.email;
+  editingHealth = false; // don't carry an in-progress health edit across a project switch
   renderProjectList();
   document.getElementById('newProjectRow').style.display = canCreateProjects ? 'flex' : 'none';
 }
@@ -2373,6 +2476,223 @@ window.deleteForeverFromTrash = async function(kind, id, title) {
   if (error) { showToast('Error: ' + error.message); return; }
   showToast('Permanently deleted.', 'success');
   await loadTrash();
+};
+
+/* ================================================================
+   RISK REGISTER (see migration-risks-health.sql) -- things that MIGHT
+   happen and need a mitigation plan, separate from tasks (which are work
+   items with a due date). Fetched as part of the normal loadData() cycle,
+   like comments/collaborators, but degrades quietly (risks = null) if the
+   migration hasn't been run yet.
+   ================================================================ */
+const RISK_MATRIX = {
+  low:    { low: 'low',    medium: 'low',    high: 'medium' },
+  medium: { low: 'low',    medium: 'medium', high: 'high' },
+  high:   { low: 'medium', medium: 'high',   high: 'high' },
+};
+function riskSeverity(likelihood, impact) {
+  return (RISK_MATRIX[impact] && RISK_MATRIX[impact][likelihood]) || 'medium';
+}
+const SEVERITY_META = {
+  low:    { color: 'var(--color-ok)',      dot: '🟢' },
+  medium: { color: 'var(--color-warn)',    dot: '🟡' },
+  high:   { color: 'var(--color-blocked)', dot: '🔴' },
+};
+function severityBadge(likelihood, impact) {
+  const sev = riskSeverity(likelihood, impact);
+  const meta = SEVERITY_META[sev];
+  return `<span class="severity-badge" style="background:color-mix(in srgb, ${meta.color} 16%, var(--color-mix-base)); color:${meta.color};">${meta.dot} ${t('severity_' + sev)}</span>`;
+}
+function riskStatusBadge(status) {
+  const cls = status === 'closed' ? 'done' : status === 'mitigated' ? 'in_progress' : 'blocked';
+  return `<span class="badge ${cls}">${t('risk_status_' + status)}</span>`;
+}
+function canEditRisk(item) {
+  if (canEditAny()) return true;
+  return currentUserRole === 'member' && item.created_by === currentUser?.id;
+}
+async function loadRisks() {
+  if (!supabaseClient || !currentProjectId) return;
+  const { data, error } = await supabaseClient
+    .from('risks')
+    .select('*')
+    .eq('project_id', currentProjectId)
+    .order('sort_order');
+  risks = error ? null : (data || []);
+  renderRisksTab();
+  renderManageRisks();
+}
+function likelihoodImpactOptions(field, current) {
+  return ['low', 'medium', 'high'].map(v => `<option value="${v}" ${current === v ? 'selected' : ''}>${t(field + '_' + v)}</option>`).join('');
+}
+function riskStatusOptions(current) {
+  return ['open', 'mitigated', 'closed'].map(v => `<option value="${v}" ${current === v ? 'selected' : ''}>${t('risk_status_' + v)}</option>`).join('');
+}
+
+function renderRisksTab() {
+  const container = document.getElementById('risksGrid');
+  const summaryEl = document.getElementById('risksSummary');
+  if (!container) return;
+  if (risks === null) {
+    container.innerHTML = `<div class="empty-state">${t('risks_not_set_up')}</div>`;
+    if (summaryEl) summaryEl.innerHTML = '';
+    return;
+  }
+  const openRisks = risks.filter(r => r.status !== 'closed');
+  if (summaryEl) {
+    const counts = { low: 0, medium: 0, high: 0 };
+    openRisks.forEach(r => counts[riskSeverity(r.likelihood, r.impact)]++);
+    summaryEl.innerHTML = ['high', 'medium', 'low'].map(sev => `
+      <div class="risk-summary-chip" style="color:${SEVERITY_META[sev].color};">
+        ${SEVERITY_META[sev].dot} <strong>${counts[sev]}</strong> ${t('severity_' + sev)}
+      </div>`).join('');
+  }
+  if (!risks.length) {
+    container.innerHTML = `<div class="empty-state">${t('no_risks_yet')}</div>`;
+    return;
+  }
+  // Highest severity / still-open risks surface first.
+  const sevRank = { high: 0, medium: 1, low: 2 };
+  const sorted = [...risks].sort((a, b) => {
+    if ((a.status === 'closed') !== (b.status === 'closed')) return a.status === 'closed' ? 1 : -1;
+    return sevRank[riskSeverity(a.likelihood, a.impact)] - sevRank[riskSeverity(b.likelihood, b.impact)];
+  });
+  const sev = r => riskSeverity(r.likelihood, r.impact);
+  container.innerHTML = sorted.map(r => `
+    <div class="risk-card ${r.status === 'closed' ? 'risk-closed' : ''}" style="border-left-color:${SEVERITY_META[sev(r)].color};">
+      <div class="risk-card-head">
+        <span class="risk-title">${r.title}</span>
+        ${severityBadge(r.likelihood, r.impact)}
+      </div>
+      ${r.description ? `<div class="risk-desc">${r.description}</div>` : ''}
+      ${r.mitigation ? `<div class="risk-mitigation"><strong>${t('risk_mitigation_label')}:</strong> ${r.mitigation}</div>` : ''}
+      <div class="risk-card-foot">
+        <span class="risk-owner">${r.owner_id ? miniAvatar(r.owner_id) + memberName(r.owner_id) : t('risk_no_owner')}</span>
+        ${riskStatusBadge(r.status)}
+      </div>
+    </div>`).join('');
+}
+
+function renderManageRisks() {
+  const el = document.getElementById('manageRisksList');
+  if (!el) return;
+  if (risks === null) {
+    el.innerHTML = `<div class="no-comments">Risks aren't set up yet for this project — run <code>migration-risks-health.sql</code>.</div>`;
+    return;
+  }
+  const cards = risks.map(r => {
+    const editable = canEditRisk(r);
+    const dis = editable ? '' : 'disabled';
+    return `
+    <div class="mcard" data-id="${r.id}">
+      <div class="mtask-summary">
+        <button type="button" class="m-expand" onclick="toggleMcard(this)" title="Show description and mitigation"><span class="m-expand-arrow">▸</span> More</button>
+        <input type="text" data-field="title" value="${r.title || ''}" ${dis}>
+        <select data-field="likelihood" ${dis}>${likelihoodImpactOptions('likelihood', r.likelihood)}</select>
+        <select data-field="impact" ${dis}>${likelihoodImpactOptions('impact', r.impact)}</select>
+        <select data-field="owner_id" data-type="uuid" ${dis}>${memberOptions(r.owner_id)}</select>
+        <select data-field="status" ${dis}>${riskStatusOptions(r.status)}</select>
+        <div class="m-actions">
+          ${editable ? `<button class="m-btn save" onclick="saveRow('risks', this)">Save</button>` : ''}
+          ${isOwner() ? `<button class="m-btn delete" onclick="deleteRow('risks', this, 'Delete this risk?')">Delete</button>` : ''}
+        </div>
+      </div>
+      <div class="mtask-detail">
+        <label>${t('risk_description_label')}<textarea data-field="description" ${dis}>${r.description || ''}</textarea></label>
+        <label>${t('risk_mitigation_label')}<textarea data-field="mitigation" placeholder="${t('risk_mitigation_placeholder')}" ${dis}>${r.mitigation || ''}</textarea></label>
+      </div>
+    </div>`;
+  }).join('');
+
+  const newForm = canCreateItems() ? `
+    <div class="mcard new-row">
+      <div class="mtask-summary">
+        <span class="m-expand" style="visibility:hidden;">▸ More</span>
+        <input type="text" class="risk-new-title" placeholder="${t('risk_title_placeholder')}">
+        <select class="risk-new-likelihood">${likelihoodImpactOptions('likelihood', 'medium')}</select>
+        <select class="risk-new-impact">${likelihoodImpactOptions('impact', 'medium')}</select>
+        <select class="risk-new-owner">${memberOptions()}</select>
+        <div class="m-actions"><button class="m-btn add" onclick="quickAddRisk(this)">${t('risk_add_btn')}</button></div>
+      </div>
+    </div>` : '';
+
+  el.innerHTML = newForm + cards;
+}
+window.quickAddRisk = function(btn) {
+  const card = btn.closest('.mcard');
+  const title = card.querySelector('.risk-new-title').value.trim();
+  if (!title) { showToast('Enter a risk title first.'); return; }
+  const likelihood = card.querySelector('.risk-new-likelihood').value;
+  const impact = card.querySelector('.risk-new-impact').value;
+  const owner_id = card.querySelector('.risk-new-owner').value || null;
+  insertRow('risks', { title, likelihood, impact, owner_id, status: 'open' });
+};
+
+/* ---- Project health (RAG) -- see migration-risks-health.sql ---- */
+const HEALTH_META = {
+  green: { color: 'var(--color-ok)',      dot: '🟢' },
+  amber: { color: 'var(--color-warn)',    dot: '🟡' },
+  red:   { color: 'var(--color-blocked)', dot: '🔴' },
+};
+let editingHealth = false;
+function renderProjectHealthCard() {
+  const el = document.getElementById('projectHealthCard');
+  if (!el) return;
+  if (!currentProjectDetails) {
+    el.innerHTML = `<div class="empty-state">${t('health_not_set_up')}</div>`;
+    return;
+  }
+  const status = currentProjectDetails.health_status || 'green';
+  const note = currentProjectDetails.health_note || '';
+  const meta = HEALTH_META[status] || HEALTH_META.green;
+  const canEdit = canEditAny();
+
+  if (editingHealth) {
+    el.innerHTML = `
+      <div class="health-edit">
+        <div class="health-status-picker">
+          ${['green', 'amber', 'red'].map(s => `
+            <button type="button" class="health-pick ${s === status ? 'active' : ''}" data-health="${s}"
+              style="--pick-color:${HEALTH_META[s].color};" onclick="pickHealthStatus('${s}')">${HEALTH_META[s].dot} ${t('health_' + s)}</button>`).join('')}
+        </div>
+        <textarea id="healthNoteInput" placeholder="${t('health_note_placeholder')}">${note}</textarea>
+        <div class="m-actions">
+          <button class="m-btn save" onclick="saveProjectHealth()">${t('health_save_btn')}</button>
+          <button class="m-btn" onclick="cancelEditProjectHealth()">${t('health_cancel_btn')}</button>
+        </div>
+      </div>`;
+    el.dataset.pendingStatus = status;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="health-display" style="border-left-color:${meta.color};">
+      <div class="health-status-row">
+        <span class="health-pill" style="background:color-mix(in srgb, ${meta.color} 18%, var(--color-mix-base)); color:${meta.color};">${meta.dot} ${t('health_' + status)}</span>
+        ${canEdit ? `<button class="link-btn" onclick="editProjectHealth()">${t('health_edit_btn')}</button>` : ''}
+      </div>
+      ${note ? `<div class="health-note">${note}</div>` : ''}
+    </div>`;
+}
+window.editProjectHealth = function() { editingHealth = true; renderProjectHealthCard(); };
+window.cancelEditProjectHealth = function() { editingHealth = false; renderProjectHealthCard(); };
+window.pickHealthStatus = function(status) {
+  const el = document.getElementById('projectHealthCard');
+  if (el) el.dataset.pendingStatus = status;
+  document.querySelectorAll('.health-pick').forEach(b => b.classList.toggle('active', b.dataset.health === status));
+};
+window.saveProjectHealth = async function() {
+  const el = document.getElementById('projectHealthCard');
+  const status = (el && el.dataset.pendingStatus) || 'green';
+  const note = document.getElementById('healthNoteInput').value.trim();
+  const { error } = await supabaseClient.from('projects').update({ health_status: status, health_note: note }).eq('id', currentProjectId);
+  if (error) {
+    showToast(/health_status/.test(error.message || '') ? "Project health isn't set up yet — run migration-risks-health.sql." : 'Error: ' + error.message);
+    return;
+  }
+  editingHealth = false;
+  showToast('Saved.', 'success');
+  await loadData(true);
 };
 window.applyBulkStatus = async function(kind) {
   const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
@@ -2727,6 +3047,7 @@ function kpiIcon(name, color) {
 }
 
 function renderOverview() {
+  renderProjectHealthCard();
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter(t => t.status === 'done').length;
   const blockedTasks = tasks.filter(t => t.status === 'blocked').length;
@@ -2973,7 +3294,7 @@ function taskOptionsExcluding(current, excludeId) {
 
 async function insertRow(table, payload) {
   if (!supabaseClient) return;
-  if (['team_members', 'phases', 'tasks', 'subtasks'].includes(table)) {
+  if (['team_members', 'phases', 'tasks', 'subtasks', 'risks'].includes(table)) {
     payload = { ...payload, project_id: currentProjectId, created_by: currentUser?.id };
   }
   const { error } = await supabaseClient.from(table).insert(payload);
@@ -3024,7 +3345,7 @@ window.saveRow = function(table, btn) {
       data.completed_date = data.completed_date || null;
     }
   }
-  if (['team_members','phases','tasks','subtasks'].includes(table)) {
+  if (['team_members','phases','tasks','subtasks','risks'].includes(table)) {
     data.updated_at = new Date().toISOString();
   }
   updateRow(table, row.dataset.id, data);
