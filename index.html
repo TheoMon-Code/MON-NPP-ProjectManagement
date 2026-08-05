@@ -622,23 +622,31 @@
   /* Milestones */
   .milestone-list { display: flex; flex-direction: column; gap: 10px; }
   .milestone-row {
-    display: flex; align-items: center; gap: 16px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
     background: var(--color-card-bg); border: 1px solid var(--color-border); border-left: 4px solid var(--color-muted);
     border-radius: var(--radius-md); padding: 14px 18px; box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--ease), transform var(--ease);
   }
-  .milestone-date-badge { font-size: 11px; font-weight: 700; text-align: center; line-height: 1.4; flex-shrink: 0; min-width: 78px; }
+  .milestone-row:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .milestone-date-badge {
+    font-size: 11px; font-weight: 700; text-align: center; line-height: 1.4; flex-shrink: 0; min-width: 78px;
+    padding: 6px 4px; border-radius: var(--radius-sm); background: color-mix(in srgb, currentColor 14%, var(--color-mix-base));
+  }
   .milestone-body { flex: 1; min-width: 0; }
   .milestone-title { font-weight: 700; font-size: 14px; letter-spacing: -0.01em; }
   .milestone-phase { font-weight: 400; color: var(--color-muted); font-size: 12px; }
   .milestone-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
   /* Workload */
-  .workload-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .workload-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; align-items: start; }
   .workload-card {
     background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
-    padding: 16px 18px; display: flex; gap: 13px; align-items: center; box-shadow: var(--shadow-sm);
+    padding: 16px 18px; box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--ease), transform var(--ease), border-color var(--ease);
   }
-  .workload-card.overloaded { border-color: var(--color-blocked); }
+  .workload-card:hover { border-color: var(--color-border-hover); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .workload-card-top { display: flex; gap: 13px; align-items: center; }
+  .workload-card.overloaded { border-color: var(--color-blocked); background: color-mix(in srgb, var(--color-blocked) 5%, var(--color-card-bg)); }
   .workload-card.unassigned { opacity: 0.75; }
   .workload-body { flex: 1; min-width: 0; }
   .workload-body .name { font-weight: 700; font-size: 14px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
@@ -647,13 +655,32 @@
     font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--color-blocked);
     background: color-mix(in srgb, var(--color-blocked) 14%, var(--color-mix-base)); padding: 2px 8px; border-radius: 999px;
   }
+  .workload-card .m-expand { flex-shrink: 0; align-self: flex-start; }
+  .workload-card.expanded .m-expand-arrow { transform: rotate(90deg); }
+  .workload-detail { display: none; }
+  .workload-card.expanded .workload-detail {
+    display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border);
+  }
+  .workload-item { display: flex; align-items: center; gap: 10px; font-size: 12.5px; flex-wrap: wrap; }
+  .workload-item-title { font-weight: 600; flex: 1; min-width: 120px; }
+  .workload-item-meta { color: var(--color-muted); font-size: 11.5px; }
 
   /* Stakeholder register */
+  .key-stakeholders-card { border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border)); margin-bottom: 22px; }
+  .key-stakeholders-card > h3 {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 12%, var(--color-card-bg)), transparent);
+  }
   .stakeholder-badge {
     display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
     border: 1px solid currentColor; margin-top: 6px;
   }
-  .quality-badge { font-size: 12px; }
+  .quality-badge {
+    display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 700; padding: 3px 9px;
+    border-radius: 999px; background: color-mix(in srgb, currentColor 16%, var(--color-mix-base)); margin-left: 4px;
+    white-space: nowrap;
+  }
+  #manageTeamTable .col-stakeholder { min-width: 150px; }
+  #manageTeamTable .col-influence { min-width: 100px; }
 
   .empty-state, .error-state { text-align: center; padding: 60px 20px; color: var(--color-muted); font-size: 13.5px; }
   .error-state { color: var(--color-blocked); }
@@ -743,6 +770,10 @@
   .m-btn.save { background: var(--color-primary); color: white; box-shadow: 0 2px 6px color-mix(in srgb, var(--color-primary) 35%, transparent); }
   .m-btn.add { background: var(--brand-gradient); color: white; box-shadow: 0 2px 6px color-mix(in srgb, var(--color-accent) 35%, transparent); }
   .m-btn.delete { background: color-mix(in srgb, var(--color-blocked) 12%, var(--color-mix-base)); color: var(--color-blocked); }
+  .m-btn.report {
+    background: color-mix(in srgb, var(--color-primary) 10%, var(--color-mix-base)); color: var(--color-primary);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  }
   .m-btn:hover { opacity: 0.85; }
   .m-btn:active { transform: scale(0.96); }
   .col-name { min-width: 140px; } .col-desc { min-width: 180px; } .col-date { min-width: 120px; }
@@ -887,7 +918,8 @@
   .project-card .pname { font-weight: 700; font-size: 14px; }
   .project-card .prole { font-size: 10.5px; color: var(--color-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.03em; }
   .project-card .pcard-right { display: flex; align-items: center; gap: 10px; }
-  .project-card .pdelete { font-size: 11px; padding: 5px 9px; }
+  .project-card .pdelete { font-size: 11px; padding: 5px 9px; white-space: nowrap; }
+  .project-card .pduplicate { background: color-mix(in srgb, var(--color-info) 12%, var(--color-mix-base)); color: var(--color-info); }
   .project-card .pstats { font-size: 11px; color: var(--color-muted); }
   .project-card .pstats .pstats-overdue { color: var(--color-blocked); font-weight: 700; }
   .new-project-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -1196,7 +1228,7 @@
       <div id="projectBudgetCard"></div>
     </div>
     <div class="overview-actions">
-      <button class="m-btn" onclick="generateStatusReport()">📄 <span data-i18n="generate_report_btn">Generate status report</span></button>
+      <button class="m-btn report" onclick="generateStatusReport()">📄 <span data-i18n="generate_report_btn">Generate status report</span></button>
     </div>
     <div class="kpi-row" id="overviewKpis"></div>
     <div class="charts-row">
@@ -1297,8 +1329,8 @@
   </section>
 
   <section class="tab-panel" id="panel-team">
-    <div class="section-card" id="keyStakeholdersCard" style="display:none;">
-      <h3 data-i18n="key_stakeholders_header">Key stakeholders</h3>
+    <div class="section-card key-stakeholders-card" id="keyStakeholdersCard" style="display:none;">
+      <h3>⭐ <span data-i18n="key_stakeholders_header">Key stakeholders</span></h3>
       <div class="team-grid" id="keyStakeholdersGrid"></div>
     </div>
     <div class="team-grid" id="teamGrid"></div>
@@ -1321,10 +1353,8 @@
   </section>
 
   <section class="tab-panel" id="panel-milestones">
-    <div class="section-card">
-      <h3 data-i18n="section_milestones">Milestones</h3>
-      <div id="milestonesList"></div>
-    </div>
+    <div class="risk-summary-row" id="milestonesSummary"></div>
+    <div id="milestonesList"></div>
   </section>
 
   <section class="tab-panel" id="panel-manage">
@@ -1557,7 +1587,7 @@ const TRANSLATIONS = {
     generate_report_btn: 'Generate status report',
     acceptance_criteria_label: 'Acceptance criteria', acceptance_criteria_placeholder: 'How do we know this is really done?',
     quality_label: 'Quality check', quality_status_pending: 'Pending', quality_status_passed: 'Passed', quality_status_failed: 'Failed',
-    duplicate_project_btn: 'Duplicate as template',
+    duplicate_project_btn: 'Duplicate as template', duplicate_btn_short: 'Duplicate',
   },
   th: {
     nav_overview: 'ภาพรวม', nav_phases: 'เฟส', nav_tasks: 'งาน', nav_subtasks: 'งานย่อย',
@@ -1645,7 +1675,7 @@ const TRANSLATIONS = {
     generate_report_btn: 'สร้างรายงานสถานะ',
     acceptance_criteria_label: 'เกณฑ์การยอมรับ', acceptance_criteria_placeholder: 'จะรู้ได้อย่างไรว่างานนี้เสร็จจริง?',
     quality_label: 'ตรวจสอบคุณภาพ', quality_status_pending: 'รอตรวจสอบ', quality_status_passed: 'ผ่าน', quality_status_failed: 'ไม่ผ่าน',
-    duplicate_project_btn: 'ทำสำเนาเป็นแม่แบบ',
+    duplicate_project_btn: 'ทำสำเนาเป็นแม่แบบ', duplicate_btn_short: 'ทำสำเนา',
   },
 };
 function t(key) {
@@ -1743,9 +1773,10 @@ function badge(status) { return `<span class="badge ${status}">${statusLabel(sta
 // verified against its acceptance criteria). See migration-pm-extras.sql.
 const QUALITY_META = { passed: { color: 'var(--color-ok)', dot: '✅' }, failed: { color: 'var(--color-blocked)', dot: '❌' } };
 function qualityBadge(item) {
-  const meta = QUALITY_META[item && item.quality_status];
+  const status = item && item.quality_status;
+  const meta = QUALITY_META[status];
   if (!meta) return '';
-  return ` <span class="quality-badge" style="color:${meta.color};" title="${meta === QUALITY_META.passed ? 'Quality check passed' : 'Quality check failed'}">${meta.dot}</span>`;
+  return ` <span class="quality-badge" style="color:${meta.color};" title="${meta === QUALITY_META.passed ? 'Quality check passed' : 'Quality check failed'}">${meta.dot} ${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
 }
 function qualityStatusOptions(current) {
   return ['pending', 'passed', 'failed'].map(v => `<option value="${v}" ${(current || 'pending') === v ? 'selected' : ''}>${v.charAt(0).toUpperCase() + v.slice(1)}</option>`).join('');
@@ -2409,7 +2440,7 @@ function renderProjectList() {
           <div class="pcard-right">
             <span class="pstats">${statsHtml}</span>
             <span class="prole">${p.role}</span>
-            ${canCreateProjects ? `<button class="m-btn pdelete" onclick="event.stopPropagation();duplicateProjectFromList('${p.id}','${p.name.replace(/'/g, "\\'")}')">${t('duplicate_project_btn')}</button>` : ''}
+            ${canCreateProjects ? `<button class="m-btn pdelete pduplicate" title="${t('duplicate_project_btn')}" onclick="event.stopPropagation();duplicateProjectFromList('${p.id}','${p.name.replace(/'/g, "\\'")}')">${t('duplicate_btn_short')}</button>` : ''}
             ${p.role === 'owner' ? `<button class="m-btn delete pdelete" onclick="event.stopPropagation();deleteProjectFromList('${p.id}','${p.name.replace(/'/g, "\\'")}')">Delete</button>` : ''}
           </div>
         </div>`;
@@ -2968,10 +2999,20 @@ function milestoneBadge(m) {
 }
 function renderMilestonesTab() {
   const container = document.getElementById('milestonesList');
+  const summaryEl = document.getElementById('milestonesSummary');
   if (!container) return;
   if (milestones === null) {
     container.innerHTML = `<div class="empty-state">${t('milestones_not_set_up')}</div>`;
+    if (summaryEl) summaryEl.innerHTML = '';
     return;
+  }
+  if (summaryEl) {
+    const counts = { overdue: 0, upcoming: 0, done: 0 };
+    milestones.forEach(m => counts[milestoneStatus(m)]++);
+    summaryEl.innerHTML = ['overdue', 'upcoming', 'done'].map(s => `
+      <div class="risk-summary-chip" style="color:${MILESTONE_META[s].color};">
+        ${MILESTONE_META[s].dot} <strong>${counts[s]}</strong> ${t('milestone_status_' + s)}
+      </div>`).join('');
   }
   if (!milestones.length) {
     container.innerHTML = `<div class="empty-state">${t('no_milestones_yet')}</div>`;
@@ -3067,6 +3108,44 @@ window.quickAddMilestone = function(btn) {
    Purely computed client-side from tasks/subtasks + team_members, which
    are already loaded -- no migration required for this one.
    ================================================================ */
+// One line in a workload card's expanded detail list -- a task or subtask,
+// with enough context (phase, dates, status) to act on it without having to
+// jump to the Tasks/Subtasks tab and hunt for it.
+function workloadItemRow(item, kind) {
+  const phaseId = kind === 'tasks' ? item.phase_id : taskPhaseId(item.task_id);
+  const label = kind === 'subtasks' ? `↳ ${item.title}` : item.title;
+  return `
+    <div class="workload-item">
+      <span class="workload-item-title">${label}</span>
+      <span class="workload-item-meta">${phaseDot(phaseId)}${phaseName(phaseId)} · ${dateRange(item.start_date, item.due_date)}${isOverdue(item) ? ' <span class="overdue-tag">Overdue</span>' : ''}</span>
+      ${badge(item.status)}
+    </div>`;
+}
+function workloadCardHtml(m, openTasks, openSubtasks, doneTasks, doneSubtasks, overdue, openCount, overloaded, unassigned) {
+  const items = [
+    ...openTasks.map(x => ({ item: x, kind: 'tasks' })),
+    ...openSubtasks.map(x => ({ item: x, kind: 'subtasks' })),
+  ].sort((a, b) => {
+    const oa = isOverdue(a.item), ob = isOverdue(b.item);
+    if (oa !== ob) return oa ? -1 : 1;
+    return (a.item.due_date || '9999').localeCompare(b.item.due_date || '9999');
+  });
+  const doneTotal = doneTasks + doneSubtasks;
+  const pct = (openCount + doneTotal) ? Math.round((doneTotal / (openCount + doneTotal)) * 100) : 0;
+  return `
+    <div class="workload-card ${overloaded ? 'overloaded' : ''} ${unassigned ? 'unassigned' : ''}">
+      <div class="workload-card-top">
+        <div class="avatar" style="background:${unassigned ? 'var(--color-muted)' : avatarGradient(m.name)}">${unassigned ? '?' : initials(m.name)}</div>
+        <div class="workload-body">
+          <div class="name">${m.name}${overloaded ? `<span class="overload-tag">${t('workload_overloaded')}</span>` : ''}</div>
+          <div class="workload-counts">${openCount} ${t('workload_open_items')}${overdue ? ` · <span style="color:var(--color-blocked);font-weight:700;">${overdue} ${t('workload_overdue')}</span>` : ''}</div>
+          ${!unassigned && (openCount + doneTotal) ? `<div class="progress-bar"><div style="width:${pct}%"></div></div>` : ''}
+        </div>
+        ${items.length ? `<button type="button" class="m-expand" onclick="toggleWorkloadCard(this)" title="Show assigned items"><span class="m-expand-arrow">▸</span> ${items.length}</button>` : ''}
+      </div>
+      ${items.length ? `<div class="workload-detail">${items.map(x => workloadItemRow(x.item, x.kind)).join('')}</div>` : ''}
+    </div>`;
+}
 function renderWorkload() {
   const container = document.getElementById('workloadGrid');
   if (!container) return;
@@ -3084,33 +3163,25 @@ function renderWorkload() {
   const unassignedTasks = tasks.filter(t => !t.assignee_id && t.status !== 'done');
   const unassignedSubtasks = subtasks.filter(s => !s.assignee_id && s.status !== 'done');
 
-  const cards = rows.map(r => `
-    <div class="workload-card ${r.overloaded ? 'overloaded' : ''}">
-      <div class="avatar" style="background:${avatarGradient(r.m.name)}">${initials(r.m.name)}</div>
-      <div class="workload-body">
-        <div class="name">${r.m.name}${r.overloaded ? `<span class="overload-tag">${t('workload_overloaded')}</span>` : ''}</div>
-        <div class="workload-counts">${r.openCount} ${t('workload_open_items')}${r.overdue ? ` · <span style="color:var(--color-blocked);font-weight:700;">${r.overdue} ${t('workload_overdue')}</span>` : ''}</div>
-        <div class="progress-bar"><div style="width:${r.openCount + r.doneTasks + r.doneSubtasks ? Math.round(((r.doneTasks + r.doneSubtasks) / (r.openCount + r.doneTasks + r.doneSubtasks)) * 100) : 0}%"></div></div>
-      </div>
-    </div>`).join('');
+  const cards = rows.map(r => workloadCardHtml(r.m, r.openTasks, r.openSubtasks, r.doneTasks, r.doneSubtasks, r.overdue, r.openCount, r.overloaded, false)).join('');
 
-  const unassignedCard = (unassignedTasks.length + unassignedSubtasks.length) ? `
-    <div class="workload-card unassigned">
-      <div class="avatar" style="background:var(--color-muted);">?</div>
-      <div class="workload-body">
-        <div class="name">${t('workload_unassigned')}</div>
-        <div class="workload-counts">${unassignedTasks.length + unassignedSubtasks.length} ${t('workload_open_items')}</div>
-      </div>
-    </div>` : '';
+  const unassignedCard = (unassignedTasks.length + unassignedSubtasks.length)
+    ? workloadCardHtml({ name: t('workload_unassigned') }, unassignedTasks, unassignedSubtasks, 0, 0, unassignedTasks.filter(isOverdue).length + unassignedSubtasks.filter(isOverdue).length, unassignedTasks.length + unassignedSubtasks.length, false, true)
+    : '';
 
   container.innerHTML = (cards + unassignedCard) || emptyStateHtml('No team members yet. Add people in Manage &gt; Team.');
 }
+window.toggleWorkloadCard = function(btn) {
+  btn.closest('.workload-card').classList.toggle('expanded');
+};
 
 /* ================================================================
    STATUS REPORT -- compiles the current snapshot (health, budget,
-   progress, overdue work, top risks, milestones) into a plain-text
-   summary that can be pasted into an email or chat, without needing to
-   copy every number by hand. Purely client-side, from already-loaded data.
+   progress, overdue work, top risks, milestones) into a standalone,
+   nicely formatted HTML file (meant to be forwarded to stakeholders like
+   Nestlé, or printed) plus a plain-text version copied to the clipboard
+   for quick pasting into an email or chat. Purely client-side, from
+   already-loaded data.
    ================================================================ */
 window.generateStatusReport = function() {
   const projectName = document.getElementById('sidebarProjectName')?.textContent || 'Project';
@@ -3120,46 +3191,118 @@ window.generateStatusReport = function() {
   const overdueTasks = tasks.filter(isOverdue);
   const overdueSubtasks = subtasks.filter(isOverdue);
   const health = currentProjectDetails ? (currentProjectDetails.health_status || 'green') : null;
+  const dateStr = new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+  const openRisks = (risks || []).filter(r => r.status !== 'closed').sort((a, b) => {
+    const rank = { high: 0, medium: 1, low: 2 };
+    return rank[riskSeverity(a.likelihood, a.impact)] - rank[riskSeverity(b.likelihood, b.impact)];
+  });
+  const upcomingMilestones = (milestones || []).filter(m => milestoneStatus(m) !== 'done');
 
+  // --- Plain-text version (clipboard: paste into an email/Teams message) ---
   let lines = [];
-  lines.push(`# ${t('generate_report_btn')} — ${projectName}`);
-  lines.push(`_${new Date().toLocaleDateString('en-CA')}_`);
+  lines.push(`STATUS REPORT — ${projectName}`);
+  lines.push(dateStr);
   lines.push('');
-  if (health) lines.push(`**${t('health_' + health)}** ${currentProjectDetails.health_note ? '— ' + currentProjectDetails.health_note : ''}`);
+  if (health) lines.push(`Health: ${t('health_' + health)}${currentProjectDetails.health_note ? ' — ' + currentProjectDetails.health_note : ''}`);
   if (currentProjectDetails && currentProjectDetails.budget_total) {
     lines.push(`Budget: ${fmtMoney(currentProjectDetails.budget_spent || 0)} / ${fmtMoney(currentProjectDetails.budget_total)}`);
   }
   lines.push('');
-  lines.push(`## Progress`);
-  lines.push(`- Overall progress: ${overallProgress}%`);
-  lines.push(`- Phases: ${phases.length}, Tasks: ${totalTasks} (${doneTasks} done), Team: ${teamMembers.length}`);
-  lines.push(`- Overdue: ${overdueTasks.length} task(s), ${overdueSubtasks.length} subtask(s)`);
+  lines.push('PROGRESS');
+  lines.push(`Overall progress: ${overallProgress}%`);
+  lines.push(`Phases: ${phases.length}, Tasks: ${totalTasks} (${doneTasks} done), Team: ${teamMembers.length}`);
+  lines.push(`Overdue: ${overdueTasks.length} task(s), ${overdueSubtasks.length} subtask(s)`);
   if (overdueTasks.length) {
     lines.push('');
-    lines.push(`## Overdue tasks`);
+    lines.push('OVERDUE TASKS');
     overdueTasks.slice(0, 8).forEach(x => lines.push(`- ${x.title} (${memberName(x.assignee_id)}, due ${fmtDate(x.due_date)})`));
   }
-  if (risks && risks.length) {
-    const openRisks = risks.filter(r => r.status !== 'closed');
+  if (openRisks.length) {
     lines.push('');
-    lines.push(`## Risks (${openRisks.length} open)`);
-    [...openRisks].sort((a, b) => {
-      const rank = { high: 0, medium: 1, low: 2 };
-      return rank[riskSeverity(a.likelihood, a.impact)] - rank[riskSeverity(b.likelihood, b.impact)];
-    }).slice(0, 6).forEach(r => lines.push(`- [${riskSeverity(r.likelihood, r.impact).toUpperCase()}] ${r.title}`));
+    lines.push(`RISKS (${openRisks.length} open)`);
+    openRisks.slice(0, 6).forEach(r => lines.push(`- [${riskSeverity(r.likelihood, r.impact).toUpperCase()}] ${r.title}`));
   }
-  if (milestones && milestones.length) {
-    const relevant = milestones.filter(m => milestoneStatus(m) !== 'done');
-    if (relevant.length) {
-      lines.push('');
-      lines.push(`## Upcoming milestones`);
-      relevant.slice(0, 6).forEach(m => lines.push(`- ${milestoneStatus(m) === 'overdue' ? '🚩 OVERDUE — ' : ''}${m.title} (${fmtDate(m.target_date)})`));
-    }
+  if (upcomingMilestones.length) {
+    lines.push('');
+    lines.push('UPCOMING MILESTONES');
+    upcomingMilestones.slice(0, 6).forEach(m => lines.push(`- ${milestoneStatus(m) === 'overdue' ? 'OVERDUE — ' : ''}${m.title} (${fmtDate(m.target_date)})`));
   }
-  const text = lines.join('\n');
-  downloadFile(text, `${projectName.replace(/[^a-z0-9]+/gi, '-')}-status-report-${new Date().toISOString().slice(0, 10)}.md`, 'text/markdown');
+  const plainText = lines.join('\n');
+
+  // --- HTML version (download: a clean, printable, shareable document) ---
+  const healthColor = health ? { green: '#1E8E5A', amber: '#F39200', red: '#BE1622' }[health] : null;
+  const budgetPct = (currentProjectDetails && currentProjectDetails.budget_total)
+    ? Math.min(100, Math.round(((currentProjectDetails.budget_spent || 0) / currentProjectDetails.budget_total) * 100)) : null;
+  const budgetOver = budgetPct !== null && (currentProjectDetails.budget_spent || 0) > currentProjectDetails.budget_total;
+  const budgetColor = budgetPct === null ? null : budgetOver ? '#BE1622' : budgetPct >= 80 ? '#F39200' : '#1E8E5A';
+
+  const kpiHtml = (num, label) => `<div class="kpi"><div class="num">${num}</div><div class="lbl">${escapeHtml(label)}</div></div>`;
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Status Report — ${escapeHtml(projectName)}</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Arial, sans-serif; max-width: 720px; margin: 40px auto; color: #1a1a1a; line-height: 1.5; padding: 0 24px; }
+  h1 { font-size: 22px; margin: 0 0 2px; }
+  .date { color: #6B7280; font-size: 13px; margin-bottom: 20px; }
+  .badge-row { display: flex; gap: 12px; margin-bottom: 26px; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 999px; font-weight: 700; font-size: 13px; }
+  .section { margin-bottom: 26px; }
+  .section h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #6B7280; border-bottom: 1px solid #E7E9F0; padding-bottom: 7px; margin: 0 0 12px; }
+  .kpis { display: flex; gap: 14px; flex-wrap: wrap; }
+  .kpi { background: #F7F8FA; border-radius: 10px; padding: 12px 18px; min-width: 100px; }
+  .kpi .num { font-size: 20px; font-weight: 800; }
+  .kpi .lbl { font-size: 11px; color: #6B7280; margin-top: 2px; }
+  .bar-track { background: #EEF0F5; border-radius: 999px; height: 8px; overflow: hidden; margin-top: 8px; max-width: 260px; }
+  .bar-fill { height: 100%; border-radius: 999px; }
+  ul { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 7px; font-size: 13.5px; }
+  .sev-high { color: #BE1622; font-weight: 700; } .sev-medium { color: #F39200; font-weight: 700; } .sev-low { color: #1E8E5A; font-weight: 700; }
+  .footer { color: #9aa0aa; font-size: 11px; margin-top: 34px; border-top: 1px solid #E7E9F0; padding-top: 14px; }
+  @media print { body { margin: 0; } }
+</style>
+</head>
+<body>
+  <h1>Status Report — ${escapeHtml(projectName)}</h1>
+  <div class="date">${dateStr}</div>
+  <div class="badge-row">
+    ${health ? `<span class="pill" style="background:color-mix(in srgb, ${healthColor} 16%, white);color:${healthColor};">${t('health_' + health)}</span>` : ''}
+    ${budgetPct !== null ? `<span class="pill" style="background:color-mix(in srgb, ${budgetColor} 16%, white);color:${budgetColor};">💰 ${fmtMoney(currentProjectDetails.budget_spent || 0)} / ${fmtMoney(currentProjectDetails.budget_total)}</span>` : ''}
+  </div>
+  ${health && currentProjectDetails.health_note ? `<p style="margin-top:-16px;color:#444;">${escapeHtml(currentProjectDetails.health_note)}</p>` : ''}
+  <div class="section">
+    <h2>Progress</h2>
+    <div class="kpis">
+      ${kpiHtml(phases.length, 'Phases')}
+      ${kpiHtml(overallProgress + '%', 'Overall progress')}
+      ${kpiHtml(totalTasks + ' (' + doneTasks + ' done)', 'Tasks')}
+      ${kpiHtml(overdueTasks.length + overdueSubtasks.length, 'Overdue')}
+      ${kpiHtml(teamMembers.length, 'Team members')}
+    </div>
+  </div>
+  ${overdueTasks.length ? `
+  <div class="section">
+    <h2>Overdue tasks</h2>
+    <ul>${overdueTasks.slice(0, 8).map(x => `<li>${escapeHtml(x.title)} — <em>${escapeHtml(memberName(x.assignee_id))}</em>, due ${fmtDate(x.due_date)}</li>`).join('')}</ul>
+  </div>` : ''}
+  ${openRisks.length ? `
+  <div class="section">
+    <h2>Risks (${openRisks.length} open)</h2>
+    <ul>${openRisks.slice(0, 6).map(r => `<li><span class="sev-${riskSeverity(r.likelihood, r.impact)}">[${riskSeverity(r.likelihood, r.impact).toUpperCase()}]</span> ${escapeHtml(r.title)}</li>`).join('')}</ul>
+  </div>` : ''}
+  ${upcomingMilestones.length ? `
+  <div class="section">
+    <h2>Upcoming milestones</h2>
+    <ul>${upcomingMilestones.slice(0, 6).map(m => `<li>${milestoneStatus(m) === 'overdue' ? '<span class="sev-high">OVERDUE —</span> ' : ''}${escapeHtml(m.title)} (${fmtDate(m.target_date)})</li>`).join('')}</ul>
+  </div>` : ''}
+  <div class="footer">Generated from the MON Logistics project dashboard on ${dateStr}.</div>
+</body>
+</html>`;
+
+  downloadFile(html, `${projectName.replace(/[^a-z0-9]+/gi, '-')}-status-report-${new Date().toISOString().slice(0, 10)}.html`, 'text/html');
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(
+    navigator.clipboard.writeText(plainText).then(
       () => showToast('Report downloaded and copied to clipboard.', 'success'),
       () => showToast('Report downloaded.', 'success')
     );
@@ -3692,10 +3835,11 @@ window.toggleTask = function(id) {
   document.querySelector(`.task[data-task-id="${id}"]`).classList.toggle('open');
 };
 
+const STAKEHOLDER_ROLE_ICON = { sponsor: '👑', decision_maker: '⚖️', contributor: '🤝', informed: '👁️' };
 function stakeholderBadge(m) {
   if (!m.stakeholder_role || m.stakeholder_role === 'contributor') return '';
   const influenceColor = m.influence === 'high' ? 'var(--color-blocked)' : m.influence === 'low' ? 'var(--color-muted)' : 'var(--color-warn)';
-  return `<span class="stakeholder-badge" style="color:${influenceColor};border-color:${influenceColor};">${t('stakeholder_role_' + m.stakeholder_role)} · ${t('influence_' + (m.influence || 'medium'))}</span>`;
+  return `<span class="stakeholder-badge" style="color:${influenceColor};border-color:${influenceColor};">${STAKEHOLDER_ROLE_ICON[m.stakeholder_role] || ''} ${t('stakeholder_role_' + m.stakeholder_role)} · ${t('influence_' + (m.influence || 'medium'))}</span>`;
 }
 function teamCardHtml(m) {
   const assignedTasks = tasks.filter(t => t.assignee_id === m.id);
@@ -4019,11 +4163,17 @@ window.changeTeamMemberAccess = async function(email, newRole) {
 
 const STAKEHOLDER_ROLES = ['contributor', 'sponsor', 'decision_maker', 'informed'];
 const INFLUENCE_LEVELS = ['low', 'medium', 'high'];
+// Short labels for the compact Manage > Team dropdowns (the column header
+// already says "Influence", so the option itself doesn't need to repeat the
+// word -- the fuller t('influence_medium') = "Medium influence" phrasing is
+// kept for prose elsewhere, e.g. the stakeholder badge on team cards).
+const STAKEHOLDER_ROLE_SHORT = { contributor: 'Contributor', sponsor: 'Sponsor', decision_maker: 'Decision maker', informed: 'Informed' };
+const INFLUENCE_SHORT = { low: 'Low', medium: 'Medium', high: 'High' };
 function stakeholderRoleOptions(current) {
-  return STAKEHOLDER_ROLES.map(r => `<option value="${r}" ${(current || 'contributor') === r ? 'selected' : ''}>${t('stakeholder_role_' + r)}</option>`).join('');
+  return STAKEHOLDER_ROLES.map(r => `<option value="${r}" ${(current || 'contributor') === r ? 'selected' : ''}>${STAKEHOLDER_ROLE_SHORT[r]}</option>`).join('');
 }
 function influenceOptions(current) {
-  return INFLUENCE_LEVELS.map(v => `<option value="${v}" ${(current || 'medium') === v ? 'selected' : ''}>${t('influence_' + v)}</option>`).join('');
+  return INFLUENCE_LEVELS.map(v => `<option value="${v}" ${(current || 'medium') === v ? 'selected' : ''}>${INFLUENCE_SHORT[v]}</option>`).join('');
 }
 function renderManageTeam() {
   const rows = teamMembers.map(m => {
@@ -4034,8 +4184,8 @@ function renderManageTeam() {
       <td class="col-name"><input type="text" data-field="role" value="${m.role || ''}" ${editable ? '' : 'disabled'}></td>
       <td class="col-select"><input type="text" data-field="company" value="${m.company || ''}" ${editable ? '' : 'disabled'}></td>
       <td class="col-name"><input type="email" data-field="email" value="${m.email || ''}" placeholder="name@company.com" ${editable ? '' : 'disabled'}></td>
-      <td class="col-select"><select data-field="stakeholder_role" ${editable ? '' : 'disabled'}>${stakeholderRoleOptions(m.stakeholder_role)}</select></td>
-      <td class="col-select"><select data-field="influence" ${editable ? '' : 'disabled'}>${influenceOptions(m.influence)}</select></td>
+      <td class="col-select col-stakeholder"><select data-field="stakeholder_role" ${editable ? '' : 'disabled'}>${stakeholderRoleOptions(m.stakeholder_role)}</select></td>
+      <td class="col-select col-influence"><select data-field="influence" ${editable ? '' : 'disabled'}>${influenceOptions(m.influence)}</select></td>
       <td class="col-select">${accessRoleSelectHtml(m)}</td>
       <td class="col-actions">
         <div class="m-actions">
@@ -4052,8 +4202,8 @@ function renderManageTeam() {
       <td><input type="text" data-field="role" placeholder="Role"></td>
       <td><input type="text" data-field="company" placeholder="Company"></td>
       <td><input type="email" data-field="email" placeholder="name@company.com"></td>
-      <td><select data-field="stakeholder_role">${stakeholderRoleOptions()}</select></td>
-      <td><select data-field="influence">${influenceOptions()}</select></td>
+      <td class="col-stakeholder"><select data-field="stakeholder_role">${stakeholderRoleOptions()}</select></td>
+      <td class="col-influence"><select data-field="influence">${influenceOptions()}</select></td>
       <td></td>
       <td><button class="m-btn add" onclick="addRow('team_members', this, 'name')">+ Add</button></td>
     </tr>` : '';
