@@ -739,6 +739,13 @@
   #manageTeamTable, #managePhasesTable {
     width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px;
   }
+  /* Team now has 8 columns (Stakeholder/Influence added) -- the old 640px
+     shared minimum let the browser's auto table-layout squeeze individual
+     columns below their own min-width (letters get clipped, e.g. "Medium"
+     rendering as "Mediu"). Give it enough total room that every column's
+     min-width is actually honored; .table-scroll handles the horizontal
+     scroll on narrower windows. */
+  #manageTeamTable { min-width: 1180px; }
   #manageTeamTable th, #managePhasesTable th,
   #manageTeamTable td, #managePhasesTable td {
     padding: 10px 12px; border-bottom: 1px solid var(--color-border); text-align: left;
@@ -752,6 +759,7 @@
     width: 100%; padding: 7px 9px; font-size: 12.5px; border: 1px solid var(--color-border);
     border-radius: var(--radius-sm); font-family: inherit; background: var(--color-card-bg);
     transition: border-color var(--ease), box-shadow var(--ease);
+    text-overflow: ellipsis;
   }
   .mrow input:focus, .mrow select:focus, .mrow textarea:focus,
   .mtask-summary input:focus, .mtask-summary select:focus,
@@ -2785,7 +2793,7 @@ function renderManageRisks() {
     <div class="mcard" data-id="${r.id}">
       <div class="mtask-summary">
         <button type="button" class="m-expand" onclick="toggleMcard(this)" title="Show description and mitigation"><span class="m-expand-arrow">▸</span> More</button>
-        <input type="text" data-field="title" value="${r.title || ''}" ${dis}>
+        <input type="text" data-field="title" value="${r.title || ''}" title="${escapeHtml(r.title || '')}" ${dis}>
         <select data-field="likelihood" ${dis}>${likelihoodImpactOptions('likelihood', r.likelihood)}</select>
         <select data-field="impact" ${dis}>${likelihoodImpactOptions('impact', r.impact)}</select>
         <select data-field="owner_id" data-type="uuid" ${dis}>${memberOptions(r.owner_id)}</select>
@@ -3062,7 +3070,7 @@ function renderManageMilestones() {
     <div class="mcard" data-id="${m.id}">
       <div class="mtask-summary">
         <button type="button" class="m-expand" onclick="toggleMcard(this)" title="Show description"><span class="m-expand-arrow">▸</span> More</button>
-        <input type="text" data-field="title" value="${m.title || ''}" ${dis}>
+        <input type="text" data-field="title" value="${m.title || ''}" title="${escapeHtml(m.title || '')}" ${dis}>
         <input type="date" data-field="target_date" data-type="date" value="${m.target_date || ''}" ${dis}>
         <select data-field="phase_id" data-type="uuid" ${dis}><option value="">${t('milestone_no_phase')}</option>${phaseOptions(m.phase_id)}</select>
         <select data-field="is_done" data-type="bool" ${dis}>
@@ -4180,10 +4188,10 @@ function renderManageTeam() {
     const editable = canEditTeamMemberRow(m);
     return `
     <tr class="mrow" data-id="${m.id}">
-      <td class="col-name"><input type="text" data-field="name" value="${m.name || ''}" ${editable ? '' : 'disabled'}></td>
-      <td class="col-name"><input type="text" data-field="role" value="${m.role || ''}" ${editable ? '' : 'disabled'}></td>
-      <td class="col-select"><input type="text" data-field="company" value="${m.company || ''}" ${editable ? '' : 'disabled'}></td>
-      <td class="col-name"><input type="email" data-field="email" value="${m.email || ''}" placeholder="name@company.com" ${editable ? '' : 'disabled'}></td>
+      <td class="col-name"><input type="text" data-field="name" value="${m.name || ''}" title="${escapeHtml(m.name || '')}" ${editable ? '' : 'disabled'}></td>
+      <td class="col-name"><input type="text" data-field="role" value="${m.role || ''}" title="${escapeHtml(m.role || '')}" ${editable ? '' : 'disabled'}></td>
+      <td class="col-select"><input type="text" data-field="company" value="${m.company || ''}" title="${escapeHtml(m.company || '')}" ${editable ? '' : 'disabled'}></td>
+      <td class="col-name"><input type="email" data-field="email" value="${m.email || ''}" title="${escapeHtml(m.email || '')}" placeholder="name@company.com" ${editable ? '' : 'disabled'}></td>
       <td class="col-select col-stakeholder"><select data-field="stakeholder_role" ${editable ? '' : 'disabled'}>${stakeholderRoleOptions(m.stakeholder_role)}</select></td>
       <td class="col-select col-influence"><select data-field="influence" ${editable ? '' : 'disabled'}>${influenceOptions(m.influence)}</select></td>
       <td class="col-select">${accessRoleSelectHtml(m)}</td>
@@ -4251,7 +4259,7 @@ function manageTaskCardHtml(t) {
     <div class="mcard" data-id="${t.id}">
       <div class="mtask-summary">
         <button type="button" class="m-expand" onclick="toggleMcard(this)" title="Show more fields: description, notes, dates, link, dependencies"><span class="m-expand-arrow">▸</span> More</button>
-        <input type="text" data-field="title" value="${t.title || ''}" ${dis}>
+        <input type="text" data-field="title" value="${t.title || ''}" title="${escapeHtml(t.title || '')}" ${dis}>
         <select data-field="assignee_id" data-type="uuid" ${dis}>${memberOptions(t.assignee_id)}</select>
         <select data-field="priority" ${dis}>${priorityOptions(t.priority)}</select>
         <input type="date" data-field="due_date" data-type="date" value="${t.due_date || ''}" ${dis}>
@@ -4281,7 +4289,7 @@ function manageSubtaskCardHtml(s) {
     <div class="mcard" data-id="${s.id}">
       <div class="mtask-summary">
         <button type="button" class="m-expand" onclick="toggleMcard(this)" title="Show more fields: description, notes, dates, link, dependencies"><span class="m-expand-arrow">▸</span> More</button>
-        <input type="text" data-field="title" value="${s.title || ''}" ${dis}>
+        <input type="text" data-field="title" value="${s.title || ''}" title="${escapeHtml(s.title || '')}" ${dis}>
         <select data-field="assignee_id" data-type="uuid" ${dis}>${memberOptions(s.assignee_id)}</select>
         <input type="date" data-field="due_date" data-type="date" value="${s.due_date || ''}" ${dis}>
         <select data-field="status" ${dis}>${statusOptions(s.status)}</select>
