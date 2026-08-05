@@ -606,6 +606,54 @@
     width: 100%; min-height: 60px; font-family: inherit; font-size: 12.5px; padding: 9px 11px;
     border: 1px solid var(--color-border); border-radius: var(--radius-sm); resize: vertical; margin-bottom: 10px;
   }
+  .health-edit label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--color-muted); margin-bottom: 8px; }
+  .health-edit input[type="number"] {
+    display: block; width: 100%; margin-top: 5px; padding: 8px 10px; font-family: inherit; font-size: 13px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-card-bg);
+  }
+
+  /* Overview top row: health card + budget card side by side */
+  .overview-top-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .overview-top-row > div { flex: 1; min-width: 260px; }
+  .overview-top-row:empty { display: none; }
+  .overview-actions { display: flex; justify-content: flex-end; margin-bottom: 18px; }
+  .budget-none { font-size: 13px; color: var(--color-muted); font-weight: 600; }
+
+  /* Milestones */
+  .milestone-list { display: flex; flex-direction: column; gap: 10px; }
+  .milestone-row {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--color-card-bg); border: 1px solid var(--color-border); border-left: 4px solid var(--color-muted);
+    border-radius: var(--radius-md); padding: 14px 18px; box-shadow: var(--shadow-sm);
+  }
+  .milestone-date-badge { font-size: 11px; font-weight: 700; text-align: center; line-height: 1.4; flex-shrink: 0; min-width: 78px; }
+  .milestone-body { flex: 1; min-width: 0; }
+  .milestone-title { font-weight: 700; font-size: 14px; letter-spacing: -0.01em; }
+  .milestone-phase { font-weight: 400; color: var(--color-muted); font-size: 12px; }
+  .milestone-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+  /* Workload */
+  .workload-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .workload-card {
+    background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    padding: 16px 18px; display: flex; gap: 13px; align-items: center; box-shadow: var(--shadow-sm);
+  }
+  .workload-card.overloaded { border-color: var(--color-blocked); }
+  .workload-card.unassigned { opacity: 0.75; }
+  .workload-body { flex: 1; min-width: 0; }
+  .workload-body .name { font-weight: 700; font-size: 14px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+  .workload-counts { font-size: 12px; color: var(--color-muted); margin: 4px 0 8px; }
+  .overload-tag {
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--color-blocked);
+    background: color-mix(in srgb, var(--color-blocked) 14%, var(--color-mix-base)); padding: 2px 8px; border-radius: 999px;
+  }
+
+  /* Stakeholder register */
+  .stakeholder-badge {
+    display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    border: 1px solid currentColor; margin-top: 6px;
+  }
+  .quality-badge { font-size: 12px; }
 
   .empty-state, .error-state { text-align: center; padding: 60px 20px; color: var(--color-muted); font-size: 13.5px; }
   .error-state { color: var(--color-blocked); }
@@ -1088,6 +1136,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         <span data-i18n="nav_team">Team</span>
       </button>
+      <button data-tab="workload">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span data-i18n="nav_workload">Workload</span>
+      </button>
       <button data-tab="objectives">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
         <span data-i18n="nav_objectives">Objectives</span>
@@ -1095,6 +1147,10 @@
       <button data-tab="risks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         <span data-i18n="nav_risks">Risks</span>
+      </button>
+      <button data-tab="milestones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a1 1 0 0 1 1-1h13.4a.6.6 0 0 1 .5.9L16 10l2.9 6.1a.6.6 0 0 1-.5.9H5a1 1 0 0 0-1 1z"></path></svg>
+        <span data-i18n="nav_milestones">Milestones</span>
       </button>
       <button data-tab="manage">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
@@ -1135,7 +1191,13 @@
   <div class="app-main">
 <main id="app">
   <section class="tab-panel active" id="panel-overview">
-    <div id="projectHealthCard"></div>
+    <div class="overview-top-row">
+      <div id="projectHealthCard"></div>
+      <div id="projectBudgetCard"></div>
+    </div>
+    <div class="overview-actions">
+      <button class="m-btn" onclick="generateStatusReport()">📄 <span data-i18n="generate_report_btn">Generate status report</span></button>
+    </div>
     <div class="kpi-row" id="overviewKpis"></div>
     <div class="charts-row">
       <div class="chart-card">
@@ -1235,7 +1297,18 @@
   </section>
 
   <section class="tab-panel" id="panel-team">
+    <div class="section-card" id="keyStakeholdersCard" style="display:none;">
+      <h3 data-i18n="key_stakeholders_header">Key stakeholders</h3>
+      <div class="team-grid" id="keyStakeholdersGrid"></div>
+    </div>
     <div class="team-grid" id="teamGrid"></div>
+  </section>
+
+  <section class="tab-panel" id="panel-workload">
+    <div class="section-card">
+      <h3 data-i18n="section_workload">Workload by person</h3>
+      <div class="workload-grid" id="workloadGrid"></div>
+    </div>
   </section>
 
   <section class="tab-panel" id="panel-objectives">
@@ -1247,6 +1320,13 @@
     <div class="risk-grid" id="risksGrid"></div>
   </section>
 
+  <section class="tab-panel" id="panel-milestones">
+    <div class="section-card">
+      <h3 data-i18n="section_milestones">Milestones</h3>
+      <div id="milestonesList"></div>
+    </div>
+  </section>
+
   <section class="tab-panel" id="panel-manage">
     <div class="manage-note" data-i18n="manage_note">Add, edit or delete phases, tasks, subtasks and team members below. Changes save straight to Supabase — everyone with this link sees them after a refresh.</div>
 
@@ -1255,6 +1335,7 @@
       <button data-msub="phases" data-i18n="subnav_phases">Phases</button>
       <button data-msub="tasks" data-i18n="subnav_tasks">Tasks</button>
       <button data-msub="risks" data-i18n="subnav_risks">Risks</button>
+      <button data-msub="milestones" data-i18n="subnav_milestones">Milestones</button>
       <button data-msub="subtasks" data-i18n="subnav_subtasks">Subtasks</button>
       <button data-msub="access" data-i18n="subnav_access">Access</button>
       <button data-msub="history" data-i18n="subnav_history">History</button>
@@ -1293,6 +1374,13 @@
       <div class="section-card">
         <h3 data-i18n="manage_risks_header">Risk register</h3>
         <div id="manageRisksList" style="padding: 14px 18px;"></div>
+      </div>
+    </div>
+
+    <div class="manage-subpanel" id="msub-milestones">
+      <div class="section-card">
+        <h3 data-i18n="manage_milestones_header">Milestones</h3>
+        <div id="manageMilestonesList" style="padding: 14px 18px;"></div>
       </div>
     </div>
 
@@ -1448,6 +1536,28 @@ const TRANSLATIONS = {
     health_green: 'On track', health_amber: 'At risk', health_red: 'Off track',
     health_note_placeholder: "What's driving this status?", health_save_btn: 'Save', health_cancel_btn: 'Cancel',
     health_edit_btn: 'Edit',
+    nav_workload: 'Workload', section_workload: 'Workload by person',
+    workload_overloaded: 'Overloaded', workload_open_items: 'open items', workload_overdue: 'overdue',
+    workload_unassigned: 'Unassigned',
+    nav_milestones: 'Milestones', subnav_milestones: 'Milestones', manage_milestones_header: 'Milestones',
+    section_milestones: 'Milestones',
+    milestone_status_upcoming: 'Upcoming', milestone_status_done: 'Done', milestone_status_overdue: 'Overdue',
+    milestones_not_set_up: "Milestones aren't set up yet for this project — run migration-pm-extras.sql.",
+    no_milestones_yet: 'No milestones yet.', milestone_no_phase: 'No phase',
+    milestone_title_placeholder: 'New milestone title', milestone_add_btn: '+ Add milestone',
+    milestone_mark_done: 'Mark done', milestone_reopen: 'Reopen',
+    budget_not_set_up: "Budget tracking isn't set up yet — run migration-pm-extras.sql.",
+    budget_total_label: 'Total budget', budget_spent_label: 'Spent so far', budget_remaining_label: 'Remaining',
+    budget_edit_btn: 'Edit', budget_save_btn: 'Save', budget_cancel_btn: 'Cancel',
+    budget_no_budget_set: 'No budget set', budget_over: 'Over budget by',
+    key_stakeholders_header: 'Key stakeholders',
+    stakeholder_role_sponsor: 'Sponsor', stakeholder_role_decision_maker: 'Decision maker',
+    stakeholder_role_contributor: 'Contributor', stakeholder_role_informed: 'Informed',
+    influence_low: 'Low influence', influence_medium: 'Medium influence', influence_high: 'High influence',
+    generate_report_btn: 'Generate status report',
+    acceptance_criteria_label: 'Acceptance criteria', acceptance_criteria_placeholder: 'How do we know this is really done?',
+    quality_label: 'Quality check', quality_status_pending: 'Pending', quality_status_passed: 'Passed', quality_status_failed: 'Failed',
+    duplicate_project_btn: 'Duplicate as template',
   },
   th: {
     nav_overview: 'ภาพรวม', nav_phases: 'เฟส', nav_tasks: 'งาน', nav_subtasks: 'งานย่อย',
@@ -1514,6 +1624,28 @@ const TRANSLATIONS = {
     health_green: 'เป็นไปตามแผน', health_amber: 'มีความเสี่ยง', health_red: 'หลุดแผน',
     health_note_placeholder: 'อะไรทำให้เป็นสถานะนี้?', health_save_btn: 'บันทึก', health_cancel_btn: 'ยกเลิก',
     health_edit_btn: 'แก้ไข',
+    nav_workload: 'ภาระงาน', section_workload: 'ภาระงานตามบุคคล',
+    workload_overloaded: 'งานล้นมือ', workload_open_items: 'งานที่ค้างอยู่', workload_overdue: 'เลยกำหนด',
+    workload_unassigned: 'ยังไม่มอบหมาย',
+    nav_milestones: 'เหตุการณ์สำคัญ', subnav_milestones: 'เหตุการณ์สำคัญ', manage_milestones_header: 'เหตุการณ์สำคัญ',
+    section_milestones: 'เหตุการณ์สำคัญ',
+    milestone_status_upcoming: 'ใกล้ถึง', milestone_status_done: 'เสร็จแล้ว', milestone_status_overdue: 'เลยกำหนด',
+    milestones_not_set_up: 'เหตุการณ์สำคัญยังไม่พร้อมใช้งานสำหรับโปรเจกต์นี้ — รัน migration-pm-extras.sql',
+    no_milestones_yet: 'ยังไม่มีเหตุการณ์สำคัญ', milestone_no_phase: 'ไม่มีเฟส',
+    milestone_title_placeholder: 'ชื่อเหตุการณ์สำคัญใหม่', milestone_add_btn: '+ เพิ่มเหตุการณ์สำคัญ',
+    milestone_mark_done: 'ทำเครื่องหมายว่าเสร็จ', milestone_reopen: 'เปิดใหม่',
+    budget_not_set_up: 'การติดตามงบประมาณยังไม่พร้อมใช้งาน — รัน migration-pm-extras.sql',
+    budget_total_label: 'งบประมาณทั้งหมด', budget_spent_label: 'ใช้ไปแล้ว', budget_remaining_label: 'คงเหลือ',
+    budget_edit_btn: 'แก้ไข', budget_save_btn: 'บันทึก', budget_cancel_btn: 'ยกเลิก',
+    budget_no_budget_set: 'ยังไม่ได้ตั้งงบประมาณ', budget_over: 'เกินงบประมาณไป',
+    key_stakeholders_header: 'ผู้มีส่วนได้ส่วนเสียหลัก',
+    stakeholder_role_sponsor: 'ผู้สนับสนุน', stakeholder_role_decision_maker: 'ผู้ตัดสินใจ',
+    stakeholder_role_contributor: 'ผู้ร่วมงาน', stakeholder_role_informed: 'รับทราบเท่านั้น',
+    influence_low: 'อิทธิพลต่ำ', influence_medium: 'อิทธิพลปานกลาง', influence_high: 'อิทธิพลสูง',
+    generate_report_btn: 'สร้างรายงานสถานะ',
+    acceptance_criteria_label: 'เกณฑ์การยอมรับ', acceptance_criteria_placeholder: 'จะรู้ได้อย่างไรว่างานนี้เสร็จจริง?',
+    quality_label: 'ตรวจสอบคุณภาพ', quality_status_pending: 'รอตรวจสอบ', quality_status_passed: 'ผ่าน', quality_status_failed: 'ไม่ผ่าน',
+    duplicate_project_btn: 'ทำสำเนาเป็นแม่แบบ',
   },
 };
 function t(key) {
@@ -1545,6 +1677,7 @@ let projectMembers = []; // access-role rows (owner/editor/member/viewer) for th
 let comments = []; // discussion threads on tasks/subtasks (see migration-comments.sql)
 let taskCollaborators = [], subtaskCollaborators = []; // extra people on an item, see migration-collaborators.sql
 let risks = null; // null = migration-risks-health.sql not run yet; [] = run, just empty
+let milestones = null; // null = migration-milestones.sql not run yet; [] = run, just empty
 let charts = {};
 let taskFilters = { phase: '', status: '', assignee: '' };
 let subtaskFilters = { task: '', status: '', assignee: '' };
@@ -1605,6 +1738,18 @@ window.addEventListener('unhandledrejection', (e) => showErrorBanner(e.reason));
 function statusLabel(status) { return status ? (t('status_' + status) || STATUS_LABELS[status] || status) : "—"; }
 function priorityLabel(p) { return p ? (t('priority_' + p) || p) : '—'; }
 function badge(status) { return `<span class="badge ${status}">${statusLabel(status)}</span>`; }
+// Quality / acceptance-check on a *done* task -- separate from item status
+// (status says the work stopped; quality_status says whether it was actually
+// verified against its acceptance criteria). See migration-pm-extras.sql.
+const QUALITY_META = { passed: { color: 'var(--color-ok)', dot: '✅' }, failed: { color: 'var(--color-blocked)', dot: '❌' } };
+function qualityBadge(item) {
+  const meta = QUALITY_META[item && item.quality_status];
+  if (!meta) return '';
+  return ` <span class="quality-badge" style="color:${meta.color};" title="${meta === QUALITY_META.passed ? 'Quality check passed' : 'Quality check failed'}">${meta.dot}</span>`;
+}
+function qualityStatusOptions(current) {
+  return ['pending', 'passed', 'failed'].map(v => `<option value="${v}" ${(current || 'pending') === v ? 'selected' : ''}>${v.charAt(0).toUpperCase() + v.slice(1)}</option>`).join('');
+}
 function prioBadge(p) { return `<span class="prio ${p}">${priorityLabel(p)}</span>`; }
 function fmtDate(d) { if (!d) return "—"; try { return new Date(d).toLocaleDateString('en-CA'); } catch(e) { return d; } }
 function initials(name) { if (!name) return "?"; return name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase(); }
@@ -1803,6 +1948,7 @@ async function loadData(silent) {
   loadComments();
   loadCollaborators();
   loadRisks();
+  loadMilestones();
 }
 
 function renderAll() {
@@ -1811,12 +1957,15 @@ function renderAll() {
   renderTasksListTab();
   renderSubtasksListTab();
   renderTeam();
+  renderWorkload();
   renderObjectives();
   renderManage();
   renderNavDots();
   computeNotifications();
   renderRisksTab();
   renderManageRisks();
+  renderMilestonesTab();
+  renderManageMilestones();
 }
 
 // Comment threads (see migration-comments.sql), fetched separately for the
@@ -2180,6 +2329,7 @@ function showProjectScreen() {
   document.getElementById('appShell').style.display = 'none';
   document.getElementById('currentUserEmail').textContent = currentUser.email;
   editingHealth = false; // don't carry an in-progress health edit across a project switch
+  editingBudget = false;
   renderProjectList();
   document.getElementById('newProjectRow').style.display = canCreateProjects ? 'flex' : 'none';
 }
@@ -2259,6 +2409,7 @@ function renderProjectList() {
           <div class="pcard-right">
             <span class="pstats">${statsHtml}</span>
             <span class="prole">${p.role}</span>
+            ${canCreateProjects ? `<button class="m-btn pdelete" onclick="event.stopPropagation();duplicateProjectFromList('${p.id}','${p.name.replace(/'/g, "\\'")}')">${t('duplicate_project_btn')}</button>` : ''}
             ${p.role === 'owner' ? `<button class="m-btn delete pdelete" onclick="event.stopPropagation();deleteProjectFromList('${p.id}','${p.name.replace(/'/g, "\\'")}')">Delete</button>` : ''}
           </div>
         </div>`;
@@ -2273,6 +2424,22 @@ window.deleteProjectFromList = async function(projectId, projectName) {
   const { error } = await supabaseClient.rpc('delete_project', { pid: projectId });
   if (error) { showToast('Error: ' + error.message); return; }
   showToast('Project deleted.', 'success');
+  await loadMyProjects();
+};
+
+// Copies a project's phases/tasks/subtasks structure (titles, descriptions,
+// priority) into a brand-new project, resetting dates/status/assignees so it
+// behaves like a reusable template rather than a duplicate of live data. See
+// migration-pm-extras.sql (duplicate_project function).
+window.duplicateProjectFromList = async function(projectId, projectName) {
+  const newName = prompt(`New project name:`, `${projectName} (copy)`);
+  if (!newName) return;
+  const { error } = await supabaseClient.rpc('duplicate_project', { source_project_id: projectId, new_name: newName });
+  if (error) {
+    showToast(/function .*duplicate_project/.test(error.message || '') ? "Project templates aren't set up yet — run migration-pm-extras.sql." : 'Error: ' + error.message);
+    return;
+  }
+  showToast('Project duplicated.', 'success');
   await loadMyProjects();
 };
 
@@ -2694,6 +2861,313 @@ window.saveProjectHealth = async function() {
   showToast('Saved.', 'success');
   await loadData(true);
 };
+
+/* ---- Budget tracking -- see migration-pm-extras.sql ---- */
+let editingBudget = false;
+function fmtMoney(n) {
+  if (n === null || n === undefined || n === '') return '—';
+  return Number(n).toLocaleString('en-CA', { maximumFractionDigits: 2 });
+}
+function renderProjectBudgetCard() {
+  const el = document.getElementById('projectBudgetCard');
+  if (!el) return;
+  if (!currentProjectDetails || currentProjectDetails.budget_total === undefined) {
+    el.innerHTML = `<div class="empty-state">${t('budget_not_set_up')}</div>`;
+    return;
+  }
+  const total = currentProjectDetails.budget_total;
+  const spent = currentProjectDetails.budget_spent || 0;
+  const canEdit = canEditAny();
+
+  if (editingBudget) {
+    el.innerHTML = `
+      <div class="health-edit">
+        <label>${t('budget_total_label')}<input type="number" id="budgetTotalInput" step="0.01" min="0" value="${total ?? ''}" placeholder="0"></label>
+        <label>${t('budget_spent_label')}<input type="number" id="budgetSpentInput" step="0.01" min="0" value="${spent ?? ''}" placeholder="0"></label>
+        <div class="m-actions">
+          <button class="m-btn save" onclick="saveProjectBudget()">${t('budget_save_btn')}</button>
+          <button class="m-btn" onclick="cancelEditProjectBudget()">${t('budget_cancel_btn')}</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (!total) {
+    el.innerHTML = `
+      <div class="health-display">
+        <div class="health-status-row">
+          <span class="budget-none">${t('budget_no_budget_set')}</span>
+          ${canEdit ? `<button class="link-btn" onclick="editProjectBudget()">${t('budget_edit_btn')}</button>` : ''}
+        </div>
+      </div>`;
+    return;
+  }
+  const pct = Math.min(100, Math.round((spent / total) * 100));
+  const over = spent > total;
+  const barColor = over ? 'var(--color-blocked)' : pct >= 80 ? 'var(--color-warn)' : 'var(--color-ok)';
+  el.innerHTML = `
+    <div class="health-display" style="border-left-color:${barColor};">
+      <div class="health-status-row">
+        <span class="health-pill" style="background:color-mix(in srgb, ${barColor} 18%, var(--color-mix-base)); color:${barColor};">💰 ${fmtMoney(spent)} / ${fmtMoney(total)}</span>
+        ${canEdit ? `<button class="link-btn" onclick="editProjectBudget()">${t('budget_edit_btn')}</button>` : ''}
+      </div>
+      <div class="progress-bar" style="margin-top:8px;"><div style="width:${pct}%;background:${barColor};"></div></div>
+      <div class="health-note">${over ? t('budget_over') : t('budget_remaining_label')}: ${fmtMoney(total - spent)} (${pct}%)</div>
+    </div>`;
+}
+window.editProjectBudget = function() { editingBudget = true; renderProjectBudgetCard(); };
+window.cancelEditProjectBudget = function() { editingBudget = false; renderProjectBudgetCard(); };
+window.saveProjectBudget = async function() {
+  const total = parseFloat(document.getElementById('budgetTotalInput').value) || null;
+  const spent = parseFloat(document.getElementById('budgetSpentInput').value) || 0;
+  const { error } = await supabaseClient.from('projects').update({ budget_total: total, budget_spent: spent }).eq('id', currentProjectId);
+  if (error) {
+    showToast(/budget_total/.test(error.message || '') ? "Budget tracking isn't set up yet — run migration-pm-extras.sql." : 'Error: ' + error.message);
+    return;
+  }
+  editingBudget = false;
+  showToast('Saved.', 'success');
+  await loadData(true);
+};
+
+/* ================================================================
+   MILESTONES (see migration-pm-extras.sql) -- key dates that matter to
+   stakeholders (e.g. a client review, a go-live), distinct from tasks.
+   Loaded the same graceful-degradation way as risks: milestones stays
+   null (rather than throwing) if the migration hasn't been run yet.
+   ================================================================ */
+async function loadMilestones() {
+  if (!supabaseClient || !currentProjectId) return;
+  const { data, error } = await supabaseClient
+    .from('milestones')
+    .select('*')
+    .eq('project_id', currentProjectId)
+    .order('target_date', { ascending: true, nullsFirst: false });
+  milestones = error ? null : (data || []);
+  renderMilestonesTab();
+  renderManageMilestones();
+}
+function canEditMilestone(item) {
+  if (canEditAny()) return true;
+  return currentUserRole === 'member' && item.created_by === currentUser?.id;
+}
+function milestoneStatus(m) {
+  if (m.is_done) return 'done';
+  if (m.target_date && new Date(m.target_date) < new Date(new Date().toDateString())) return 'overdue';
+  return 'upcoming';
+}
+const MILESTONE_META = {
+  done:     { color: 'var(--color-ok)',      dot: '✅' },
+  overdue:  { color: 'var(--color-blocked)', dot: '🚩' },
+  upcoming: { color: 'var(--color-info)',    dot: '🏳️' },
+};
+function milestoneBadge(m) {
+  const s = milestoneStatus(m);
+  const meta = MILESTONE_META[s];
+  return `<span class="severity-badge" style="background:color-mix(in srgb, ${meta.color} 16%, var(--color-mix-base)); color:${meta.color};">${meta.dot} ${t('milestone_status_' + s)}</span>`;
+}
+function renderMilestonesTab() {
+  const container = document.getElementById('milestonesList');
+  if (!container) return;
+  if (milestones === null) {
+    container.innerHTML = `<div class="empty-state">${t('milestones_not_set_up')}</div>`;
+    return;
+  }
+  if (!milestones.length) {
+    container.innerHTML = `<div class="empty-state">${t('no_milestones_yet')}</div>`;
+    return;
+  }
+  const sorted = [...milestones].sort((a, b) => {
+    const rank = { overdue: 0, upcoming: 1, done: 2 };
+    const ra = rank[milestoneStatus(a)], rb = rank[milestoneStatus(b)];
+    if (ra !== rb) return ra - rb;
+    return (a.target_date || '').localeCompare(b.target_date || '');
+  });
+  container.innerHTML = `<div class="milestone-list">${sorted.map(m => {
+    const meta = MILESTONE_META[milestoneStatus(m)];
+    const editable = canEditMilestone(m);
+    return `
+    <div class="milestone-row" style="border-left-color:${meta.color};">
+      <div class="milestone-date-badge" style="color:${meta.color};">${meta.dot}<br>${fmtDate(m.target_date)}</div>
+      <div class="milestone-body">
+        <div class="milestone-title">${m.title}${m.phase_id ? ` <span class="milestone-phase">· ${phaseName(m.phase_id)}</span>` : ''}</div>
+        ${m.description ? `<div class="risk-desc">${m.description}</div>` : ''}
+      </div>
+      <div class="milestone-actions">
+        ${milestoneBadge(m)}
+        ${editable ? `<button class="m-btn" onclick="toggleMilestoneDone('${m.id}')">${m.is_done ? t('milestone_reopen') : t('milestone_mark_done')}</button>` : ''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+window.toggleMilestoneDone = async function(id) {
+  const m = (milestones || []).find(x => x.id === id);
+  if (!m) return;
+  const { error } = await supabaseClient.from('milestones').update({ is_done: !m.is_done, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) { showToast('Error: ' + error.message); return; }
+  await loadData(true);
+};
+function renderManageMilestones() {
+  const el = document.getElementById('manageMilestonesList');
+  if (!el) return;
+  if (milestones === null) {
+    el.innerHTML = `<div class="no-comments">Milestones aren't set up yet for this project — run <code>migration-pm-extras.sql</code>.</div>`;
+    return;
+  }
+  const cards = milestones.map(m => {
+    const editable = canEditMilestone(m);
+    const dis = editable ? '' : 'disabled';
+    return `
+    <div class="mcard" data-id="${m.id}">
+      <div class="mtask-summary">
+        <button type="button" class="m-expand" onclick="toggleMcard(this)" title="Show description"><span class="m-expand-arrow">▸</span> More</button>
+        <input type="text" data-field="title" value="${m.title || ''}" ${dis}>
+        <input type="date" data-field="target_date" data-type="date" value="${m.target_date || ''}" ${dis}>
+        <select data-field="phase_id" data-type="uuid" ${dis}><option value="">${t('milestone_no_phase')}</option>${phaseOptions(m.phase_id)}</select>
+        <select data-field="is_done" data-type="bool" ${dis}>
+          <option value="false" ${!m.is_done ? 'selected' : ''}>${t('milestone_status_upcoming')}</option>
+          <option value="true" ${m.is_done ? 'selected' : ''}>${t('milestone_status_done')}</option>
+        </select>
+        <div class="m-actions">
+          ${editable ? `<button class="m-btn save" onclick="saveRow('milestones', this)">Save</button>` : ''}
+          ${isOwner() ? `<button class="m-btn delete" onclick="deleteRow('milestones', this, 'Delete this milestone?')">Delete</button>` : ''}
+        </div>
+      </div>
+      <div class="mtask-detail">
+        <label>${t('risk_description_label')}<textarea data-field="description" ${dis}>${m.description || ''}</textarea></label>
+      </div>
+    </div>`;
+  }).join('');
+
+  const newForm = canCreateItems() ? `
+    <div class="mcard new-row">
+      <div class="mtask-summary">
+        <span class="m-expand" style="visibility:hidden;">▸ More</span>
+        <input type="text" class="milestone-new-title" placeholder="${t('milestone_title_placeholder')}">
+        <input type="date" class="milestone-new-date">
+        <select class="milestone-new-phase"><option value="">${t('milestone_no_phase')}</option>${phaseOptions()}</select>
+        <div class="m-actions"><button class="m-btn add" onclick="quickAddMilestone(this)">${t('milestone_add_btn')}</button></div>
+      </div>
+    </div>` : '';
+
+  el.innerHTML = newForm + cards;
+}
+window.quickAddMilestone = function(btn) {
+  const card = btn.closest('.mcard');
+  const title = card.querySelector('.milestone-new-title').value.trim();
+  if (!title) { showToast('Enter a milestone title first.'); return; }
+  const target_date = card.querySelector('.milestone-new-date').value || null;
+  const phase_id = card.querySelector('.milestone-new-phase').value || null;
+  insertRow('milestones', { title, target_date, phase_id, is_done: false });
+};
+
+/* ================================================================
+   WORKLOAD -- per-person view of open work, so overload is visible at a
+   glance instead of having to scan every task's assignee individually.
+   Purely computed client-side from tasks/subtasks + team_members, which
+   are already loaded -- no migration required for this one.
+   ================================================================ */
+function renderWorkload() {
+  const container = document.getElementById('workloadGrid');
+  if (!container) return;
+  const rows = teamMembers.map(m => {
+    const openTasks = tasks.filter(t => t.assignee_id === m.id && t.status !== 'done');
+    const openSubtasks = subtasks.filter(s => s.assignee_id === m.id && s.status !== 'done');
+    const doneTasks = tasks.filter(t => t.assignee_id === m.id && t.status === 'done').length;
+    const doneSubtasks = subtasks.filter(s => s.assignee_id === m.id && s.status === 'done').length;
+    const overdue = openTasks.filter(isOverdue).length + openSubtasks.filter(isOverdue).length;
+    const openCount = openTasks.length + openSubtasks.length;
+    const overloaded = overdue >= 3 || openCount >= 8;
+    return { m, openTasks, openSubtasks, doneTasks, doneSubtasks, overdue, openCount, overloaded };
+  }).sort((a, b) => b.openCount - a.openCount);
+
+  const unassignedTasks = tasks.filter(t => !t.assignee_id && t.status !== 'done');
+  const unassignedSubtasks = subtasks.filter(s => !s.assignee_id && s.status !== 'done');
+
+  const cards = rows.map(r => `
+    <div class="workload-card ${r.overloaded ? 'overloaded' : ''}">
+      <div class="avatar" style="background:${avatarGradient(r.m.name)}">${initials(r.m.name)}</div>
+      <div class="workload-body">
+        <div class="name">${r.m.name}${r.overloaded ? `<span class="overload-tag">${t('workload_overloaded')}</span>` : ''}</div>
+        <div class="workload-counts">${r.openCount} ${t('workload_open_items')}${r.overdue ? ` · <span style="color:var(--color-blocked);font-weight:700;">${r.overdue} ${t('workload_overdue')}</span>` : ''}</div>
+        <div class="progress-bar"><div style="width:${r.openCount + r.doneTasks + r.doneSubtasks ? Math.round(((r.doneTasks + r.doneSubtasks) / (r.openCount + r.doneTasks + r.doneSubtasks)) * 100) : 0}%"></div></div>
+      </div>
+    </div>`).join('');
+
+  const unassignedCard = (unassignedTasks.length + unassignedSubtasks.length) ? `
+    <div class="workload-card unassigned">
+      <div class="avatar" style="background:var(--color-muted);">?</div>
+      <div class="workload-body">
+        <div class="name">${t('workload_unassigned')}</div>
+        <div class="workload-counts">${unassignedTasks.length + unassignedSubtasks.length} ${t('workload_open_items')}</div>
+      </div>
+    </div>` : '';
+
+  container.innerHTML = (cards + unassignedCard) || emptyStateHtml('No team members yet. Add people in Manage &gt; Team.');
+}
+
+/* ================================================================
+   STATUS REPORT -- compiles the current snapshot (health, budget,
+   progress, overdue work, top risks, milestones) into a plain-text
+   summary that can be pasted into an email or chat, without needing to
+   copy every number by hand. Purely client-side, from already-loaded data.
+   ================================================================ */
+window.generateStatusReport = function() {
+  const projectName = document.getElementById('sidebarProjectName')?.textContent || 'Project';
+  const totalTasks = tasks.length;
+  const doneTasks = tasks.filter(x => x.status === 'done').length;
+  const overallProgress = totalTasks ? Math.round(tasks.reduce((s, x) => s + STATUS_PROGRESS[x.status], 0) / totalTasks) : 0;
+  const overdueTasks = tasks.filter(isOverdue);
+  const overdueSubtasks = subtasks.filter(isOverdue);
+  const health = currentProjectDetails ? (currentProjectDetails.health_status || 'green') : null;
+
+  let lines = [];
+  lines.push(`# ${t('generate_report_btn')} — ${projectName}`);
+  lines.push(`_${new Date().toLocaleDateString('en-CA')}_`);
+  lines.push('');
+  if (health) lines.push(`**${t('health_' + health)}** ${currentProjectDetails.health_note ? '— ' + currentProjectDetails.health_note : ''}`);
+  if (currentProjectDetails && currentProjectDetails.budget_total) {
+    lines.push(`Budget: ${fmtMoney(currentProjectDetails.budget_spent || 0)} / ${fmtMoney(currentProjectDetails.budget_total)}`);
+  }
+  lines.push('');
+  lines.push(`## Progress`);
+  lines.push(`- Overall progress: ${overallProgress}%`);
+  lines.push(`- Phases: ${phases.length}, Tasks: ${totalTasks} (${doneTasks} done), Team: ${teamMembers.length}`);
+  lines.push(`- Overdue: ${overdueTasks.length} task(s), ${overdueSubtasks.length} subtask(s)`);
+  if (overdueTasks.length) {
+    lines.push('');
+    lines.push(`## Overdue tasks`);
+    overdueTasks.slice(0, 8).forEach(x => lines.push(`- ${x.title} (${memberName(x.assignee_id)}, due ${fmtDate(x.due_date)})`));
+  }
+  if (risks && risks.length) {
+    const openRisks = risks.filter(r => r.status !== 'closed');
+    lines.push('');
+    lines.push(`## Risks (${openRisks.length} open)`);
+    [...openRisks].sort((a, b) => {
+      const rank = { high: 0, medium: 1, low: 2 };
+      return rank[riskSeverity(a.likelihood, a.impact)] - rank[riskSeverity(b.likelihood, b.impact)];
+    }).slice(0, 6).forEach(r => lines.push(`- [${riskSeverity(r.likelihood, r.impact).toUpperCase()}] ${r.title}`));
+  }
+  if (milestones && milestones.length) {
+    const relevant = milestones.filter(m => milestoneStatus(m) !== 'done');
+    if (relevant.length) {
+      lines.push('');
+      lines.push(`## Upcoming milestones`);
+      relevant.slice(0, 6).forEach(m => lines.push(`- ${milestoneStatus(m) === 'overdue' ? '🚩 OVERDUE — ' : ''}${m.title} (${fmtDate(m.target_date)})`));
+    }
+  }
+  const text = lines.join('\n');
+  downloadFile(text, `${projectName.replace(/[^a-z0-9]+/gi, '-')}-status-report-${new Date().toISOString().slice(0, 10)}.md`, 'text/markdown');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => showToast('Report downloaded and copied to clipboard.', 'success'),
+      () => showToast('Report downloaded.', 'success')
+    );
+  } else {
+    showToast('Report downloaded.', 'success');
+  }
+};
+
 window.applyBulkStatus = async function(kind) {
   const set = kind === 'tasks' ? selectedTaskIds : selectedSubtaskIds;
   const list = kind === 'tasks' ? tasks : subtasks;
@@ -2753,7 +3227,7 @@ function renderTasksListTab() {
       <td>${miniAvatar(t.assignee_id)}${memberName(t.assignee_id)}</td>
       <td>${prioBadge(t.priority)}</td>
       <td>${dateRange(t.start_date, t.due_date)}${completedTag(t)}${isOverdue(t) ? ' <span class="overdue-tag">Overdue</span>' : ''}</td>
-      <td>${badge(t.status)}</td>
+      <td>${badge(t.status)}${qualityBadge(t)}</td>
     </tr>`).join('');
   const tasksEmptyMsg = tasks.length === 0
     ? `No tasks yet. <a href="#" onclick="goToManage();return false;" style="color:var(--color-accent);font-weight:600;">Add one in Manage →</a>`
@@ -3048,6 +3522,7 @@ function kpiIcon(name, color) {
 
 function renderOverview() {
   renderProjectHealthCard();
+  renderProjectBudgetCard();
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter(t => t.status === 'done').length;
   const blockedTasks = tasks.filter(t => t.status === 'blocked').length;
@@ -3177,7 +3652,7 @@ function renderPhasesTree() {
             ${prioBadge(t.priority)}
             <span class="task-assignee">${miniAvatar(t.assignee_id)}${memberName(t.assignee_id)}</span>
             <span class="task-due">${dateRange(t.start_date, t.due_date)}${completedTag(t)}</span>
-            ${badge(t.status)}
+            ${badge(t.status)}${qualityBadge(t)}
           </div>
           ${detailBlock(t, 'tasks')}
           <div class="subtasks">
@@ -3217,25 +3692,38 @@ window.toggleTask = function(id) {
   document.querySelector(`.task[data-task-id="${id}"]`).classList.toggle('open');
 };
 
-function renderTeam() {
-  const html = teamMembers.map(m => {
-    const assignedTasks = tasks.filter(t => t.assignee_id === m.id);
-    const assignedSubtasks = subtasks.filter(s => s.assignee_id === m.id);
-    const doneTasks = assignedTasks.filter(t => t.status === 'done').length;
-    const doneSubtasks = assignedSubtasks.filter(s => s.status === 'done').length;
-    const overdueOwn = assignedTasks.filter(isOverdue).length + assignedSubtasks.filter(isOverdue).length;
-    return `
+function stakeholderBadge(m) {
+  if (!m.stakeholder_role || m.stakeholder_role === 'contributor') return '';
+  const influenceColor = m.influence === 'high' ? 'var(--color-blocked)' : m.influence === 'low' ? 'var(--color-muted)' : 'var(--color-warn)';
+  return `<span class="stakeholder-badge" style="color:${influenceColor};border-color:${influenceColor};">${t('stakeholder_role_' + m.stakeholder_role)} · ${t('influence_' + (m.influence || 'medium'))}</span>`;
+}
+function teamCardHtml(m) {
+  const assignedTasks = tasks.filter(t => t.assignee_id === m.id);
+  const assignedSubtasks = subtasks.filter(s => s.assignee_id === m.id);
+  const doneTasks = assignedTasks.filter(t => t.status === 'done').length;
+  const doneSubtasks = assignedSubtasks.filter(s => s.status === 'done').length;
+  const overdueOwn = assignedTasks.filter(isOverdue).length + assignedSubtasks.filter(isOverdue).length;
+  return `
       <div class="team-card">
         <div class="avatar" style="background:${avatarGradient(m.name)}">${initials(m.name)}</div>
         <div class="team-card-body">
           <div class="name">${m.name}</div>
           ${m.role ? `<div class="role">${m.role}</div>` : ''}
           ${m.company ? `<span class="company-tag">${m.company}</span>` : ''}
+          ${stakeholderBadge(m)}
           ${m.email ? `<div class="member-email" title="${m.email}">${m.email}</div>` : ''}
           <div class="workload">${assignedTasks.length} task${assignedTasks.length===1?'':'s'} (${doneTasks} done) · ${assignedSubtasks.length} subtask${assignedSubtasks.length===1?'':'s'} (${doneSubtasks} done)${overdueOwn ? ` · <span style="color:var(--color-blocked);font-weight:600;">${overdueOwn} overdue</span>` : ''}</div>
         </div>
       </div>`;
-  }).join('');
+}
+function renderTeam() {
+  const keyStakeholders = teamMembers.filter(m => m.stakeholder_role === 'sponsor' || m.stakeholder_role === 'decision_maker');
+  const keyCard = document.getElementById('keyStakeholdersCard');
+  if (keyCard) {
+    keyCard.style.display = keyStakeholders.length ? 'block' : 'none';
+    document.getElementById('keyStakeholdersGrid').innerHTML = keyStakeholders.map(teamCardHtml).join('');
+  }
+  const html = teamMembers.map(teamCardHtml).join('');
   document.getElementById('teamGrid').innerHTML = teamMembers.length ? html : emptyStateHtml('No team members yet. Add the people working on this project.');
 }
 
@@ -3294,7 +3782,7 @@ function taskOptionsExcluding(current, excludeId) {
 
 async function insertRow(table, payload) {
   if (!supabaseClient) return;
-  if (['team_members', 'phases', 'tasks', 'subtasks', 'risks'].includes(table)) {
+  if (['team_members', 'phases', 'tasks', 'subtasks', 'risks', 'milestones'].includes(table)) {
     payload = { ...payload, project_id: currentProjectId, created_by: currentUser?.id };
   }
   const { error } = await supabaseClient.from(table).insert(payload);
@@ -3345,7 +3833,7 @@ window.saveRow = function(table, btn) {
       data.completed_date = data.completed_date || null;
     }
   }
-  if (['team_members','phases','tasks','subtasks','risks'].includes(table)) {
+  if (['team_members','phases','tasks','subtasks','risks','milestones'].includes(table)) {
     data.updated_at = new Date().toISOString();
   }
   updateRow(table, row.dataset.id, data);
@@ -3529,6 +4017,14 @@ window.changeTeamMemberAccess = async function(email, newRole) {
   await reloadProjectMembers();
 };
 
+const STAKEHOLDER_ROLES = ['contributor', 'sponsor', 'decision_maker', 'informed'];
+const INFLUENCE_LEVELS = ['low', 'medium', 'high'];
+function stakeholderRoleOptions(current) {
+  return STAKEHOLDER_ROLES.map(r => `<option value="${r}" ${(current || 'contributor') === r ? 'selected' : ''}>${t('stakeholder_role_' + r)}</option>`).join('');
+}
+function influenceOptions(current) {
+  return INFLUENCE_LEVELS.map(v => `<option value="${v}" ${(current || 'medium') === v ? 'selected' : ''}>${t('influence_' + v)}</option>`).join('');
+}
 function renderManageTeam() {
   const rows = teamMembers.map(m => {
     const editable = canEditTeamMemberRow(m);
@@ -3538,6 +4034,8 @@ function renderManageTeam() {
       <td class="col-name"><input type="text" data-field="role" value="${m.role || ''}" ${editable ? '' : 'disabled'}></td>
       <td class="col-select"><input type="text" data-field="company" value="${m.company || ''}" ${editable ? '' : 'disabled'}></td>
       <td class="col-name"><input type="email" data-field="email" value="${m.email || ''}" placeholder="name@company.com" ${editable ? '' : 'disabled'}></td>
+      <td class="col-select"><select data-field="stakeholder_role" ${editable ? '' : 'disabled'}>${stakeholderRoleOptions(m.stakeholder_role)}</select></td>
+      <td class="col-select"><select data-field="influence" ${editable ? '' : 'disabled'}>${influenceOptions(m.influence)}</select></td>
       <td class="col-select">${accessRoleSelectHtml(m)}</td>
       <td class="col-actions">
         <div class="m-actions">
@@ -3554,12 +4052,14 @@ function renderManageTeam() {
       <td><input type="text" data-field="role" placeholder="Role"></td>
       <td><input type="text" data-field="company" placeholder="Company"></td>
       <td><input type="email" data-field="email" placeholder="name@company.com"></td>
+      <td><select data-field="stakeholder_role">${stakeholderRoleOptions()}</select></td>
+      <td><select data-field="influence">${influenceOptions()}</select></td>
       <td></td>
       <td><button class="m-btn add" onclick="addRow('team_members', this, 'name')">+ Add</button></td>
     </tr>` : '';
 
   document.getElementById('manageTeamTable').innerHTML = `
-    <thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Email</th><th>App access</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Email</th><th>Stakeholder</th><th>Influence</th><th>App access</th><th>Actions</th></tr></thead>
     <tbody>${rows}${newRow}</tbody>`;
 }
 
@@ -3618,6 +4118,8 @@ function manageTaskCardHtml(t) {
         <label>Completed<input type="date" data-field="completed_date" data-type="date" value="${t.completed_date || ''}" ${dis}></label>
         <label>Depends on<select data-field="depends_on_task_id" data-type="uuid" ${dis}>${taskOptionsExcluding(t.depends_on_task_id, t.id)}</select></label>
         <label>Link<input type="url" data-field="link_url" placeholder="https://…" value="${t.link_url || ''}" ${dis}></label>
+        <label>Acceptance criteria<textarea data-field="acceptance_criteria" placeholder="How do we know this is really done?" ${dis}>${t.acceptance_criteria || ''}</textarea></label>
+        <label>Quality check<select data-field="quality_status" ${dis}>${qualityStatusOptions(t.quality_status)}</select></label>
       </div>
     </div>`;
 }
